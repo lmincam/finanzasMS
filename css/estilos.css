@@ -11,8 +11,11 @@
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--txt);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px;-webkit-font-smoothing:antialiased}
 body{padding-bottom:calc(90px + env(safe-area-inset-bottom));min-height:100vh;min-height:100dvh}
-/* iPhone: la zona de la isla y el "rebote" al tirar hacia abajo toman el azul de la cabecera (sin neblina); el rebote inferior, el fondo claro */
-html{background:linear-gradient(var(--navy) 50%,var(--bg) 50%) fixed;background-color:var(--navy)}
+/* iPhone (iOS 26, también como app instalada): el sistema tiñe/difumina la franja de la isla con el color de fondo
+   de la PÁGINA. Por eso el fondo de la página es el azul de la cabecera, y el gris claro va en una capa fija detrás del contenido. */
+html{background:var(--navy)}
+body{background:transparent}
+body::before{content:'';position:fixed;inset:0;background:var(--bg);z-index:-1;pointer-events:none}
 h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:-.01em}
 h2{font-size:20px}h3{font-size:16px}
 a{color:var(--blue)}

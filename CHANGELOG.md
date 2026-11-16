@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.7.3 — 16/11/2026 · iPhone (app instalada): franja superior sin neblina
+- El fondo de la página pasa a ser el azul de la cabecera y el gris claro va en una capa fija detrás del contenido. iOS 26 difumina la zona de la isla con el color de fondo de la página: ahora ese color es el mismo azul, así que no se nota.
+
 ## 5.7.2 — 16/11/2026 · iPhone: franja superior sin neblina
 - La cabecera pasa a ser fija (antes "sticky"). Safari en iOS 26 solo toma el color de la zona de la isla de un elemento fijo pegado arriba; si no lo encuentra, pinta una sombra difuminada con el fondo claro de la página.
 
