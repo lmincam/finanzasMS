@@ -111,11 +111,13 @@ function renderInversiones() {
       ${kpi('Capital aportado neto', fmtEUR(totAp), 'Aportaciones − retiradas')}
       ${kpi('Plusvalía latente', `<span class="${totPlus >= 0 ? 'pos' : 'neg'}">${signed(totPlus)}</span>`, `Rentabilidad acumulada: <b>${totAp > 0 ? fmtPct(totPlus / totAp) : '—'}</b>`, totPlus >= 0 ? 'pos' : 'neg')}
       ${kpi(`Aportado en ${anio}`, fmtEUR(apAnio), `Periódicas: <b>${fmtEUR(aportacionMensual())}/mes</b> (${fmtEUR(aportacionMensual() * 12, 0)}/año)`)}
+      ${(t => kpi('Rentabilidad anual (TIR)', t.tir !== null ? `<span class="${t.tir >= 0 ? 'pos' : 'neg'}">${fmtPct(t.tir, 2)}</span>` : '—',
+        t.tir !== null ? `Real (descontando ${fmtNum(supuestos().inflacion, 1)} % de inflación): <b>${fmtPct((1 + t.tir) / (1 + supuestos().inflacion / 100) - 1, 2)}</b> · desde ${fmtDate(t.desde)}${t.dias < 365 ? ' · <span class="warn-t">menos de 1 año: anualizada puede exagerar</span>' : ''}` : esc(t.motivo || ''), t.tir !== null && t.tir >= 0 ? 'pos' : ''))(tirInversion(act))}
     </div>
     <div class="grid-2e">${infos.map(({ c, x }) => { const top = distribucion([c], 'producto').slice(0, 3);
       return `<div class="card inv-card ${c.activa === false ? 'off' : ''}" style="--acc:${esc(c.color || '#7c3aed')};margin-bottom:0;cursor:pointer" data-action="inv-open" data-id="${c.id}">
         <div class="asset-head"><div class="asset-ico">📈</div><div style="flex:1"><h3>${esc(c.nombre)}</h3><div class="small muted">${esc(c.entidad || '')}${x.tieneVM ? ` · valorada ${fmtDate(c.fecha_valor_mercado)}` : ' · sin valoración'}</div></div><span class="btn sm">Ver detalle →</span></div>
-        <div class="metrics">${metric('Valor', fmtEUR(x.valor, 0))}${metric('Aportado', fmtEUR(x.aportado, 0))}${metric('Plusvalía', x.tieneVM ? signed(x.plus) : '—', x.plus >= 0 ? 'pos' : 'neg')}${metric('Rentab.', fmtPct(x.rent, 1), x.plus >= 0 ? 'pos' : 'neg')}</div>
+        <div class="metrics">${metric('Valor', fmtEUR(x.valor, 0))}${metric('Aportado', fmtEUR(x.aportado, 0))}${metric('Plusvalía', x.tieneVM ? signed(x.plus) : '—', x.plus >= 0 ? 'pos' : 'neg')}${(t => metric('TIR anual', t.tir !== null ? fmtPct(t.tir, 1) : '—', t.tir >= 0 ? 'pos' : 'neg'))(tirInversion([c]))}</div>
         ${top.length ? `<div class="small muted" style="margin-top:10px">${top.map(t => `${esc(t.label)} <b>${fmtPct(t.pct, 0)}</b>`).join(' · ')}</div>` : ''}
         ${aportacionMensual(c.id) ? `<div class="small" style="margin-top:6px">🔁 ${fmtEUR(aportacionMensual(c.id))}/mes automáticos</div>` : ''}
       </div>`; }).join('') || '<div class="card empty">No tienes cuentas de inversión.</div>'}</div>
@@ -161,6 +163,8 @@ function renderInversionDetalle(c) {
       ${kpi('Aportado neto', fmtEUR(x.aportado), `Últimos 12 meses: ${fmtEUR(x.ap12)}`)}
       ${kpi('Plusvalía', x.tieneVM ? `<span class="${x.plus >= 0 ? 'pos' : 'neg'}">${signed(x.plus)}</span>` : '—', `Rentabilidad: <b>${fmtPct(x.rent, 2)}</b>`, x.plus >= 0 ? 'pos' : 'neg')}
       ${kpi('Aportación periódica', fmtEUR(aportacionMensual(c.id)) + '/mes', `${fmtEUR(aportacionMensual(c.id) * 12, 0)} al año`)}
+      ${(t => kpi('Rentabilidad anual (TIR)', t.tir !== null ? `<span class="${t.tir >= 0 ? 'pos' : 'neg'}">${fmtPct(t.tir, 2)}</span>` : '—',
+        t.tir !== null ? `Real: <b>${fmtPct((1 + t.tir) / (1 + supuestos().inflacion / 100) - 1, 2)}</b> · tiene en cuenta cuándo aportaste cada euro` : esc(t.motivo || ''), t.tir !== null && t.tir >= 0 ? 'pos' : ''))(tirInversion([c]))}
     </div>
 
     <div class="card"><div class="card-head"><h3>🧩 Asset Location · ${esc(c.nombre)}</h3>${S.v4 ? `<button class="btn sm" data-action="pos-new" data-id="${c.id}">+ Añadir producto</button>` : ''}</div>

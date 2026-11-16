@@ -338,3 +338,43 @@ function isinValido(s) {
 }
 /** Total mensual comprometido en aportaciones periódicas activas (opcional: de una cuenta). */
 const aportacionMensual = cid => sum(S.aportaciones_periodicas.filter(p => p.activo !== false && (!cid || p.cuenta_id === cid) && (!p.hasta || p.hasta >= todayISO())), 'importe');
+
+/* ---------- Rentabilidad real de las inversiones (TIR / XIRR) ---------- */
+/** TIR anualizada de una serie de flujos [{fecha, importe}] (negativo = dinero que pones, positivo = valor o retirada). */
+function xirr(flows) {
+  const fs = flows.filter(x => x.importe && x.fecha).sort((a, b) => a.fecha < b.fecha ? -1 : 1);
+  if (fs.length < 2 || !fs.some(x => x.importe < 0) || !fs.some(x => x.importe > 0)) return null;
+  const t0 = isoToUTC(fs[0].fecha), Y = 365.25 * 86400000;
+  const f = r => fs.reduce((s, x) => s + x.importe / Math.pow(1 + r, (isoToUTC(x.fecha) - t0) / Y), 0);
+  let lo = -0.9999, hi = 10, flo = f(lo), fhi = f(hi);
+  if (!isFinite(flo) || !isFinite(fhi) || flo * fhi > 0) return null;
+  let mid = 0;
+  for (let i = 0; i < 300; i++) {
+    mid = (lo + hi) / 2; const fm = f(mid);
+    if (Math.abs(fm) < 1e-6) break;
+    if (flo * fm < 0) { hi = mid; fhi = fm; } else { lo = mid; flo = fm; }
+  }
+  return mid;
+}
+/** Flujos de una cuenta de inversión: punto de partida (primera valoración o capital aportado de partida),
+ *  aportaciones y retiradas posteriores, y su valor de hoy como flujo final. */
+function flujosInversion(c) {
+  const vals = (S.valoraciones || []).filter(v => v.cuenta_id === c.id).sort((a, b) => a.fecha < b.fecha ? -1 : 1);
+  let desde, inicial;
+  if (vals.length && vals[0].fecha <= c.fecha_saldo_inicial) { desde = vals[0].fecha; inicial = num(vals[0].valor); }
+  else if (vals.length && !num(c.saldo_inicial)) { desde = vals[0].fecha; inicial = num(vals[0].valor); }
+  else { desde = c.fecha_saldo_inicial; inicial = num(c.saldo_inicial); }
+  const fl = [];
+  if (inicial) fl.push({ fecha: desde, importe: -inicial });
+  for (const m of S.movimientos) if (m.cuenta_id === c.id && m.tipo === 'transferencia' && m.fecha > desde) fl.push({ fecha: m.fecha, importe: -num(m.importe) });
+  return { desde, flujos: fl, valorHoy: Calc.valor(c) };
+}
+/** Rentabilidad anualizada (TIR) de una o varias cuentas de inversión. */
+function tirInversion(cuentas) {
+  const hoy = todayISO(); let fl = [], desde = hoy, valor = 0;
+  for (const c of cuentas) { const x = flujosInversion(c); fl = fl.concat(x.flujos); valor += x.valorHoy; if (x.desde < desde) desde = x.desde; }
+  const dias = diasEntre(desde, hoy);
+  if (!valor || dias < 90) return { tir: null, dias, desde, motivo: 'Necesita al menos 3 meses de historia (valoraciones o aportaciones)' };
+  const t = xirr(fl.concat([{ fecha: hoy, importe: valor }]));
+  return { tir: t, dias, desde, motivo: t === null ? 'No se puede calcular con estos datos' : null };
+}

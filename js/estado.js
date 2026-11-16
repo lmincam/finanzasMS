@@ -34,7 +34,7 @@ const CLASE_ACTIVO = { renta_variable: 'Renta variable', renta_fija: 'Renta fija
 const PALETTE = ['#1e3a8a', '#0891b2', '#16a34a', '#ca8a04', '#dc2626', '#7c3aed', '#db2777', '#ea580c', '#0d9488', '#64748b'];
 const TABS = [
   ['dashboard', '📊 Dashboard'], ['cuentas', '💳 Cuentas y movimientos'], ['planificacion', '🎯 Previsión y metas'], ['patrimonio', '🏠 Inmuebles y vehículos'],
-  ['inversiones', '📈 Inversiones'], ['deudas', '🏦 Deudas'], ['seguros', '🛡️ Seguros'], ['auditoria', '📸 Auditoría trimestral'], ['categorias', '🏷️ Categorías y presupuestos'], ['ajustes', '⚙️ Ajustes']
+  ['inversiones', '📈 Inversiones'], ['deudas', '🏦 Deudas'], ['seguros', '🛡️ Seguros'], ['futuro', '🚀 Proyección y libertad financiera'], ['auditoria', '📸 Auditoría trimestral'], ['categorias', '🏷️ Categorías y presupuestos'], ['ajustes', '⚙️ Ajustes']
 ];
 
 /* ---------- Registros de módulos ----------

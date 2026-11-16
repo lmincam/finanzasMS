@@ -25,6 +25,7 @@ js/
   metas.js            Metas de ahorro y pestaña Previsión y metas
   inversiones.js      Pestaña Inversiones (global + detalle, posiciones, aportaciones periódicas)
   inmuebles.js        Pestaña Inmuebles y vehículos
+  futuro.js           Proyección, independencia financiera e inflación
   deudas.js           Pestaña Deudas (vista general + detalle, simulador, amortizaciones)
   seguros.js          Pestaña Seguros
   auditoria.js        Pestaña Auditoría trimestral

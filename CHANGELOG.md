@@ -1,5 +1,11 @@
 # Historial de versiones
 
+## 5.3.0 — 16/11/2026 · Fase 4: proyección, libertad financiera, TIR e inflación
+- Nueva pestaña **🚀 Proyección y libertad financiera**: patrimonio neto proyectado a N años en tres escenarios (prudente/medio/optimista), con aportación creciente, cuota de los préstamos reinvertida al terminar, revalorización de la vivienda, depreciación de vehículos y calendario real de las deudas. Vista **en euros de hoy** (descontada la inflación) o nominal. Hitos previstos y tabla cada 5 años.
+- **Independencia financiera**: capital necesario según tu gasto y la tasa de retiro, progreso, años y edad estimados por escenario, efecto de la pensión pública y qué la acelera (aportar más, rentar más, gastar menos).
+- **Rentabilidad real (TIR/XIRR)** de cada cuenta de inversión y de toda la cartera, nominal y descontada la inflación, teniendo en cuenta cuándo aportaste cada euro.
+- Supuestos editables (rentabilidades, inflación, revalorización, tasa de retiro, año de nacimiento, pensión). Sin cambios de SQL.
+
 ## 5.2.0 — 16/11/2026 · Fase 3: previsión de tesorería y metas
 - Nueva pestaña **🎯 Previsión y metas**.
 - **Previsión de tesorería** a 3, 6 o 12 meses del dinero en cuentas operativas: detecta los ingresos y recibos recurrentes de tu historial (nómina, luz, suscripciones, colegio…) y los combina con cuotas de préstamos, recibos de seguros, aportaciones periódicas, plan de amortizaciones, gasto variable estimado y aportación a metas. Gráfico, detalle por mes, próximos 30 días y aviso de meses en los que la cuenta se queda corta.
