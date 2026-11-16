@@ -24,6 +24,7 @@ function snapshotBanner() {
 function renderDashboard() {
   const el = $('#tab-dashboard');
   const months = periodMonths();
+  if (S.dashCal) return renderCalendario(el, months);
   const st = periodStats(months);
   const P = Calc.patrimonio();
   const tasaAh = st.ingresos > 0 ? st.ahorro / st.ingresos : null;
@@ -54,6 +55,7 @@ function renderDashboard() {
       <div class="seg">${modes.map(([k, l]) => `<button data-action="period-mode" data-mode="${k}" class="${p.mode === k ? 'active' : ''}">${l}</button>`).join('')}</div>
       ${inputs}
       <div class="period-label">${periodLabel(months)}</div>
+      <button class="btn sm primary" data-action="cal-open" title="Ver los gastos de cada día">📅 Calendario</button>
       <div class="sp"></div>
       <span class="small muted">Ingresos según <b>mes de imputación</b> (regla de nómina)</span>
     </div>

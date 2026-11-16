@@ -1,5 +1,11 @@
 # Historial de versiones
 
+## 5.7.0 — 16/11/2026 · Calendario de gastos
+- Botón **📅 Calendario** en el Dashboard: muestra el mes o periodo seleccionado con cada gasto en su día (por fecha de operación) y el total diario. Los días se colorean según cuánto se gastó.
+- Total y media diaria de cada mes, y día de más gasto del periodo. Pulsando un gasto se abre para verlo o corregirlo. Flechas ‹ › para cambiar de mes sin salir.
+- En el móvil se ve como una lista de los días con gastos.
+- No incluye transferencias internas ni amortizaciones de deuda; las devoluciones de gastos compartidos restan del día.
+
 ## 5.6.0 — 16/11/2026 · Avisos útiles, no avisos por avisar
 - **Gastos fijos** (cuota de un préstamo, o importe casi idéntico cada mes: hipoteca, alquiler, gimnasio…): ya no avisan por estar al 100 % del presupuesto. Solo avisan si el cargo sube por encima de lo presupuestado.
 - Eliminado el aviso "cerca del límite". En gastos variables queda: presupuesto superado, o "a este ritmo te pasarás" con lo que puedes gastar al día los días que quedan. La proyección ya no extrapola los cargos fijos.
