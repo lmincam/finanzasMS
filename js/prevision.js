@@ -26,6 +26,7 @@ function detectarRecurrentes() {
   const grupos = new Map();
   for (const m of S.movimientos) {
     if ((m.tipo !== 'gasto' && m.tipo !== 'ingreso') || !ops.has(m.cuenta_id) || ymOf(m.fecha) < desde || m.fecha > hoy) continue;
+    if (m.reembolso_de || (m.tipo === 'gasto' && num(m.importe) > 0)) continue; // devoluciones y reembolsos no son recurrentes
     const pat = normPatron(proponerPatron(m.notas, m.concepto)) || normConcept(m.concepto);
     const k = `${m.tipo}|${m.categoria_id || ''}|${pat}`;
     if (!grupos.has(k)) grupos.set(k, { key: k, tipo: m.tipo, categoria_id: m.categoria_id, patron: pat, movs: [] });
@@ -122,7 +123,7 @@ function calcularPrevision(horizonte = S.prevH, incluirMetas = S.prevMetas) {
   // 7) Gasto variable: mediana mensual de los 3 últimos meses completos de lo que no es recurrente ni cuota
   const clavesRec = new Set(usados.map(r => r.key));
   const varPorMes = [1, 2, 3].map(k => { const ym = addMonths(ymH, -k);
-    return -sum(S.movimientos.filter(m => m.tipo === 'gasto' && opsIds.has(m.cuenta_id) && ymOf(m.fecha) === ym && !catsCuota.has(m.categoria_id) && !esCatAmortizacion(m.categoria_id)
+    return -sum(S.movimientos.filter(m => m.tipo === 'gasto' && opsIds.has(m.cuenta_id) && ymOf(m.mes_imputacion) === ym && !catsCuota.has(m.categoria_id) && !esCatAmortizacion(m.categoria_id)
       && !clavesRec.has(`gasto|${m.categoria_id || ''}|${normPatron(proponerPatron(m.notas, m.concepto)) || normConcept(m.concepto)}`)), 'importe'); });
   const variableMes = Math.max(0, median2(varPorMes.filter(v => v > 0)));
   // 8) Metas: aportación mensual necesaria (hucha virtual: dinero que deberías apartar)

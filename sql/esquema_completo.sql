@@ -1,5 +1,5 @@
 -- =====================================================================
---  PATRIMONIO FAMILIAR · ESQUEMA COMPLETO DE BASE DE DATOS (v5.2)
+--  PATRIMONIO FAMILIAR · ESQUEMA COMPLETO DE BASE DE DATOS (v5.5)
 --  ---------------------------------------------------------------------
 --  Un único script para Supabase → SQL Editor → New query → Run.
 --
@@ -566,6 +566,17 @@ end $$;
 
 
 -- #####################################################################
+--  BLOQUE 8 · Gastos compartidos y reembolsos (Bizum)
+-- #####################################################################
+-- En un gasto compartido: cuánto te tienen que devolver y entre cuántas personas
+alter table public.movimientos add column if not exists a_cobrar numeric(12,2);
+alter table public.movimientos add column if not exists personas int;
+-- En un reembolso (Bizum recibido): de qué gasto es la devolución
+alter table public.movimientos add column if not exists reembolso_de uuid references public.movimientos(id) on delete set null;
+create index if not exists movimientos_reembolso_idx on public.movimientos(reembolso_de);
+
+
+-- #####################################################################
 --  BLOQUE 5 · Seguridad: solo usuarios con sesión + espacio para copias
 -- #####################################################################
 -- Quita cualquier permiso del rol anónimo en las tablas de la app
@@ -610,7 +621,8 @@ select 'Columna ' || tb || '.' || col,
             then '✅ OK' else '❌ FALTA' end
 from (values ('inmuebles','metros_construidos'), ('inmuebles','precio_m2_venta'),
              ('deudas','comision_amortizacion'), ('aportaciones_periodicas','omitidos'),
-             ('deudas','categoria_cuota_id'), ('categorias','naturaleza')) as y(tb, col)
+             ('deudas','categoria_cuota_id'), ('categorias','naturaleza'),
+             ('movimientos','reembolso_de'), ('movimientos','a_cobrar')) as y(tb, col)
 union all
 select 'Acceso anónimo bloqueado',
        case when exists (select 1 from pg_roles where rolname = 'anon')

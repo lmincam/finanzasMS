@@ -22,6 +22,7 @@ js/
   alertas.js          Motor de alertas y consejos del Dashboard
   dashboard.js        Pestaña Dashboard
   cuentas.js          Pestaña Cuentas y movimientos + registro rápido
+  compartidos.js      Gastos compartidos y reembolsos (Bizum)
   reglas.js           Motor de reglas de categorización (predefinidas + aprendidas)
   importador.js       Importador de extractos de Unicaja
   prevision.js        Previsión de tesorería (recurrentes, partidas previstas)

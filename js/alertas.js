@@ -136,6 +136,10 @@ function buildAlertas(months, st, P, rows) {
       add('blue', '🏦', `${d.nombre}: este mes toca amortizar ${fmtEUR(p.importe)}`, 'Según tu plan de amortizaciones. Cuando la hagas, regístrala en 🏦 Deudas para actualizar el préstamo y tu ahorro en intereses.');
   }
 
+  // 14b) Gastos compartidos pendientes de cobro
+  if (S.v6) { const ab = gastosAbiertos().filter(g => diasEntre(g.fecha, today) >= 10);
+    if (ab.length) add('blue', '👥', `Te deben ${fmtEUR(sum(ab, g => infoCompartido(g).pendiente))} de ${ab.length} gasto(s) compartido(s)`, `El más antiguo: ${esc(ab[ab.length - 1].concepto)} (${fmtDate(ab[ab.length - 1].fecha)}). Recuérdaselo o márcalo como saldado en 💳 Cuentas.`); }
+
   // 15) Previsión de tesorería: meses en los que la cuenta se queda corta
   if (S.v52) {
     try {

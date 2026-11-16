@@ -62,6 +62,9 @@ const DB = {
       if (error) throw error;
     }
   },
+  async tieneColumna(table, col) {
+    try { const { error } = await this.client.from(table).select(col).limit(1); return !error; } catch (e) { return false; }
+  },
   async remove(table, id) {
     soloLectura();
     const { error } = await this.client.from(table).delete().eq('id', id);
@@ -98,6 +101,7 @@ async function loadAll() {
     S.v4 = !S.missing.has('seguros') && !S.missing.has('precios_m2');
     S.v5 = !S.missing.has('patrimonio_mensual');
     S.v52 = !S.missing.has('metas') && !S.missing.has('partidas_previstas');
+    S.v6 = await DB.tieneColumna('movimientos', 'reembolso_de');
     tables.forEach((t, i) => { if (t !== 'ajustes') S[t] = res[i]; });
     const regla = res[7].find(r => r.clave === 'regla_nomina');
     if (regla && regla.valor) { S.ajustes.nomina_dias = num(regla.valor.dias) || 5; S.ajustes.nomina_umbral = num(regla.valor.umbral); }

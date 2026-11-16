@@ -47,6 +47,7 @@ function renderImport() {
       ${pctBar(pct, pct >= 0.9 ? '' : pct >= 0.6 ? 'amber' : 'red')}
     </div>
     ${bloqueConciliacion()}
+    ${bloqueBizums()}
     ${D.grupos.length ? `<div class="card" style="border:2px solid ${pendientes.length ? '#f59e0b' : '#16a34a'};box-shadow:none">
       <div class="card-head"><h3>${pendientes.length ? `❓ Necesito tu ayuda con ${pendientes.length} comercio(s)` : '✅ Todo categorizado'}</h3>
         <span class="sub">Lo que elijas se guardará como regla y la próxima vez lo haré yo</span></div>
@@ -68,7 +69,7 @@ function renderImport() {
       <button class="btn success" data-action="imp-save">Guardar ${sel.length} movimientos${pendientes.length ? ` (${pendientes.length} sin resolver)` : ''}</button></div>`;
 }
 const necesitaAyuda = x => !x.dup && (x.tipo === 'transferencia' ? !x.cuenta_contraria_id : !x.categoria_id);
-const FUENTE_BADGE = { regla: ['green', 'Regla'], aprendida: ['green', 'Aprendida'], transferencia: ['blue', 'Transferencia detectada'], predefinida: ['blue', 'Predefinida'], nomina: ['blue', 'Nómina'] };
+const FUENTE_BADGE = { reembolso: ['green', '↩ Reembolso'], regla: ['green', 'Regla'], aprendida: ['green', 'Aprendida'], transferencia: ['blue', 'Transferencia detectada'], predefinida: ['blue', 'Predefinida'], nomina: ['blue', 'Nómina'] };
 function selectCategoria(tipo, sel, attrs) {
   return `<select ${attrs}>${catOpts(tipo, sel, '— Elige categoría —')}<option value="__new__">➕ Nueva categoría…</option></select>`;
 }
@@ -150,6 +151,7 @@ function buildLearned(cuentaId) {
   const L = new Map();
   const sorted = S.movimientos.filter(m => m.cuenta_id === cuentaId).sort((a, b) => a.fecha < b.fecha ? -1 : 1);
   for (const m of sorted) {
+    if (esBizum(m.concepto, m.notas) || m.reembolso_de) continue; // un Bizum de la misma persona puede ser cada vez una cosa
     if (m.tipo !== 'transferencia' && !m.categoria_id) continue;
     if (m.tipo === 'transferencia' && !m.cuenta_contraria_id) continue;
     const v = { tipo: m.tipo, categoria_id: m.categoria_id, cuenta_contraria_id: m.cuenta_contraria_id, subtipo: m.subtipo_transferencia };
@@ -185,7 +187,7 @@ function impProcess() {
   const existing = new Set(S.movimientos.filter(m => m.cuenta_id === cuentaId && m.hash_import).map(m => m.hash_import));
   const soft = S.movimientos.filter(m => m.cuenta_id === cuentaId && !m.hash_import);
   const autos = S.movimientos.filter(m => m.cuenta_id === cuentaId && m.origen === 'auto');
-  const occ = {}; const items = [];
+  const occ = {}; const items = []; const pendImport = new Map();
   let fila = 0;
   for (const r of data) {
     fila++;
@@ -206,8 +208,15 @@ function impProcess() {
     const dup = existing.has(hash);
     const posibleDup = !dup && (soft.some(m => m.fecha === fecha && round2(num(m.importe)) === imp)
       || autos.some(m => round2(num(m.importe)) === imp && Math.abs(diasEntre(m.fecha, fecha)) <= 5)); // ya generada por aportación periódica
-    const sg = clasificar(concepto, cOrig, imp, ctx);
-    let mes = ymOf(fecha), nomina = false;
+    const bizum = esBizum(concepto, cOrig);
+    let sg, reemb = null;
+    if (bizum && imp > 0 && S.v6) {
+      // Bizum recibido: nunca por reglas; se propone como reembolso de un gasto compartido abierto
+      reemb = sugerirReembolso(imp, fecha, pendImport);
+      if (reemb) pendImport.set(reemb.id, (pendImport.get(reemb.id) || 0) + imp);
+      sg = reemb ? { tipo: 'gasto', categoria_id: reemb.categoria_id, fuente: 'reembolso' } : { tipo: 'ingreso', categoria_id: null, fuente: null };
+    } else sg = clasificar(concepto, cOrig, imp, ctx);
+    let mes = reemb ? ymOf(reemb.mes_imputacion) : ymOf(fecha), nomina = false;
     if (sg.tipo === 'ingreso' && reglaNominaAplica(fecha, imp)) { mes = addMonths(mes, 1); nomina = true; }
     items.push({
       sel: !dup && !posibleDup, fecha, importe: imp, concepto, notas: (anot && cOrig && anot !== cOrig) ? cOrig : null,
@@ -215,14 +224,15 @@ function impProcess() {
       subtipo: sg.subtipo || 'liquidez', mes, nomina, dup, posibleDup, hash, key: normConcept(concepto),
       fila, saldoBanco: (map.saldo >= 0 && r[map.saldo] !== '' && r[map.saldo] !== undefined) ? parseNum(r[map.saldo]) : null,
       fuente: sg.fuente, fuenteInicial: sg.fuente, regla: sg.regla || null, patronPredef: sg.patronPredef || null,
-      patron: sg.regla ? sg.regla.patron : (sg.patronPredef || proponerPatron(cOrig, concepto)), editado: false, recordar: true
+      patron: sg.regla ? sg.regla.patron : (sg.patronPredef || proponerPatron(cOrig, concepto)), editado: false, recordar: !bizum,
+      id: uuid(), bizum, bizumIn: bizum && imp > 0 && !!S.v6, reembolsoDe: reemb ? reemb.id : null
     });
   }
   if (!items.length) { toast('No se encontraron movimientos válidos. Revisa las columnas.', 'warn'); return; }
   items.sort((a, b) => a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : 0);
   // Agrupa por comercio (palabra clave propuesta) lo que no se ha podido categorizar
   const grupos = new Map();
-  items.forEach((x, i) => { if (x.dup || !necesitaAyuda(x)) return; const k = normPatron(x.patron) || '_'; if (!grupos.has(k)) grupos.set(k, { patron: x.patron, idxs: [], recordar: true }); grupos.get(k).idxs.push(i); });
+  items.forEach((x, i) => { if (x.dup || x.bizumIn || !necesitaAyuda(x)) return; const k = normPatron(x.patron) || '_'; if (!grupos.has(k)) grupos.set(k, { patron: x.patron, idxs: [], recordar: true }); grupos.get(k).idxs.push(i); });
   D.grupos = [...grupos.values()];
   D.items = items; D.stage = 'preview';
   renderImport();
@@ -302,7 +312,7 @@ function calcularConciliacion() {
 }
 function bloqueConciliacion() {
   const D = S.importData, k = calcularConciliacion();
-  if (!k) return D.map && D.map.saldo < 0 ? '<div class="banner blue">💡 Si tu Excel tiene columna de <b>Saldo</b>, selecciónala en “← Columnas” y comprobaré que tus números cuadran con el banco.</div>' : '';
+  if (!k) return D.map && D.map.saldo < 0 ? '<div class="banner blue" style="display:block">💡 Si tu Excel tiene columna de <b>Saldo</b>, selecciónala en “← Columnas” y comprobaré que tus números cuadran con el banco.</div>' : '';
   if (k.dif === null) return `<div class="banner amber">🏦 No puedo comparar con el saldo del banco: ${esc(k.motivo)}.</div>`;
   if (Math.abs(k.dif) < 0.01) return `<div class="banner blue" style="background:#dcfce7;color:#14532d">🏦 ✅ <b>Cuadra con el banco.</b> Saldo a ${fmtDate(k.corte)}: ${fmtEUR(k.banco)}.</div>`;
   return `<div class="banner amber" style="display:block">🏦 ⚠ <b>No cuadra con el banco: diferencia de ${signed(k.dif)}.</b>
@@ -319,6 +329,29 @@ async function guardarConciliacion(cuentaId, k, fijar) {
 }
 const conciliacionDe = cid => (((S.ajustesRows || []).find(r => r.clave === 'conciliaciones') || {}).valor || {})[cid] || null;
 
+/* ---------- Bizums recibidos ---------- */
+function bloqueBizums() {
+  const D = S.importData, idx = D.items.map((x, i) => [x, i]).filter(([x]) => x.bizumIn && !x.dup && x.sel);
+  if (!idx.length) return '';
+  const pend = idx.filter(([x]) => !x.reembolsoDe && !x.categoria_id).length;
+  return `<div class="card" style="border:2px solid ${pend ? '#f59e0b' : '#16a34a'};box-shadow:none">
+    <div class="card-head"><h3>💸 Bizums recibidos (${idx.length})${pend ? ` · ${pend} sin asignar` : ' · ✅'}</h3><span class="sub">No creo reglas con ellos: dime cada vez qué son</span></div>
+    ${idx.map(([x, i]) => { const d = x.reembolsoDe ? destinoReembolso(x.reembolsoDe, D.items) : null;
+      return `<div class="form-grid" style="grid-template-columns:minmax(200px,1.2fr) 110px minmax(220px,1.6fr);align-items:center;border-top:1px solid var(--line);padding:8px 0">
+        <div><b>${esc(x.concepto)}</b><div class="small muted">${fmtDate(x.fecha)}${d ? ` · resta de <b>${esc(catName(d.categoria_id) || '¿sin categoría?')}</b> en ${ymLabel(d.mes, true)}` : ''}</div></div>
+        <div class="num pos right"><b>+${fmtEUR(x.importe)}</b></div>
+        <select data-bz="${i}">${opcionesBizum(x, D.items)}</select></div>`; }).join('')}
+    <p class="small muted" style="margin:6px 0 0">↩ Si es la devolución de un gasto (cena, regalo conjunto, entradas…), elige ese gasto: restará de su categoría y no contará como ingreso. Para tener la lista de "te deben", marca el gasto como compartido con 👥 en la lista de movimientos.</p></div>`;
+}
+function onBizumChange(el) {
+  const D = S.importData, it = D.items[+el.dataset.bz]; if (!it) return;
+  const v = el.value; it.reembolsoDe = null; it.editado = true; it.fuente = null;
+  if (v.startsWith('r:')) { it.reembolsoDe = v.slice(2); const d = destinoReembolso(it.reembolsoDe, D.items); it.tipo = 'gasto'; it.categoria_id = d ? d.categoria_id : null; it.mes = d ? d.mes : ymOf(it.fecha); it.fuente = 'reembolso'; }
+  else if (v.startsWith('c:')) { it.tipo = 'ingreso'; it.categoria_id = v.slice(2); it.mes = ymOf(it.fecha); }
+  else { it.tipo = 'ingreso'; it.categoria_id = null; }
+  renderImport();
+}
+
 async function impSave(btn) {
   const D = S.importData; const sel = D.items.filter(x => x.sel);
   if (!sel.length) { toast('No hay movimientos seleccionados', 'warn'); return; }
@@ -327,12 +360,14 @@ async function impSave(btn) {
   const sinCat = sel.filter(x => x.tipo !== 'transferencia' && !x.categoria_id);
   if (sinCat.length && !(await confirmDlg(`Quedan <b>${sinCat.length}</b> movimiento(s) sin categoría. Puedes guardarlos así y categorizarlos después, pero no aprenderé de ellos.<br><br>¿Guardar igualmente?`, 'Guardar igualmente', false))) return;
   const rows = [];
-  for (const x of sel) {
+  const ordenados = [...sel].sort((a, b) => (a.reembolsoDe ? 1 : 0) - (b.reembolsoDe ? 1 : 0)); // primero los gastos, luego sus reembolsos
+  for (const x of ordenados) {
+    if (x.reembolsoDe) { const d = destinoReembolso(x.reembolsoDe, D.items); if (d) { x.tipo = 'gasto'; x.categoria_id = d.categoria_id; x.mes = d.mes; } }
     const isT = x.tipo === 'transferencia', tid = isT ? uuid() : null;
     const mes = (isT ? ymOf(x.fecha) : (x.mes || ymOf(x.fecha))) + '-01';
     const hash = x.dup ? `${x.hash}~${Date.now()}` : x.hash;
-    const base = { id: uuid(), cuenta_id: D.cuentaId, fecha: x.fecha, mes_imputacion: mes, concepto: x.concepto, notas: x.notas, importe: x.importe, tipo: x.tipo,
-      categoria_id: isT ? null : x.categoria_id, subtipo_transferencia: isT ? x.subtipo : null, cuenta_contraria_id: isT ? x.cuenta_contraria_id : null, transfer_id: tid, origen: 'import', hash_import: hash };
+    const base = { id: x.id || uuid(), cuenta_id: D.cuentaId, fecha: x.fecha, mes_imputacion: mes, concepto: x.concepto, notas: x.notas, importe: x.importe, tipo: x.tipo,
+      categoria_id: isT ? null : x.categoria_id, subtipo_transferencia: isT ? x.subtipo : null, cuenta_contraria_id: isT ? x.cuenta_contraria_id : null, transfer_id: tid, origen: 'import', hash_import: hash, ...(x.reembolsoDe ? { reembolso_de: x.reembolsoDe } : {}) };
     rows.push(base);
     if (isT) rows.push({ ...base, id: uuid(), cuenta_id: x.cuenta_contraria_id, cuenta_contraria_id: D.cuentaId, importe: -x.importe, hash_import: null });
   }
@@ -341,7 +376,7 @@ async function impSave(btn) {
   const r = await withSaving(btn, async () => {
     for (let i = 0; i < rows.length; i += 400) await DB.insert('movimientos', rows.slice(i, i + 400));
     // Aprendizaje: lo que has categorizado o corregido tú se convierte en regla
-    aprendido = await aprenderReglas(sel.filter(x => x.editado && x.recordar !== false));
+    aprendido = await aprenderReglas(sel.filter(x => x.editado && x.recordar !== false && !x.bizum && !x.reembolsoDe));
     await contarUsos(sel);
     await reloadTables('movimientos', ...(S.missing.has('reglas_categoria') ? [] : ['reglas_categoria']));
   });
@@ -359,6 +394,7 @@ async function impSave(btn) {
 
 // Los campos de la previsualización y del mapeo se identifican por atributo, no por id
 ChangeFilters.push(t => {
+  if (t.dataset && t.dataset.bz !== undefined) { onBizumChange(t); return true; }
   if (t.dataset && t.dataset.grp !== undefined) { onGrupoChange(t); return true; }
   if (t.dataset && t.dataset.imp !== undefined) { onImpChange(t); return true; }
   if (t.dataset && t.dataset.map !== undefined) { S.importData.map[t.dataset.map] = parseInt(t.value, 10); return true; }

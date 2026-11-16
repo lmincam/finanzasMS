@@ -1,5 +1,13 @@
 # Historial de versiones
 
+## 5.5.0 — 16/11/2026 · Gastos compartidos y Bizum
+- **Gastos compartidos** (👥 en un gasto): indicas entre cuántas personas se reparte o cuánto te deben. Tarjeta "Te deben" en Cuentas, con lo cobrado y lo pendiente, y opción de darlo por saldado.
+- **Reembolsos**: un Bizum o transferencia recibida se puede vincular al gasto que te devuelven (↩). Resta de la categoría de ese gasto y en su mes, y no cuenta como ingreso.
+- **Importador**: los Bizum recibidos van a una tarjeta propia. Se proponen solos como reembolso cuando su importe coincide con la parte de una o varias personas de un gasto compartido; si no, te pregunta (reembolso de un gasto, también de uno del mismo Excel, o ingreso).
+- **Los Bizum nunca generan reglas** ni se aprenden por el nombre de la persona.
+- La previsión de tesorería ignora las devoluciones al detectar recurrentes. Alerta en el Dashboard de lo que te deben desde hace más de 10 días.
+- Nuevo módulo `js/compartidos.js`. SQL: ejecutar de nuevo `sql/esquema_completo.sql` (bloque 8).
+
 ## 5.4.0 — 16/11/2026 · App instalable, sin conexión y avisos
 - **App instalable (PWA)**: icono propio, se abre a pantalla completa y arranca al instante (`manifest.json`, `sw.js`, carpeta `icons/`).
 - **Sin cobertura**: abre con los últimos datos guardados en el dispositivo, en modo solo lectura y con una barra que lo indica. La copia local se borra al cerrar sesión.

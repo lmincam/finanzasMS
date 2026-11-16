@@ -40,6 +40,7 @@ function renderCuentas() {
       <div class="btn-row"><button class="btn" data-action="cuenta-new">+ Cuenta</button><button class="btn primary" data-action="quick-open" data-tipo="gasto">+ Movimiento</button><button class="btn" data-action="quick-open" data-tipo="transferencia">⇄ Transferencia</button></div></div>
     <div class="acc-grid">${cards || '<div class="card empty">Sin cuentas</div>'}</div>
 
+    ${renderPendientesCard()}
     <div class="card" id="import-card"></div>
 
     <div class="card">
@@ -77,6 +78,8 @@ function movRow(m) {
   let chip;
   if (m.tipo === 'transferencia') { const o = cuentaById(m.cuenta_contraria_id); chip = `<span class="chip t">${imp < 0 ? '→' : '←'} ${esc(o ? o.nombre : '?')} · ${SUBTIPO[m.subtipo_transferencia] || ''}</span>`; }
   else chip = `<span class="chip">${esc(catName(m.categoria_id) || 'Sin categoría')}</span>`;
+  if (S.v6 && m.reembolso_de) { const g = S.movimientos.find(x => x.id === m.reembolso_de); chip += ` <span class="badge green">↩ reembolso de ${esc(g ? g.concepto : '¿gasto borrado?')}</span>`; }
+  if (S.v6 && num(m.a_cobrar) > 0) { const i = infoCompartido(m); chip += ` <span class="badge ${i.pendiente > 0.01 ? 'amber' : 'green'}">👥 ${i.pendiente > 0.01 ? `te deben ${fmtEUR(i.pendiente)}` : 'cobrado'} · tu parte ${fmtEUR(i.miParte)}</span>`; }
   const desf = m.tipo !== 'transferencia' && ymOf(m.mes_imputacion) !== ymOf(m.fecha) ? `<span class="badge blue">Imputado a ${ymLabel(ymOf(m.mes_imputacion), true)}</span>` : '';
   return `<div class="mov-row">
     <div class="mov-date">${fmtDateShort(m.fecha)}<br><span class="small">${DIAS[weekday(m.fecha)]}</span></div>
@@ -85,6 +88,9 @@ function movRow(m) {
     <div class="mov-amt ${m.tipo === 'transferencia' ? 'muted' : imp >= 0 ? 'pos' : 'neg'}">${signed(imp)}</div>
     <div class="mov-act">
       ${m.tipo === 'ingreso' ? `<button class="mini" data-action="mov-imput" data-id="${m.id}" title="Cambiar mes de imputación (mes de la fecha ↔ mes siguiente)">⏭</button>` : ''}
+      ${S.v6 && m.tipo === 'gasto' && imp < 0 && !m.reembolso_de ? `<button class="mini" data-action="mov-compartir" data-id="${m.id}" title="Gasto compartido: cuánto te deben">👥</button>` : ''}
+      ${S.v6 && imp > 0 && m.tipo !== 'transferencia' && !m.reembolso_de ? `<button class="mini" data-action="mov-reembolso" data-id="${m.id}" title="Es la devolución de un gasto (Bizum…)">↩</button>` : ''}
+      ${S.v6 && m.reembolso_de ? `<button class="mini" data-action="mov-desvincular" data-id="${m.id}" title="Quitar vínculo con el gasto">⛓</button>` : ''}
       <button class="mini" data-action="mov-edit" data-id="${m.id}" title="Editar">✎</button>
       <button class="mini" data-action="mov-del" data-id="${m.id}" title="Eliminar">🗑</button>
     </div></div>`;
