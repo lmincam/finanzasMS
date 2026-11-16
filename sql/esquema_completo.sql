@@ -1,5 +1,5 @@
 -- =====================================================================
---  PATRIMONIO FAMILIAR · ESQUEMA COMPLETO DE BASE DE DATOS (v5.0)
+--  PATRIMONIO FAMILIAR · ESQUEMA COMPLETO DE BASE DE DATOS (v5.1)
 --  ---------------------------------------------------------------------
 --  Un único script para Supabase → SQL Editor → New query → Run.
 --
@@ -486,6 +486,41 @@ where p.nombre = 'Alimentación' and p.parent_id is null
 notify pgrst, 'reload schema';
 
 -- #####################################################################
+--  BLOQUE 6 · Fase 2: hipoteca intereses/capital y patrimonio mensual
+-- #####################################################################
+-- Categoría en la que se registra la cuota de cada préstamo (para separar intereses y capital)
+alter table public.deudas add column if not exists categoria_cuota_id uuid references public.categorias(id) on delete set null;
+-- Naturaleza especial de una categoría: 'amortizacion' = todo es capital de deuda (ahorro, no gasto)
+alter table public.categorias add column if not exists naturaleza text;
+
+-- Foto automática del patrimonio de cada mes (la app la actualiza al abrirse)
+create table if not exists public.patrimonio_mensual (
+  id               uuid primary key default gen_random_uuid(),
+  anio_mes         text not null unique,          -- 'AAAA-MM'
+  fecha            date not null default current_date,
+  liquidez         numeric(14,2) default 0,
+  inversiones      numeric(14,2) default 0,
+  inmuebles        numeric(14,2) default 0,
+  vehiculos        numeric(14,2) default 0,
+  deudas           numeric(14,2) default 0,
+  patrimonio_neto  numeric(14,2) default 0,
+  detalle          jsonb default '{}'::jsonb,
+  updated_at       timestamptz default now()
+);
+alter table public.patrimonio_mensual enable row level security;
+drop policy if exists acceso_personal on public.patrimonio_mensual;
+create policy acceso_personal on public.patrimonio_mensual for all to authenticated using (true) with check (true);
+grant select, insert, update, delete on public.patrimonio_mensual to authenticated;
+
+-- Subcategoría para amortizaciones anticipadas (cuenta como ahorro, no como gasto)
+insert into public.categorias (nombre, tipo, parent_id, orden, naturaleza)
+select 'Amortización anticipada', 'gasto', p.id, 99, 'amortizacion'
+from public.categorias p
+where p.nombre = 'Vivienda' and p.parent_id is null
+  and not exists (select 1 from public.categorias c where c.parent_id = p.id and c.nombre = 'Amortización anticipada');
+
+
+-- #####################################################################
 --  BLOQUE 5 · Seguridad: solo usuarios con sesión + espacio para copias
 -- #####################################################################
 -- Quita cualquier permiso del rol anónimo en las tablas de la app
@@ -494,7 +529,7 @@ declare t text;
 begin
   foreach t in array array['cuentas','categorias','movimientos','inmuebles','vehiculos','deudas','snapshots','ajustes',
                            'valoraciones','precios_m2','amortizaciones','amortizaciones_plan','aportaciones_periodicas',
-                           'posiciones','seguros','reglas_categoria'] loop
+                           'posiciones','seguros','reglas_categoria','patrimonio_mensual'] loop
     if to_regclass('public.' || t) is not null then
       execute format('revoke all on public.%I from anon', t);
     end if;
@@ -522,14 +557,15 @@ select 'Tabla ' || t as elemento,
        case when to_regclass('public.' || t) is not null then '✅ OK' else '❌ FALTA' end as estado
 from unnest(array['cuentas','categorias','movimientos','inmuebles','vehiculos','deudas','snapshots','ajustes',
                   'valoraciones','precios_m2','amortizaciones','amortizaciones_plan','aportaciones_periodicas',
-                  'posiciones','seguros','reglas_categoria']) as t
+                  'posiciones','seguros','reglas_categoria','patrimonio_mensual']) as t
 union all
 select 'Columna ' || tb || '.' || col,
        case when exists (select 1 from information_schema.columns
                          where table_schema = 'public' and table_name = tb and column_name = col)
             then '✅ OK' else '❌ FALTA' end
 from (values ('inmuebles','metros_construidos'), ('inmuebles','precio_m2_venta'),
-             ('deudas','comision_amortizacion'), ('aportaciones_periodicas','omitidos')) as y(tb, col)
+             ('deudas','comision_amortizacion'), ('aportaciones_periodicas','omitidos'),
+             ('deudas','categoria_cuota_id'), ('categorias','naturaleza')) as y(tb, col)
 union all
 select 'Acceso anónimo bloqueado',
        case when exists (select 1 from pg_roles where rolname = 'anon')

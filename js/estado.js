@@ -11,7 +11,7 @@ const S = {
   cuentas: [], categorias: [], movimientos: [], inmuebles: [], vehiculos: [], deudas: [], snapshots: [],
   valoraciones: [], tablaValoraciones: true,
   // Tablas de la migración v4 (opcionales: si faltan, la app sigue funcionando y avisa)
-  seguros: [], amortizaciones: [], amortizaciones_plan: [], aportaciones_periodicas: [], posiciones: [], precios_m2: [], reglas_categoria: [],
+  seguros: [], amortizaciones: [], amortizaciones_plan: [], aportaciones_periodicas: [], posiciones: [], precios_m2: [], reglas_categoria: [], patrimonio_mensual: [],
   missing: new Set(), v4: true,
   deudaSel: null, invSel: null, deudaVista: { modo: 'plazo', anual: false, conPlan: true },
   ajustes: { nomina_dias: 5, nomina_umbral: 300, extra_umbral: 300, fondo_meses: 6 },

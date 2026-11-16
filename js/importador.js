@@ -20,7 +20,7 @@ function renderImport() {
     return;
   }
   if (D.stage === 'map') {
-    const keys = [['fecha', 'Fecha *'], ['concepto', 'Concepto banco'], ['anot', 'Anotaciones (tu concepto)'], ['importe', 'Importe (con signo)'], ['cargo', 'Cargo (si va separado)'], ['abono', 'Abono (si va separado)']];
+    const keys = [['fecha', 'Fecha *'], ['concepto', 'Concepto banco'], ['anot', 'Anotaciones (tu concepto)'], ['importe', 'Importe (con signo)'], ['cargo', 'Cargo (si va separado)'], ['abono', 'Abono (si va separado)'], ['saldo', 'Saldo (para conciliar)']];
     box.innerHTML = `<div class="card-head"><h3>📥 ${esc(D.fileName)}</h3><span class="sub">${D.data.length} filas detectadas · cabecera en fila ${D.headerRow + 1}</span></div>
       <p class="small muted">Comprueba qué columna corresponde a cada dato (se recordará para próximas importaciones):</p>
       <div class="map-grid">${keys.map(([k, l]) => `<div><label>${l}</label><select data-map="${k}"><option value="-1">— ninguna —</option>${D.headers.map((h, i) => `<option value="${i}" ${D.map[k] === i ? 'selected' : ''}>${esc(h)}</option>`).join('')}</select></div>`).join('')}</div>
@@ -46,6 +46,7 @@ function renderImport() {
         <span class="muted small">Cuantas más importaciones hagas, más alto será este porcentaje</span></div>
       ${pctBar(pct, pct >= 0.9 ? '' : pct >= 0.6 ? 'amber' : 'red')}
     </div>
+    ${bloqueConciliacion()}
     ${D.grupos.length ? `<div class="card" style="border:2px solid ${pendientes.length ? '#f59e0b' : '#16a34a'};box-shadow:none">
       <div class="card-head"><h3>${pendientes.length ? `❓ Necesito tu ayuda con ${pendientes.length} comercio(s)` : '✅ Todo categorizado'}</h3>
         <span class="sub">Lo que elijas se guardará como regla y la próxima vez lo haré yo</span></div>
@@ -128,18 +129,20 @@ async function impReadFile(file) {
   const sig = 'pf_map_' + normText(headers.join('|')).slice(0, 180);
   let map = null;
   try { map = JSON.parse(localStorage.getItem(sig) || 'null'); } catch (e) { map = null; }
-  if (!map) {
+  {
     const H = headers.map(normText);
     const idx = (...tests) => { for (const t of tests) { const i = H.findIndex(t); if (i >= 0) return i; } return -1; };
-    map = {
+    const auto = {
       fecha: idx(x => x === 'fecha', x => x.includes('fecha') && x.includes('operac'), x => x.includes('fecha') && !x.includes('valor'), x => x.includes('fecha')),
       concepto: idx(x => x === 'concepto', x => x.includes('concepto'), x => x.includes('descrip'), x => x.includes('movimiento')),
       anot: idx(x => x.includes('anotac'), x => x.includes('observ'), x => x.includes('comentario'), x => x.includes('nota')),
       importe: idx(x => x === 'importe', x => x.includes('importe') && !x.includes('saldo'), x => x.includes('cantidad')),
       cargo: idx(x => x.includes('cargo') || x === 'debe'),
-      abono: idx(x => x.includes('abono') || x === 'haber')
+      abono: idx(x => x.includes('abono') || x === 'haber'),
+      saldo: idx(x => x === 'saldo', x => x.includes('saldo') && !x.includes('anterior'))
     };
-    if (map.anot === map.concepto) map.anot = -1;
+    if (auto.anot === auto.concepto) auto.anot = -1;
+    map = { ...auto, ...(map || {}) }; // lo guardado manda; las columnas nuevas (p. ej. saldo) se detectan solas
   }
   S.importData = { stage: 'map', cuentaId: S.importCuenta, fileName: file.name, headers, data, map, sig, headerRow: h };
 }
@@ -183,7 +186,9 @@ function impProcess() {
   const soft = S.movimientos.filter(m => m.cuenta_id === cuentaId && !m.hash_import);
   const autos = S.movimientos.filter(m => m.cuenta_id === cuentaId && m.origen === 'auto');
   const occ = {}; const items = [];
+  let fila = 0;
   for (const r of data) {
+    fila++;
     const fecha = parseDateAny(r[map.fecha]); if (!fecha) continue;
     let imp = map.importe >= 0 ? parseNum(r[map.importe]) : null;
     if ((imp === null || isNaN(imp)) && (map.cargo >= 0 || map.abono >= 0)) {
@@ -208,6 +213,7 @@ function impProcess() {
       sel: !dup && !posibleDup, fecha, importe: imp, concepto, notas: (anot && cOrig && anot !== cOrig) ? cOrig : null,
       tipo: sg.tipo, categoria_id: sg.categoria_id || null, cuenta_contraria_id: sg.cuenta_contraria_id || null,
       subtipo: sg.subtipo || 'liquidez', mes, nomina, dup, posibleDup, hash, key: normConcept(concepto),
+      fila, saldoBanco: (map.saldo >= 0 && r[map.saldo] !== '' && r[map.saldo] !== undefined) ? parseNum(r[map.saldo]) : null,
       fuente: sg.fuente, fuenteInicial: sg.fuente, regla: sg.regla || null, patronPredef: sg.patronPredef || null,
       patron: sg.regla ? sg.regla.patron : (sg.patronPredef || proponerPatron(cOrig, concepto)), editado: false, recordar: true
     });
@@ -275,6 +281,44 @@ function nuevaCategoriaImport(tipo, asignar) {
     } });
   renderImport(); // devuelve el select a su valor mientras se rellena el formulario
 }
+/* ---------- Conciliación con el saldo del banco ---------- */
+/** Compara el saldo que da el banco tras el último movimiento del Excel con el que calcularía la app. */
+function calcularConciliacion() {
+  const D = S.importData; if (!D || !D.items) return null;
+  const conSaldo = D.items.filter(x => x.saldoBanco !== null && !isNaN(x.saldoBanco));
+  if (!conSaldo.length) return null;
+  const corte = conSaldo.map(x => x.fecha).sort().pop();
+  // El Excel puede venir del más nuevo al más antiguo o al revés: se detecta por el orden de las filas
+  const porFila = [...D.items].sort((a, b) => a.fila - b.fila);
+  const desc = porFila[0].fecha > porFila[porFila.length - 1].fecha;
+  const delDia = conSaldo.filter(x => x.fecha === corte).sort((a, b) => a.fila - b.fila);
+  const ultimo = desc ? delDia[0] : delDia[delDia.length - 1];
+  const c = cuentaById(D.cuentaId); if (!c) return null;
+  const base = Calc.saldoA(c, corte);
+  if (base === null) return { corte, banco: ultimo.saldoBanco, app: null, dif: null, motivo: `el saldo de partida de la cuenta es del ${fmtDate(c.fecha_saldo_inicial)}, posterior a este extracto` };
+  const nuevos = D.items.filter(x => x.sel && !x.dup && x.fecha > c.fecha_saldo_inicial && x.fecha <= corte);
+  const app = round2(base + sum(nuevos, 'importe'));
+  return { corte, banco: round2(ultimo.saldoBanco), app, dif: round2(ultimo.saldoBanco - app) };
+}
+function bloqueConciliacion() {
+  const D = S.importData, k = calcularConciliacion();
+  if (!k) return D.map && D.map.saldo < 0 ? '<div class="banner blue">💡 Si tu Excel tiene columna de <b>Saldo</b>, selecciónala en “← Columnas” y comprobaré que tus números cuadran con el banco.</div>' : '';
+  if (k.dif === null) return `<div class="banner amber">🏦 No puedo comparar con el saldo del banco: ${esc(k.motivo)}.</div>`;
+  if (Math.abs(k.dif) < 0.01) return `<div class="banner blue" style="background:#dcfce7;color:#14532d">🏦 ✅ <b>Cuadra con el banco.</b> Saldo a ${fmtDate(k.corte)}: ${fmtEUR(k.banco)}.</div>`;
+  return `<div class="banner amber" style="display:block">🏦 ⚠ <b>No cuadra con el banco: diferencia de ${signed(k.dif)}.</b>
+    El banco dice <b>${fmtEUR(k.banco)}</b> a ${fmtDate(k.corte)} y la app calcularía <b>${fmtEUR(k.app)}</b> con estos movimientos.
+    <div class="small" style="margin-top:6px">Causas habituales: falta importar alguna semana anterior, un movimiento duplicado marcado (o uno desmarcado que no lo era), o el saldo de partida de la cuenta no era correcto.</div>
+    <label class="chk" style="margin-top:8px"><input type="checkbox" id="imp-fijar" ${D.fijarSaldo ? 'checked' : ''}> Al guardar, tomar el saldo del banco como punto de control (la cuenta quedará en ${fmtEUR(k.banco)})</label></div>`;
+}
+async function guardarConciliacion(cuentaId, k, fijar) {
+  const row = (S.ajustesRows || []).find(r => r.clave === 'conciliaciones');
+  const valor = { ...((row && row.valor) || {}), [cuentaId]: { fecha: k.corte, banco: k.banco, app: k.app, dif: fijar ? 0 : k.dif, ajustado: fijar && Math.abs(k.dif || 0) >= 0.01, ts: new Date().toISOString() } };
+  await DB.upsert('ajustes', { clave: 'conciliaciones', valor, updated_at: new Date().toISOString() }, 'clave');
+  if (row) row.valor = valor; else (S.ajustesRows = S.ajustesRows || []).push({ clave: 'conciliaciones', valor });
+  if (fijar && k.dif !== null && Math.abs(k.dif) >= 0.01) { await DB.update('cuentas', cuentaId, { saldo_inicial: k.banco, fecha_saldo_inicial: k.corte }); await reloadTable('cuentas'); }
+}
+const conciliacionDe = cid => (((S.ajustesRows || []).find(r => r.clave === 'conciliaciones') || {}).valor || {})[cid] || null;
+
 async function impSave(btn) {
   const D = S.importData; const sel = D.items.filter(x => x.sel);
   if (!sel.length) { toast('No hay movimientos seleccionados', 'warn'); return; }
@@ -292,6 +336,7 @@ async function impSave(btn) {
     rows.push(base);
     if (isT) rows.push({ ...base, id: uuid(), cuenta_id: x.cuenta_contraria_id, cuenta_contraria_id: D.cuentaId, importe: -x.importe, hash_import: null });
   }
+  const conc = calcularConciliacion();
   let aprendido = { nuevas: 0, actualizadas: 0 };
   const r = await withSaving(btn, async () => {
     for (let i = 0; i < rows.length; i += 400) await DB.insert('movimientos', rows.slice(i, i + 400));
@@ -302,6 +347,12 @@ async function impSave(btn) {
   });
   if (r !== FAIL) {
     toast(`${sel.length} movimientos importados ✓${aprendido.nuevas || aprendido.actualizadas ? ` · ${aprendido.nuevas} regla(s) nueva(s)${aprendido.actualizadas ? `, ${aprendido.actualizadas} actualizada(s)` : ''}` : ''}`, 'ok', 5000);
+    if (conc) {
+      try {
+        await guardarConciliacion(D.cuentaId, conc, !!D.fijarSaldo);
+        if (D.fijarSaldo && Math.abs(conc.dif) >= 0.01) toast(`Saldo de ${cuentaById(D.cuentaId).nombre} fijado al del banco (${fmtEUR(conc.banco)})`, 'ok', 5000);
+      } catch (e) { console.warn(e); }
+    }
     S.importData = null; render();
   }
 }
@@ -323,6 +374,7 @@ Object.assign(Actions, {
 });
 
 Object.assign(Changes, {
+  'imp-fijar': el => { S.importData.fijarSaldo = el.checked; },
   'imp-cuenta': el => { S.importCuenta = el.value; },
   'imp-file': async el => {
     const f = el.files && el.files[0]; if (!f) return;

@@ -37,7 +37,7 @@ function renderDashboard() {
 
   // Datos para gráficos
   const chartMonths = months.length < 3 ? Array.from({ length: 6 }, (_, i) => addMonths(months[months.length - 1], i - 5)) : months;
-  const perMonth = chartMonths.map(mm => { const s = periodStats([mm]); return { ing: s.ingresos, gas: s.gastos, ah: s.ahorro }; });
+  const perMonth = chartMonths.map(mm => { const s = periodStats([mm]); return { ing: s.ingresos, gas: s.gastos, cap: s.capital, ah: s.ahorro }; });
   const gastosMov = st.movs.filter(m => m.tipo === 'gasto');
   const byRoot = new Map();
   for (const m of gastosMov) { const r = rootOf(catById(m.categoria_id)); const k = r ? r.id : '_none'; byRoot.set(k, (byRoot.get(k) || 0) - num(m.importe)); }
@@ -60,10 +60,11 @@ function renderDashboard() {
 
     <div class="kpis">
       ${kpi('Ingresos imputados', fmtEUR(st.ingresos), nM > 1 ? `Media ${fmtEUR(st.ingresos / nM)}/mes` : 'Del periodo', 'pos')}
-      ${kpi('Gastos operativos', fmtEUR(st.gastos), (nM > 1 ? `Media ${fmtEUR(st.gastos / nM)}/mes · ` : '') + 'sin transferencias internas', 'neg')}
-      ${kpi('Capacidad de ahorro', `<span class="${st.ahorro >= 0 ? 'pos' : 'neg'}">${fmtEUR(st.ahorro)}</span>`, `Tasa de ahorro: <b>${fmtPct(tasaAh)}</b>`, st.ahorro >= 0 ? 'pos' : 'warn')}
+      ${kpi('Gastos operativos', fmtEUR(st.gastos), (nM > 1 ? `Media ${fmtEUR(st.gastos / nM)}/mes · ` : '') + (st.capital > 0 ? `sin transferencias ni <b>${fmtEUR(st.capital)}</b> de capital de deuda` : 'sin transferencias internas'), 'neg')}
+      ${kpi('Capacidad de ahorro', `<span class="${st.ahorro >= 0 ? 'pos' : 'neg'}">${fmtEUR(st.ahorro)}</span>`, `Tasa de ahorro: <b>${fmtPct(tasaAh)}</b>${st.capital > 0 ? ` · incluye ${fmtEUR(st.capital, 0)} amortizados` : ''}`, st.ahorro >= 0 ? 'pos' : 'warn')}
       ${kpi('Tasa de inversión', fmtPct(tasaInv), `Invertido: ${fmtEUR(st.aport.inversion)} · A reserva: ${fmtEUR(st.aport.ahorro)}`, '')}
-      ${kpi('Patrimonio neto total', fmtEUR(P.neto, 0), `Activos ${fmtEUR(P.activos, 0)} · Deudas ${fmtEUR(P.deudas, 0)}`, 'navy')}
+      ${kpi('Patrimonio neto total', fmtEUR(P.neto, 0), (() => { const prev = S.patrimonio_mensual.filter(x => x.anio_mes < ymOf(todayISO())).sort((a, b) => a.anio_mes < b.anio_mes ? 1 : -1)[0];
+        return prev ? `<span class="${P.neto - num(prev.patrimonio_neto) >= 0 ? 'pos' : 'neg'}"><b>${signed(P.neto - num(prev.patrimonio_neto))}</b></span> vs ${ymLabel(prev.anio_mes, true)}` : `Activos ${fmtEUR(P.activos, 0)} · Deudas ${fmtEUR(P.deudas, 0)}`; })(), 'navy')}
       ${kpi('Liquidez disponible', fmtEUR(P.liquidez), `Operativa ${fmtEUR(P.operativa, 0)} · Fondo emerg. ${fmtEUR(P.reserva, 0)}`, '')}
     </div>
 
@@ -108,12 +109,13 @@ function renderDashboard() {
     data: {
       labels: chartMonths.map(m => ymLabel(m, true)),
       datasets: [
-        { label: 'Ingresos', data: perMonth.map(x => round2(x.ing)), backgroundColor: '#16a34a', borderRadius: 5, order: 2 },
-        { label: 'Gastos', data: perMonth.map(x => round2(x.gas)), backgroundColor: '#dc2626', borderRadius: 5, order: 2 },
+        { label: 'Ingresos', data: perMonth.map(x => round2(x.ing)), backgroundColor: '#16a34a', borderRadius: 5, order: 2, stack: 'i' },
+        { label: 'Gastos operativos', data: perMonth.map(x => round2(x.gas)), backgroundColor: '#dc2626', borderRadius: 5, order: 2, stack: 'g' },
+        ...(perMonth.some(x => x.cap > 0) ? [{ label: 'Capital de deuda amortizado', data: perMonth.map(x => round2(x.cap)), backgroundColor: '#fca5a5', borderRadius: 5, order: 2, stack: 'g' }] : []),
         { type: 'line', label: 'Ahorro', data: perMonth.map(x => round2(x.ah)), borderColor: '#0f1f3a', backgroundColor: '#0f1f3a', tension: .3, pointRadius: 3, order: 1 }
       ]
     },
-    options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { y: euroAxis, x: { grid: { display: false } } } }
+    options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { y: { ...euroAxis, stacked: true }, x: { grid: { display: false }, stacked: true } } }
   });
   if (donut.length) mkChart('ch-cat', {
     type: 'doughnut',

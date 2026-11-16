@@ -17,7 +17,7 @@ function mediaHistorica(refYm, n = 6) {
   const porRaiz = {};
   for (const m of st.movs) if (m.tipo === 'gasto') { const r = rootOf(catById(m.categoria_id)); const k = r ? r.id : '_none'; porRaiz[k] = (porRaiz[k] || 0) - num(m.importe); }
   Object.keys(porRaiz).forEach(k => { porRaiz[k] /= ms.length; });
-  return { n: ms.length, gastos: st.gastos / ms.length, ingresos: st.ingresos / ms.length, ahorro: st.ahorro / ms.length, porRaiz };
+  return { n: ms.length, gastos: st.gastos / ms.length, gastosCaja: st.gastosCaja / ms.length, ingresos: st.ingresos / ms.length, ahorro: st.ahorro / ms.length, porRaiz };
 }
 function buildAlertas(months, st, P, rows) {
   const A = []; const add = (nivel, ic, t, txt) => A.push({ nivel, ic, t, txt });
@@ -25,7 +25,7 @@ function buildAlertas(months, st, P, rows) {
   const nM = months.length, enCurso = months.includes(curYm), soloMesActual = nM === 1 && months[0] === curYm;
   const frac = cd / daysInMonth(cy, cm);
   const hist = mediaHistorica(months[0], 6);
-  const gastoMes = (hist && hist.gastos > 0) ? hist.gastos : (st.gastos / nM);
+  const gastoMes = (hist && hist.gastosCaja > 0) ? hist.gastosCaja : (st.gastosCaja / nM);
   const ingMes = (hist && hist.ingresos > 0) ? hist.ingresos : (st.ingresos / nM);
 
   // 1) Presupuestos (la proyección solo se aplica a categorías con varios gastos, no a recibos únicos como la hipoteca)
@@ -83,8 +83,8 @@ function buildAlertas(months, st, P, rows) {
 
   // 7) Inversión y destino del ahorro
   if (st.ingresos > 0 && st.ahorro > 0) {
-    const ti = st.aport.inversion / st.ingresos, movido = st.aport.inversion + st.aport.ahorro;
-    if (movido < st.ahorro * 0.5) add('blue', '🧭', 'El ahorro se queda en la cuenta corriente', `Has ahorrado ${fmtEUR(st.ahorro)} pero solo has movido ${fmtEUR(Math.max(0, movido))} a ahorro o inversión. Programa una transferencia automática el día después de cobrar la nómina (“págate primero”).`);
+    const ti = st.aport.inversion / st.ingresos, movido = st.aport.inversion + st.aport.ahorro + st.capital;
+    if (movido < st.ahorro * 0.5) add('blue', '🧭', 'El ahorro se queda en la cuenta corriente', `Has ahorrado ${fmtEUR(st.ahorro)} pero solo has movido ${fmtEUR(Math.max(0, movido))} a ahorro, inversión o amortización de deuda. Programa una transferencia automática el día después de cobrar la nómina (“págate primero”).`);
     if (ti < 0.1 && P.reserva / (gastoMes || 1) >= 3) add('blue', '📊', `Tasa de inversión del ${fmtPct(ti)}`, `Con tu ahorro medio, una aportación periódica de unos <b>${fmtEUR(Math.max(50, Math.round(((hist ? hist.ahorro : st.ahorro / nM) * 0.5) / 10) * 10), 0)}/mes</b> (la mitad de lo que ahorras) haría crecer el patrimonio de forma constante.`);
     else if (ti >= 0.15) add('green', '📈', `Buena tasa de inversión: ${fmtPct(ti)}`, `Inviertes ${fmtEUR(st.aport.inversion)} en el periodo. La constancia mensual es lo que más pesa a largo plazo.`);
   }

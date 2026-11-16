@@ -6,9 +6,9 @@
    Depende de: config.js, utilidades.js, estado.js
    ===================================================================== */
 
-const OPTIONAL_TABLES = ['valoraciones', 'precios_m2', 'amortizaciones', 'amortizaciones_plan', 'aportaciones_periodicas', 'posiciones', 'seguros', 'reglas_categoria'];
+const OPTIONAL_TABLES = ['valoraciones', 'precios_m2', 'amortizaciones', 'amortizaciones_plan', 'aportaciones_periodicas', 'posiciones', 'seguros', 'reglas_categoria', 'patrimonio_mensual'];
 const ORDER = { cuentas: 'orden', categorias: 'orden', movimientos: 'fecha', inmuebles: 'created_at', vehiculos: 'created_at', deudas: 'created_at', snapshots: 'fecha', ajustes: 'clave', valoraciones: 'fecha',
-  precios_m2: 'fecha', amortizaciones: 'fecha', amortizaciones_plan: 'created_at', aportaciones_periodicas: 'created_at', posiciones: 'orden', seguros: 'created_at', reglas_categoria: 'created_at' };
+  precios_m2: 'fecha', amortizaciones: 'fecha', amortizaciones_plan: 'created_at', aportaciones_periodicas: 'created_at', posiciones: 'orden', seguros: 'created_at', reglas_categoria: 'created_at', patrimonio_mensual: 'anio_mes' };
 const getConn = () => ({
   url: (SUPABASE_URL || localStorage.getItem('pf_sb_url') || '').trim(),
   key: (SUPABASE_ANON_KEY || localStorage.getItem('pf_sb_key') || '').trim()
@@ -86,6 +86,7 @@ async function loadAll() {
     await optP;
     S.tablaValoraciones = !S.missing.has('valoraciones');
     S.v4 = !S.missing.has('seguros') && !S.missing.has('precios_m2');
+    S.v5 = !S.missing.has('patrimonio_mensual');
     tables.forEach((t, i) => { if (t !== 'ajustes') S[t] = res[i]; });
     const regla = res[7].find(r => r.clave === 'regla_nomina');
     if (regla && regla.valor) { S.ajustes.nomina_dias = num(regla.valor.dias) || 5; S.ajustes.nomina_umbral = num(regla.valor.umbral); }

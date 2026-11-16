@@ -122,7 +122,11 @@ function periodStats(months) {
   const set = new Set(months);
   const movs = S.movimientos.filter(m => set.has(ymOf(m.mes_imputacion)));
   const ingresos = sum(movs.filter(m => m.tipo === 'ingreso'), 'importe');
-  const gastos = -sum(movs.filter(m => m.tipo === 'gasto'), 'importe');
+  const gastosCaja = -sum(movs.filter(m => m.tipo === 'gasto'), 'importe');
+  // La parte de capital de las cuotas de préstamos y las amortizaciones anticipadas no es gasto: reduce deuda (ahorro)
+  let capital = 0;
+  for (const m of movs) if (m.tipo === 'gasto' && num(m.importe) < 0) capital += capitalDeMovimiento(m);
+  const gastos = gastosCaja - capital;
   // Transferencias: se toma la pata positiva de cada pareja. Si entra en cuenta de inversión/ahorro suma; si vuelve a operativa, resta (retirada).
   const aport = { liquidez: 0, ahorro: 0, inversion: 0 };
   for (const m of movs) {
@@ -132,8 +136,42 @@ function periodStats(months) {
     if (st === 'liquidez') aport.liquidez += num(m.importe);
     else aport[st] += (c && (c.tipo === 'inversion' || c.tipo === 'ahorro')) ? num(m.importe) : -num(m.importe);
   }
-  return { movs, ingresos, gastos, ahorro: ingresos - gastos, aport };
+  return { movs, ingresos, gastos, gastosCaja, capital, ahorro: ingresos - gastos, ahorroCaja: ingresos - gastosCaja, aport };
 }
+
+/* ---------- Préstamos: separar intereses y capital de las cuotas pagadas ---------- */
+/** Categoría donde se registra la cuota de un préstamo (por defecto, "Hipoteca" para las hipotecas). */
+function categoriaCuota(d) {
+  if (d.categoria_cuota_id) return d.categoria_cuota_id;
+  if (d.tipo === 'hipoteca') { const c = S.categorias.find(x => x.tipo === 'gasto' && x.parent_id && normText(x.nombre) === 'hipoteca'); return c ? c.id : null; }
+  return null;
+}
+/** ¿La categoría (o su principal) es de amortización anticipada? */
+const esCatAmortizacion = id => { const c = catById(id); if (!c) return false; const p = c.parent_id ? catById(c.parent_id) : null; return c.naturaleza === 'amortizacion' || (p && p.naturaleza === 'amortizacion'); };
+/** Capital pendiente al inicio de un mes (hacia delante o hacia atrás desde el último dato conocido). */
+function pendienteEnMes(d, ym) {
+  const I = deudaInfo(d), r = I.r, c = I.cuota;
+  const tiene = d.capital_pendiente !== null && d.capital_pendiente !== undefined && d.capital_pendiente !== '';
+  let P = tiene ? num(d.capital_pendiente) : num(d.capital_inicial);
+  const refYm = ymOf(tiene ? (d.fecha_capital_pendiente || todayISO()) : (d.fecha_inicio || todayISO()));
+  const k = monthsDiff(refYm + '-01', ym + '-01');
+  if (k >= 0) for (let i = 0; i < k && P > 0; i++) P = Math.max(0, P * (1 + r) - c);
+  else for (let i = 0; i < -k; i++) P = r > 0 ? (P + c) / (1 + r) : P + c;
+  return P;
+}
+/** Parte de capital (no gasto) de un movimiento de gasto. */
+function capitalDeMovimiento(m) {
+  const abs = Math.abs(num(m.importe));
+  if (!m.categoria_id) return 0;
+  if (esCatAmortizacion(m.categoria_id)) return abs;
+  const d = S.deudas.find(x => x.activa !== false && categoriaCuota(x) === m.categoria_id);
+  if (!d) return 0;
+  const I = deudaInfo(d); if (!I.r && !I.cuota) return 0;
+  const interes = Math.min(abs, pendienteEnMes(d, ymOf(m.fecha)) * I.r);
+  return Math.max(0, Math.min(abs, I.cuota) - interes);
+}
+/** Saldo de una cuenta al final de un día (null si es anterior al saldo de partida). */
+Calc.saldoA = (c, fecha) => fecha < c.fecha_saldo_inicial ? null : round2(num(c.saldo_inicial) + sum(S.movimientos.filter(m => m.cuenta_id === c.id && m.fecha > c.fecha_saldo_inicial && m.fecha <= fecha), 'importe'));
 
 /* ---------- Inversiones ---------- */
 function invInfo(c) {

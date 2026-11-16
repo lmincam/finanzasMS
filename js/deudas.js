@@ -17,10 +17,11 @@ const FIELDS_DEUDA = [
   { name: 'interes', label: 'TIN anual vigente (%)', type: 'number', ph: '2,50' }, { name: 'cuota_mensual', label: 'Cuota mensual (€)', type: 'number', hint: 'Si la dejas vacía se calcula' },
   { name: 'capital_pendiente', label: 'Capital pendiente (€)', type: 'number', hint: 'Del último recibo / app del banco' }, { name: 'fecha_capital_pendiente', label: 'A fecha de', type: 'date' },
   { name: 'comision_amortizacion', label: 'Comisión amortización anticipada (%)', type: 'number', ph: '0,00', hint: 'Mira tu escritura: suele ser 0 – 2 %', cls: 'v4' },
+  { name: 'categoria_cuota_id', label: 'Categoría donde se registra la cuota', type: 'rawselect', html: v => catOpts('gasto', v, '— Automática (Hipoteca para hipotecas) —'), cls: 'v5', hint: 'Sirve para separar cada cuota en intereses (gasto) y capital (ahorro)' },
   { name: 'activa', label: 'Préstamo activo', type: 'checkbox', def: true }, { name: 'notas', label: 'Notas', type: 'textarea', full: true, ph: 'Revisiones del variable, bonificaciones, seguros vinculados…' }
 ];
 /** Quita los campos que dependen de la migración v4 si aún no se ha ejecutado. */
-const camposV4 = fields => S.v4 ? fields : fields.filter(f => !(f.cls || '').includes('v4'));
+const camposV4 = fields => fields.filter(f => !((f.cls || '').includes('v4') && !S.v4) && !((f.cls || '').includes('v5') && !S.v5));
 const bannerV4 = () => S.v4 ? '' : '<div class="banner amber">Para usar esta función ejecuta <code>sql/03_migracion_v4.sql</code> en Supabase (solo añade tablas y campos, no toca tus datos).</div>';
 const FRECUENCIAS = [{ v: 0, l: 'Una sola vez' }, { v: 1, l: 'Cada mes' }, { v: 3, l: 'Cada trimestre' }, { v: 6, l: 'Cada semestre' }, { v: 12, l: 'Cada año' }];
 const frecLabel = n => (FRECUENCIAS.find(f => f.v === num(n)) || { l: `Cada ${n} meses` }).l;
@@ -112,11 +113,13 @@ function renderDeudaDetalle(d) {
     ${!I.viable ? '<div class="banner red">⚠ La cuota no cubre los intereses: revisa cuota e interés (✎ Editar).</div>' : ''}
     ${!num(d.capital_inicial) && !num(d.capital_pendiente) ? '<div class="banner blue">Completa los datos del préstamo (✎ Editar): capital inicial, fecha de inicio, plazo, interés, cuota y capital pendiente.</div>' : ''}
     ${tocaHoy ? `<div class="banner amber">📅 Según tu plan, este mes toca una amortización anticipada. Cuando la hagas, regístrala para actualizar el préstamo y tu ahorro. <button class="btn sm" data-action="amo-new" data-id="${d.id}">Registrar amortización</button></div>` : ''}
+    ${S.v5 && I.cuota ? `<div class="banner blue">📊 En el Dashboard, de cada cuota solo cuentan como <b>gasto los intereses</b>; la parte de <b>capital cuenta como ahorro</b> porque reduce tu deuda. ${categoriaCuota(d) ? `Las cuotas se identifican por la categoría <b>${esc(catName(categoriaCuota(d)))}</b>.` : '<b>Indica en ✎ Editar la categoría donde registras la cuota</b> para que se separe.'}</div>` : ''}
     ${d.tipo_interes && d.tipo_interes !== 'fijo' ? '<div class="banner blue">Interés variable/mixto: los cálculos suponen que el TIN actual se mantiene. Actualízalo en cada revisión.</div>' : ''}
 
     <div class="kpis">
       ${kpi(`Capital pendiente${I.estimado ? ' (estimado hoy)' : ''}`, fmtEUR(I.pendienteHoy), `Inicial ${fmtEUR(d.capital_inicial, 0)}`, 'neg')}
-      ${kpi('Cuota mensual', fmtEUR(I.cuota), `${fmtNum(I.pagadas || 0, 0)} pagadas · ${I.restantes !== null ? fmtNum(I.restantes, 0) : '—'} restantes`)}
+      ${kpi('Cuota mensual', fmtEUR(I.cuota), (() => { const int = Math.min(I.cuota, pendienteEnMes(d, ymHoy) * I.r);
+        return `Este mes: <b class="neg">${fmtEUR(int)}</b> intereses · <b class="pos">${fmtEUR(I.cuota - int)}</b> capital<br>${fmtNum(I.pagadas || 0, 0)} pagadas · ${I.restantes !== null ? fmtNum(I.restantes, 0) : '—'} restantes`; })())}
       ${kpi('Fin previsto', I.fin ? ymLabel(I.fin) : '—', d.plazo_meses ? `Plazo contractual ${fmtNum(d.plazo_meses, 0)} meses` : '')}
       ${kpi('Intereses pendientes', fmtEUR(I.interesesPendientes), 'Sin amortizar nada más', 'warn')}
       ${kpi('Ahorro por amortizaciones', fmtEUR(ahorroPrev), `Ya conseguido hasta hoy: <b>${fmtEUR(ahorroYa)}</b>`, 'pos')}

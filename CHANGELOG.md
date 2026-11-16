@@ -1,5 +1,11 @@
 # Historial de versiones
 
+## 5.1.0 — 16/11/2026 · Fase 2: números exactos
+- **Conciliación con el saldo del banco**: el importador lee la columna Saldo del Excel y comprueba que el saldo calculado coincide con el del banco tras el último movimiento. Si no cuadra, lo avisa con la diferencia y permite fijar el saldo del banco como punto de control. Cada cuenta muestra si cuadra.
+- **Cuotas de préstamos separadas en intereses y capital**: los intereses cuentan como gasto operativo y el capital como ahorro (reduce deuda). Categoría de la cuota configurable en cada préstamo (por defecto "Hipoteca"). Nueva subcategoría "Amortización anticipada" que cuenta entera como ahorro. Desglose de la cuota del mes en el detalle del préstamo.
+- **Evolución mensual automática del patrimonio**: se guarda una foto cada mes al abrir la app; gráfico, tabla y variación vs. mes anterior en el Dashboard y en Auditoría.
+- SQL: ejecutar de nuevo `sql/esquema_completo.sql` (bloque 6).
+
 ## 5.0.0 — 16/11/2026 · Fase 1: seguridad y copias de seguridad
 - **Acceso con email y contraseña** (Supabase Auth) para los usuarios que crees en Supabase. Sesión recordada en cada dispositivo, recuperación de contraseña por email, cambio de contraseña y cierre de sesión en ⚙️ Ajustes.
 - **Base de datos cerrada al acceso anónimo**: solo los usuarios con sesión pueden leer o escribir.

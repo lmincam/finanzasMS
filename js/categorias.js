@@ -11,7 +11,7 @@ function renderCategorias() {
   const col = tipo => {
     const roots = S.categorias.filter(c => c.tipo === tipo && !c.parent_id).sort(byOrden);
     const total = sum(roots, r => budgetOf(r));
-    const row = (c, lvl) => `<div class="cat-row lvl${lvl}"><span class="cdot" style="background:${esc(c.color || (lvl ? '#cbd5e1' : '#94a3b8'))}"></span><span class="cname">${esc(c.nombre)}</span>
+    const row = (c, lvl) => `<div class="cat-row lvl${lvl}"><span class="cdot" style="background:${esc(c.color || (lvl ? '#cbd5e1' : '#94a3b8'))}"></span><span class="cname">${esc(c.nombre)}${c.naturaleza === 'amortizacion' ? ' <span class="badge green" title="Cuenta como ahorro, no como gasto">capital</span>' : ''}${S.deudas.some(d => categoriaCuota(d) === c.id) ? ' <span class="badge blue" title="Se separa en intereses (gasto) y capital (ahorro)">cuota préstamo</span>' : ''}</span>
       <span class="cbud">${num(c.presupuesto_mensual) ? fmtEUR(c.presupuesto_mensual) + '/mes' : (lvl === 0 && budgetOf(c) ? `<span class="muted">Σ ${fmtEUR(budgetOf(c))}</span>` : '')}</span>
       ${lvl === 0 ? `<button class="mini" data-action="cat-new" data-tipo="${tipo}" data-parent="${c.id}" title="Añadir subcategoría">+ sub</button>` : ''}
       <button class="mini" data-action="cat-edit" data-id="${c.id}">✎</button><button class="mini" data-action="cat-del" data-id="${c.id}">🗑</button></div>`;
@@ -30,14 +30,16 @@ function openCatForm(cat, tipo, parentId) {
     { name: 'nombre', label: 'Nombre', required: true },
     { name: 'parent_id', label: 'Categoría principal', type: 'select', options: () => [{ v: '', l: '— Ninguna (es principal) —' }].concat(S.categorias.filter(c => c.tipo === t && !c.parent_id && (!cat || c.id !== cat.id)).sort(byOrden).map(c => ({ v: c.id, l: c.nombre }))) },
     { name: 'presupuesto_mensual', label: t === 'gasto' ? 'Presupuesto mensual (€)' : 'Previsión mensual (€)', type: 'number' },
-    { name: 'color', label: 'Color', type: 'color' }, { name: 'orden', label: 'Orden', type: 'int' }
+    { name: 'color', label: 'Color', type: 'color' }, { name: 'orden', label: 'Orden', type: 'int' },
+    ...(S.v5 && t === 'gasto' ? [{ name: 'es_amort', label: 'Es amortización de deuda (cuenta como ahorro, no como gasto)', type: 'checkbox', full: true }] : [])
   ];
   openForm({
     title: cat ? 'Editar categoría' : (parentId ? 'Nueva subcategoría' : 'Nueva categoría'), fields,
-    values: cat || { parent_id: parentId || '', color: PALETTE[S.categorias.length % PALETTE.length], orden: S.categorias.length + 1 },
+    values: cat ? { ...cat, es_amort: cat.naturaleza === 'amortizacion' } : { parent_id: parentId || '', color: PALETTE[S.categorias.length % PALETTE.length], orden: S.categorias.length + 1 },
     onSubmit: async v => {
       if (cat && v.parent_id && childrenOf(cat.id).length) throw new Error('Una categoría con subcategorías no puede convertirse en subcategoría');
       const row = { nombre: v.nombre, tipo: t, parent_id: v.parent_id || null, presupuesto_mensual: v.presupuesto_mensual || 0, color: v.color, orden: v.orden || 0 };
+      if (S.v5 && t === 'gasto') row.naturaleza = v.es_amort ? 'amortizacion' : null;
       if (cat) await DB.update('categorias', cat.id, row); else await DB.insert('categorias', [row]);
       await reloadTable('categorias');
     }
