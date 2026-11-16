@@ -65,6 +65,10 @@ function bindEvents() {
   const h = location.hash.slice(1); if (TABS.some(t => t[0] === h)) S.tab = h;
   setupChartDefaults();
   bindEvents();
+  // La cabecera es fija: el contenido empieza justo debajo de su altura real (cambia en móvil, al rotar o con la barra offline)
+  const hdr = $('.sticky');
+  if (hdr) { const fit = () => document.documentElement.style.setProperty('--hdr', hdr.offsetHeight + 'px'); fit();
+    if (window.ResizeObserver) new ResizeObserver(fit).observe(hdr); else window.addEventListener('resize', fit); }
   iniciarPWA();
   if (!window.supabase) { toast('No se pudo cargar la librería de Supabase. Revisa tu conexión.', 'err', 6000); return; }
   arrancarAuth();

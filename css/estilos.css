@@ -16,7 +16,10 @@ html{background:linear-gradient(var(--navy) 50%,var(--bg) 50%) fixed;background-
 h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:-.01em}
 h2{font-size:20px}h3{font-size:16px}
 a{color:var(--blue)}
-.sticky{position:sticky;top:0;z-index:40;background:var(--navy);box-shadow:0 2px 10px rgba(0,0,0,.15)}
+/* Cabecera fija (position:fixed, no sticky): en iPhone con iOS 26, Safari solo toma el color de la franja de la isla
+   de un elemento FIJO pegado arriba; si no lo hay, pinta una sombra difuminada con el fondo claro de la página. */
+.sticky{position:fixed;top:0;left:0;right:0;z-index:40;background:var(--navy);box-shadow:0 2px 10px rgba(0,0,0,.15)}
+body{padding-top:var(--hdr,112px)}
 .topbar{background:var(--navy);color:#fff;padding:12px 18px;padding-top:calc(12px + env(safe-area-inset-top));display:flex;align-items:center;gap:12px}
 .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#22c55e,#15803d);display:grid;place-items:center;font-weight:700;font-size:18px}
 .brand{font-weight:700;font-size:16px;line-height:1.15}

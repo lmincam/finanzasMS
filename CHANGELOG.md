@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.7.2 — 16/11/2026 · iPhone: franja superior sin neblina
+- La cabecera pasa a ser fija (antes "sticky"). Safari en iOS 26 solo toma el color de la zona de la isla de un elemento fijo pegado arriba; si no lo encuentra, pinta una sombra difuminada con el fondo claro de la página.
+
 ## 5.7.1 — 16/11/2026 · Nombre e iPhone
 - La app pasa a llamarse **Patrimonio Miñán Sánchez** (cabecera, menú, acceso, pestaña del navegador y app instalada).
 - iPhone: la franja de la isla dinámica ya no se ve borrosa. La cabecera fija tiene fondo sólido y el rebote al tirar hacia abajo toma el mismo azul.
