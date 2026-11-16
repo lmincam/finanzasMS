@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.3.1 — 16/11/2026 · Corrección
+- Al abrir un formulario, el cursor ya no salta al primer campo si has empezado a escribir en otro (podía hacer que lo tecleado acabara en el campo equivocado). Ajuste visual en el recuadro de supuestos de la proyección.
+
 ## 5.3.0 — 16/11/2026 · Fase 4: proyección, libertad financiera, TIR e inflación
 - Nueva pestaña **🚀 Proyección y libertad financiera**: patrimonio neto proyectado a N años en tres escenarios (prudente/medio/optimista), con aportación creciente, cuota de los préstamos reinvertida al terminar, revalorización de la vivienda, depreciación de vehículos y calendario real de las deudas. Vista **en euros de hoy** (descontada la inflación) o nominal. Hitos previstos y tabla cada 5 años.
 - **Independencia financiera**: capital necesario según tu gasto y la tasa de retiro, progreso, años y edad estimados por escenario, efecto de la pensión pública y qué la acelera (aportar más, rentar más, gastar menos).

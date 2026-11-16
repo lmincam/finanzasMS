@@ -28,7 +28,7 @@ function modal(html, { onClose } = {}) {
   back.addEventListener('mousedown', e => { if (e.target === back) close(); });
   back.querySelector('.modal-x').addEventListener('click', close);
   const first = back.querySelector('input:not([type=checkbox]):not([type=hidden]),select');
-  if (first && window.innerWidth > 700) setTimeout(() => first.focus(), 50);
+  if (first && window.innerWidth > 700) setTimeout(() => { if (!back.contains(document.activeElement)) first.focus(); }, 50); // no robar el foco si ya estás escribiendo
   return { el: back.querySelector('.modal'), close };
 }
 function confirmDlg(msg, okLabel = 'Confirmar', danger = true) {

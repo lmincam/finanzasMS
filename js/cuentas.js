@@ -165,7 +165,7 @@ function openQuick(tipo = 'gasto', opts = {}) {
     st.tipo = b.dataset.q; $$('#q-seg button', m.el).forEach(x => x.classList.toggle('active', x === b)); dyn();
   });
   m.el.querySelector('[data-qclose]').addEventListener('click', m.close);
-  setTimeout(() => m.el.querySelector('#q-imp').focus(), 80);
+  setTimeout(() => { if (!m.el.contains(document.activeElement)) m.el.querySelector('#q-imp').focus(); }, 80);
   m.el.querySelector('#q-form').addEventListener('submit', async e => {
     e.preventDefault();
     const v = parseNum(m.el.querySelector('#q-imp').value);
