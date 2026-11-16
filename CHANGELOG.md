@@ -1,5 +1,9 @@
 # Historial de versiones
 
+## 5.7.1 — 16/11/2026 · Nombre e iPhone
+- La app pasa a llamarse **Patrimonio Miñán Sánchez** (cabecera, menú, acceso, pestaña del navegador y app instalada).
+- iPhone: la franja de la isla dinámica ya no se ve borrosa. La cabecera fija tiene fondo sólido y el rebote al tirar hacia abajo toma el mismo azul.
+
 ## 5.7.0 — 16/11/2026 · Calendario de gastos
 - Botón **📅 Calendario** en el Dashboard: muestra el mes o periodo seleccionado con cada gasto en su día (por fecha de operación) y el total diario. Los días se colorean según cuánto se gastó.
 - Total y media diaria de cada mes, y día de más gasto del periodo. Pulsando un gasto se abre para verlo o corregirlo. Flechas ‹ › para cambiar de mes sin salir.

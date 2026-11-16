@@ -10,11 +10,13 @@
 }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--txt);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px;-webkit-font-smoothing:antialiased}
-body{padding-bottom:calc(90px + env(safe-area-inset-bottom))}
+body{padding-bottom:calc(90px + env(safe-area-inset-bottom));min-height:100vh;min-height:100dvh}
+/* iPhone: la zona de la isla y el "rebote" al tirar hacia abajo toman el azul de la cabecera (sin neblina); el rebote inferior, el fondo claro */
+html{background:linear-gradient(var(--navy) 50%,var(--bg) 50%) fixed;background-color:var(--navy)}
 h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:-.01em}
 h2{font-size:20px}h3{font-size:16px}
 a{color:var(--blue)}
-.sticky{position:sticky;top:0;z-index:40;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+.sticky{position:sticky;top:0;z-index:40;background:var(--navy);box-shadow:0 2px 10px rgba(0,0,0,.15)}
 .topbar{background:var(--navy);color:#fff;padding:12px 18px;padding-top:calc(12px + env(safe-area-inset-top));display:flex;align-items:center;gap:12px}
 .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#22c55e,#15803d);display:grid;place-items:center;font-weight:700;font-size:18px}
 .brand{font-weight:700;font-size:16px;line-height:1.15}

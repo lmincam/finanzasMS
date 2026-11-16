@@ -57,7 +57,7 @@ function renderLogin(mode = 'login', msg = '') {
         <button class="btn primary" type="submit" style="justify-content:center">Entrar</button>
       </form>
       <div class="auth-links"><a href="#" data-action="auth-modo" data-m="olvido">¿Olvidaste la contraseña?</a>${fija ? '' : '<a href="#" data-action="auth-modo" data-m="config">Conexión</a>'}</div>`;
-  box.innerHTML = `<div class="auth-card"><div class="auth-logo"><div class="logo">€</div><div class="brand">Patrimonio Familiar<small>Acceso privado · v${APP_VERSION}</small></div></div>${body}
+  box.innerHTML = `<div class="auth-card"><div class="auth-logo"><div class="logo">€</div><div class="brand">Patrimonio Miñán Sánchez<small>Acceso privado · v${APP_VERSION}</small></div></div>${body}
     <p class="small muted" style="margin:16px 0 0;text-align:center">🔒 Solo los usuarios creados en tu proyecto de Supabase pueden entrar.</p></div>`;
   box.querySelector('#auth-form').addEventListener('submit', enviarAuth);
   const f = box.querySelector('input:not([disabled])'); if (f && window.innerWidth > 700) setTimeout(() => f.focus(), 50);

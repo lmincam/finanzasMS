@@ -111,5 +111,5 @@ Object.assign(Actions, {
     render();
   },
   'pwa-avisos-off': () => { localStorage.removeItem('pf_avisos'); toast('Avisos desactivados', 'ok'); render(); },
-  'pwa-probar': () => mostrarAviso('💶 Patrimonio Familiar', 'Así se verán los avisos de la app.')
+  'pwa-probar': () => mostrarAviso('💶 Patrimonio Miñán Sánchez', 'Así se verán los avisos de la app.')
 });

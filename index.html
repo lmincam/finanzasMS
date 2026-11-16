@@ -6,26 +6,26 @@
 <meta name="theme-color" content="#0f1f3a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Patrimonio">
+<meta name="apple-mobile-web-app-title" content="Patrimonio MS">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="robots" content="noindex, nofollow">
-<title>Patrimonio Familiar · Dashboard</title>
+<title>Patrimonio Miñán Sánchez · Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-<link rel="stylesheet" href="css/estilos.css?v=5.7.0">
+<link rel="stylesheet" href="css/estilos.css?v=5.7.1">
 </head>
 <body>
 <div class="sticky">
   <header class="topbar">
     <button class="icon-btn menu-btn" data-action="menu-open" aria-label="Abrir menú">☰</button>
     <div class="logo">€</div>
-    <div class="brand">Patrimonio Familiar<small>Dashboard ejecutivo · <span id="app-version"></span></small></div>
+    <div class="brand">Patrimonio Miñán Sánchez<small>Dashboard ejecutivo · <span id="app-version"></span></small></div>
     <div class="sp"></div>
     <div class="conn"><span class="dot" id="conn-dot"></span><span id="conn-txt">Sin conectar</span></div>
     <button class="icon-btn" data-action="refresh" title="Recargar datos">⟳</button>
@@ -40,7 +40,7 @@
 <div id="drawer" class="drawer" aria-hidden="true">
   <div class="drawer-back" data-action="menu-close"></div>
   <nav class="drawer-panel" aria-label="Secciones">
-    <div class="drawer-head"><div class="logo">€</div><div class="brand">Patrimonio Familiar<small id="drawer-version"></small></div>
+    <div class="drawer-head"><div class="logo">€</div><div class="brand">Patrimonio Miñán Sánchez<small id="drawer-version"></small></div>
       <button class="drawer-x" data-action="menu-close" aria-label="Cerrar menú">×</button></div>
     <div id="drawer-list"></div>
     <div class="drawer-foot"><button class="btn success" data-action="quick-open" data-tipo="gasto" style="width:100%;justify-content:center">+ Registrar movimiento</button></div>
@@ -68,33 +68,33 @@
 
 <!-- Módulos de la app: el ORDEN importa (cada uno usa lo definido en los anteriores).
      Al publicar una versión nueva, cambia ?v= en todos para que los navegadores no usen la copia antigua. -->
-<script src="js/config.js?v=5.7.0"></script>
-<script src="js/utilidades.js?v=5.7.0"></script>
-<script src="js/estado.js?v=5.7.0"></script>
-<script src="js/datos.js?v=5.7.0"></script>
-<script src="js/calculos.js?v=5.7.0"></script>
-<script src="js/ui.js?v=5.7.0"></script>
-<script src="js/graficos.js?v=5.7.0"></script>
-<script src="js/alertas.js?v=5.7.0"></script>
-<script src="js/dashboard.js?v=5.7.0"></script>
-<script src="js/calendario.js?v=5.7.0"></script>
-<script src="js/cuentas.js?v=5.7.0"></script>
-<script src="js/compartidos.js?v=5.7.0"></script>
-<script src="js/reglas.js?v=5.7.0"></script>
-<script src="js/importador.js?v=5.7.0"></script>
-<script src="js/prevision.js?v=5.7.0"></script>
-<script src="js/metas.js?v=5.7.0"></script>
-<script src="js/inversiones.js?v=5.7.0"></script>
-<script src="js/inmuebles.js?v=5.7.0"></script>
-<script src="js/deudas.js?v=5.7.0"></script>
-<script src="js/seguros.js?v=5.7.0"></script>
-<script src="js/futuro.js?v=5.7.0"></script>
-<script src="js/auditoria.js?v=5.7.0"></script>
-<script src="js/categorias.js?v=5.7.0"></script>
-<script src="js/auth.js?v=5.7.0"></script>
-<script src="js/copias.js?v=5.7.0"></script>
-<script src="js/ajustes.js?v=5.7.0"></script>
-<script src="js/pwa.js?v=5.7.0"></script>
-<script src="js/app.js?v=5.7.0"></script>
+<script src="js/config.js?v=5.7.1"></script>
+<script src="js/utilidades.js?v=5.7.1"></script>
+<script src="js/estado.js?v=5.7.1"></script>
+<script src="js/datos.js?v=5.7.1"></script>
+<script src="js/calculos.js?v=5.7.1"></script>
+<script src="js/ui.js?v=5.7.1"></script>
+<script src="js/graficos.js?v=5.7.1"></script>
+<script src="js/alertas.js?v=5.7.1"></script>
+<script src="js/dashboard.js?v=5.7.1"></script>
+<script src="js/calendario.js?v=5.7.1"></script>
+<script src="js/cuentas.js?v=5.7.1"></script>
+<script src="js/compartidos.js?v=5.7.1"></script>
+<script src="js/reglas.js?v=5.7.1"></script>
+<script src="js/importador.js?v=5.7.1"></script>
+<script src="js/prevision.js?v=5.7.1"></script>
+<script src="js/metas.js?v=5.7.1"></script>
+<script src="js/inversiones.js?v=5.7.1"></script>
+<script src="js/inmuebles.js?v=5.7.1"></script>
+<script src="js/deudas.js?v=5.7.1"></script>
+<script src="js/seguros.js?v=5.7.1"></script>
+<script src="js/futuro.js?v=5.7.1"></script>
+<script src="js/auditoria.js?v=5.7.1"></script>
+<script src="js/categorias.js?v=5.7.1"></script>
+<script src="js/auth.js?v=5.7.1"></script>
+<script src="js/copias.js?v=5.7.1"></script>
+<script src="js/ajustes.js?v=5.7.1"></script>
+<script src="js/pwa.js?v=5.7.1"></script>
+<script src="js/app.js?v=5.7.1"></script>
 </body>
 </html>

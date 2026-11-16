@@ -1,5 +1,5 @@
 /* =====================================================================
-   SERVICE WORKER · Patrimonio Familiar
+   SERVICE WORKER · Patrimonio Miñán Sánchez
    ---------------------------------------------------------------------
    • La página (index.html) se pide primero a internet para tener siempre
      la última versión; si no hay conexión, se usa la copia guardada.
@@ -7,7 +7,7 @@
      se guardan en el dispositivo para que abra al instante y sin cobertura.
    • NUNCA guarda las llamadas a Supabase (tus datos van por otro camino).
    ===================================================================== */
-const CACHE = 'patrimonio-v5.7.0';
+const CACHE = 'patrimonio-v5.7.1';
 const SHELL = ['./', './index.html', './manifest.json', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {

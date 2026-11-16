@@ -1,4 +1,4 @@
-# Patrimonio Familiar · v3
+# Patrimonio Miñán Sánchez · v3
 
 App web personal de control de patrimonio y finanzas familiares.
 Interfaz en **GitHub Pages**, datos en **Supabase**.
