@@ -1,5 +1,14 @@
 # Historial de versiones
 
+## 5.6.0 — 16/11/2026 · Avisos útiles, no avisos por avisar
+- **Gastos fijos** (cuota de un préstamo, o importe casi idéntico cada mes: hipoteca, alquiler, gimnasio…): ya no avisan por estar al 100 % del presupuesto. Solo avisan si el cargo sube por encima de lo presupuestado.
+- Eliminado el aviso "cerca del límite". En gastos variables queda: presupuesto superado, o "a este ritmo te pasarás" con lo que puedes gastar al día los días que quedan. La proyección ya no extrapola los cargos fijos.
+- "Gastas más que tu media" compara solo el gasto variable, y no se repite si esa categoría ya tiene aviso de presupuesto o un gasto extraordinario.
+- Gastos extraordinarios: no cuentan las amortizaciones de deuda, los cargos anuales que ya se repitieron hace un año por un importe parecido (IBI, seguros…) ni los gastos sin categoría (ya tienen su propio aviso).
+- Tasa de ahorro y destino del ahorro: solo con meses cerrados (con el mes a medias no tienen sentido). Dinero ocioso: también se mira el saldo a fin del mes pasado, no solo justo después de cobrar.
+- Quitadas las felicitaciones fijas (fondo completo, buena tasa de inversión…).
+- Cada aviso tiene ✕ para ocultarlo un tiempo (30 días; 90-180 en los consejos generales). Vuelve si la situación sigue igual. Se comparte con tu pareja.
+
 ## 5.5.3 — 16/11/2026 · Corrección definitiva del saldo tras conciliar
 - Al conciliar una cuenta (o fijar el saldo del banco al importar), el saldo se guarda como el del día anterior, descontando los movimientos ya apuntados ese día. Así cuentan todos los movimientos de ese día, los apuntados antes y después, sin depender de la hora del móvil ni del SQL nuevo.
 - Lectura de fechas de Supabase compatible con Safari (iPhone).
