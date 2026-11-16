@@ -227,7 +227,7 @@ Object.assign(Actions, {
     const c = cuentaById(el.dataset.id);
     openForm({ title: `Conciliar saldo · ${c.nombre}`, intro: `<p class="small muted">Saldo calculado ahora: <b>${fmtEUR(Calc.saldo(c))}</b>. Introduce el saldo real que ves en el banco (o el efectivo contado) tras los movimientos de la fecha indicada. Los movimientos posteriores seguirán sumando.</p>`,
       fields: [{ name: 'saldo', label: 'Saldo real (€)', type: 'number', required: true }, { name: 'fecha', label: 'A cierre del día', type: 'date' }], values: { saldo: Calc.saldo(c), fecha: todayISO() },
-      onSubmit: v => saveEntity('cuentas', c.id, { saldo_inicial: v.saldo, fecha_saldo_inicial: v.fecha || todayISO(), ...(S.v7 ? { saldo_actualizado: new Date().toISOString() } : {}) }) });
+      onSubmit: v => saveEntity('cuentas', c.id, Calc.fijarSaldo(c, v.saldo, v.fecha || todayISO())) });
   },
   'mov-edit': el => { const m = S.movimientos.find(x => x.id === el.dataset.id); if (m) openMovEdit(m); },
   'mov-del': async el => {

@@ -16,11 +16,21 @@ const catName = id => { const c = catById(id); if (!c) return ''; const p = c.pa
 const budgetOf = r => num(r.presupuesto_mensual) > 0 ? num(r.presupuesto_mensual) : sum(childrenOf(r.id), 'presupuesto_mensual');
 const subtipoPorCuenta = c => c ? (c.tipo === 'inversion' ? 'inversion' : c.tipo === 'ahorro' ? 'ahorro' : 'liquidez') : 'liquidez';
 
+/** Milisegundos de una marca de tiempo de Supabase (admite microsegundos, que Safari no siempre entiende). */
+const tsMs = t => { const x = String(t).replace(' ', 'T').replace(/(\.\d{3})\d+/, '$1').replace(/\+00(:?00)?$/, 'Z'); const v = Date.parse(x); return isNaN(v) ? 0 : v; };
+const diaAnterior = iso => { const d = new Date(Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10) - 1)); return d.toISOString().slice(0, 10); };
 const Calc = {
   /** ¿El movimiento es posterior al saldo fijado? Días posteriores siempre; el mismo día, solo si se apuntó después de fijarlo. */
   posterior(m, fecha, ts) {
     if (!fecha || m.fecha > fecha) return true;
-    return m.fecha === fecha && !!ts && !!m.created_at && Date.parse(m.created_at) > Date.parse(ts);
+    return m.fecha === fecha && !!ts && !!m.created_at && tsMs(m.created_at) > tsMs(ts);
+  },
+  /** Datos para fijar el saldo real de una cuenta a cierre de un día. Se guarda como saldo del día anterior
+   *  descontando los movimientos ya apuntados ese día: así cuentan todos los de ese día, los de antes y los que apuntes después. */
+  fijarSaldo(c, saldo, fecha) {
+    const delDia = S.movimientos.filter(m => m.cuenta_id === c.id && m.fecha === fecha);
+    return { saldo_inicial: round2(num(saldo) - sum(delDia, 'importe')), fecha_saldo_inicial: diaAnterior(fecha),
+      ...(S.v7 ? { saldo_actualizado: new Date().toISOString() } : {}) };
   },
   movsDesde(cid, desde, ts) { return S.movimientos.filter(m => m.cuenta_id === cid && this.posterior(m, desde, ts)); },
   /** Saldo contable = saldo de partida + movimientos posteriores. */
