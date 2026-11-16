@@ -87,7 +87,7 @@ function grupoCard(g, k) {
       <div><label>Tipo</label><select data-grp="tipo" data-g="${k}">${Object.entries(TIPO_MOV).map(([v, l]) => `<option value="${v}" ${x.tipo === v ? 'selected' : ''}>${v === 'transferencia' ? 'Transferencia' : l}</option>`).join('')}</select></div>
       <div><label>${isT ? 'Cuenta contraria' : 'Categoría'}</label>${isT ? `<select data-grp="cuenta_contraria_id" data-g="${k}">${accOpts(x.cuenta_contraria_id, { exclude: D.cuentaId, empty: '— Elige cuenta —' })}</select>` : selectCategoria(x.tipo, x.categoria_id, `data-grp="categoria_id" data-g="${k}"`)}</div>
       <div><label class="chk" style="margin:0 0 8px"><input type="checkbox" data-grp="recordar" data-g="${k}" ${g.recordar !== false ? 'checked' : ''}> Recordar</label></div>
-    </div></div>`;
+    </div>${g.bizum ? '<div class="small muted">💸 Bizum enviado: no lo recuerdo salvo que marques “Recordar” (útil si a esta persona siempre le pagas lo mismo, como la limpieza o una cuota).</div>' : ''}</div>`;
 }
 function impRow(x, i) {
   const isT = x.tipo === 'transferencia';
@@ -232,7 +232,7 @@ function impProcess() {
   items.sort((a, b) => a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : 0);
   // Agrupa por comercio (palabra clave propuesta) lo que no se ha podido categorizar
   const grupos = new Map();
-  items.forEach((x, i) => { if (x.dup || x.bizumIn || !necesitaAyuda(x)) return; const k = normPatron(x.patron) || '_'; if (!grupos.has(k)) grupos.set(k, { patron: x.patron, idxs: [], recordar: true }); grupos.get(k).idxs.push(i); });
+  items.forEach((x, i) => { if (x.dup || x.bizumIn || !necesitaAyuda(x)) return; const k = normPatron(x.patron) || '_'; if (!grupos.has(k)) grupos.set(k, { patron: x.patron, idxs: [], recordar: !x.bizum, bizum: x.bizum }); grupos.get(k).idxs.push(i); });
   D.grupos = [...grupos.values()];
   D.items = items; D.stage = 'preview';
   renderImport();
@@ -376,7 +376,7 @@ async function impSave(btn) {
   const r = await withSaving(btn, async () => {
     for (let i = 0; i < rows.length; i += 400) await DB.insert('movimientos', rows.slice(i, i + 400));
     // Aprendizaje: lo que has categorizado o corregido tú se convierte en regla
-    aprendido = await aprenderReglas(sel.filter(x => x.editado && x.recordar !== false && !x.bizum && !x.reembolsoDe));
+    aprendido = await aprenderReglas(sel.filter(x => x.editado && x.recordar !== false && !x.bizumIn && !x.reembolsoDe)); // Bizum enviados: solo si marcas "Recordar"
     await contarUsos(sel);
     await reloadTables('movimientos', ...(S.missing.has('reglas_categoria') ? [] : ['reglas_categoria']));
   });

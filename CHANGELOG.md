@@ -1,5 +1,9 @@
 # Historial de versiones
 
+## 5.5.1 — 16/11/2026 · Bizum enviados
+- Los Bizum enviados siguen siendo gastos que categorizas tú. Por defecto no se recuerdan, pero si marcas "Recordar" sí se crea la regla (antes la casilla no tenía efecto).
+- Para los Bizum la palabra clave propuesta es el nombre completo (p. ej. "maria ruiz limpieza") y no solo el primer nombre.
+
 ## 5.5.0 — 16/11/2026 · Gastos compartidos y Bizum
 - **Gastos compartidos** (👥 en un gasto): indicas entre cuántas personas se reparte o cuánto te deben. Tarjeta "Te deben" en Cuentas, con lo cobrado y lo pendiente, y opción de darlo por saldado.
 - **Reembolsos**: un Bizum o transferencia recibida se puede vincular al gasto que te devuelven (↩). Resta de la categoría de ese gasto y en su mes, y no cuenta como ingreso.

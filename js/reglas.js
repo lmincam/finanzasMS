@@ -88,6 +88,7 @@ function proponerPatron(cOrig, concepto) {
   const base = cOrig || concepto || '';
   const toks = normPatron(base).split(' ').map(t => t.replace(/\d+/g, '')).filter(t => t.length >= 2 && !STOP_PATRON.has(t) && !/^x+$/.test(t));
   if (!toks.length) return normPatron(base).replace(/\d+/g, '').trim().slice(0, 25);
+  if (/bizum/.test(normPatron(base))) return toks.slice(0, 3).join(' '); // en un Bizum, el nombre completo (no basta con "maria")
   return toks[0].length >= 5 ? toks[0] : toks.slice(0, 2).join(' ');
 }
 
