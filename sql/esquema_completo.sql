@@ -577,6 +577,16 @@ create index if not exists movimientos_reembolso_idx on public.movimientos(reemb
 
 
 -- #####################################################################
+--  BLOQUE 9 · Momento exacto en que fijas un saldo (v5.5.2)
+-- #####################################################################
+-- Si concilias una cuenta hoy y después apuntas un gasto con fecha de hoy,
+-- la app necesita saber que el gasto es posterior al saldo para restarlo.
+alter table public.cuentas add column if not exists saldo_actualizado timestamptz;
+alter table public.cuentas add column if not exists valor_actualizado timestamptz;
+notify pgrst, 'reload schema';
+
+
+-- #####################################################################
 --  BLOQUE 5 · Seguridad: solo usuarios con sesión + espacio para copias
 -- #####################################################################
 -- Quita cualquier permiso del rol anónimo en las tablas de la app
@@ -622,7 +632,8 @@ select 'Columna ' || tb || '.' || col,
 from (values ('inmuebles','metros_construidos'), ('inmuebles','precio_m2_venta'),
              ('deudas','comision_amortizacion'), ('aportaciones_periodicas','omitidos'),
              ('deudas','categoria_cuota_id'), ('categorias','naturaleza'),
-             ('movimientos','reembolso_de'), ('movimientos','a_cobrar')) as y(tb, col)
+             ('movimientos','reembolso_de'), ('movimientos','a_cobrar'),
+             ('cuentas','saldo_actualizado'), ('cuentas','valor_actualizado')) as y(tb, col)
 union all
 select 'Acceso anónimo bloqueado',
        case when exists (select 1 from pg_roles where rolname = 'anon')

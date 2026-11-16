@@ -245,17 +245,17 @@ Object.assign(Actions, {
       fields: [{ name: 'valor', label: 'Valor actual (€)', type: 'number', required: true }, { name: 'fecha', label: 'Fecha', type: 'date' }], values: { valor: Calc.valor(c), fecha: todayISO() },
       onSubmit: async v => {
         const fecha = v.fecha || todayISO();
-        await saveEntity('cuentas', c.id, { valor_mercado: v.valor, fecha_valor_mercado: fecha });
+        await saveEntity('cuentas', c.id, { valor_mercado: v.valor, fecha_valor_mercado: fecha, ...(S.v7 ? { valor_actualizado: new Date().toISOString() } : {}) });
         if (S.tablaValoraciones) { await DB.insert('valoraciones', [{ cuenta_id: c.id, fecha, valor: v.valor, aportado_neto: Calc.aportadoA(c, fecha) }]); await reloadTable('valoraciones'); }
       } });
   },
   'inv-new': () => openForm({ title: 'Nueva cuenta de inversión', fields: FIELDS_CUENTA, values: { tipo: 'inversion', fecha_saldo_inicial: todayISO(), orden: S.cuentas.length + 1, activa: true, color: PALETTE[S.cuentas.length % PALETTE.length] },
-    onSubmit: v => saveEntity('cuentas', null, zeroNulls({ ...v, fecha_saldo_inicial: v.fecha_saldo_inicial || todayISO() }, ['saldo_inicial', 'orden'])) }),
+    onSubmit: v => saveEntity('cuentas', null, zeroNulls({ ...v, fecha_saldo_inicial: v.fecha_saldo_inicial || todayISO(), ...(S.v7 ? { saldo_actualizado: new Date().toISOString() } : {}) }, ['saldo_inicial', 'orden'])) }),
   'inv-aportado': el => {
     const c = cuentaById(el.dataset.id);
     openForm({ title: `Capital aportado · ${c.nombre}`, intro: '<p class="small muted">Total que has aportado de tu bolsillo a esta cuenta (aportaciones − retiradas) hasta la fecha indicada. Las aportaciones posteriores (puntuales o periódicas) se sumarán solas.</p>',
       fields: [{ name: 'saldo', label: 'Capital aportado neto (€)', type: 'number', required: true }, { name: 'fecha', label: 'Hasta el día', type: 'date' }], values: { saldo: Calc.saldo(c), fecha: todayISO() },
-      onSubmit: v => saveEntity('cuentas', c.id, { saldo_inicial: v.saldo, fecha_saldo_inicial: v.fecha || todayISO() }) });
+      onSubmit: v => saveEntity('cuentas', c.id, { saldo_inicial: v.saldo, fecha_saldo_inicial: v.fecha || todayISO(), ...(S.v7 ? { saldo_actualizado: new Date().toISOString() } : {}) }) });
   },
   'val-del': async el => {
     const v = S.valoraciones.find(x => x.id === el.dataset.id); if (!v) return;

@@ -325,7 +325,7 @@ async function guardarConciliacion(cuentaId, k, fijar) {
   const valor = { ...((row && row.valor) || {}), [cuentaId]: { fecha: k.corte, banco: k.banco, app: k.app, dif: fijar ? 0 : k.dif, ajustado: fijar && Math.abs(k.dif || 0) >= 0.01, ts: new Date().toISOString() } };
   await DB.upsert('ajustes', { clave: 'conciliaciones', valor, updated_at: new Date().toISOString() }, 'clave');
   if (row) row.valor = valor; else (S.ajustesRows = S.ajustesRows || []).push({ clave: 'conciliaciones', valor });
-  if (fijar && k.dif !== null && Math.abs(k.dif) >= 0.01) { await DB.update('cuentas', cuentaId, { saldo_inicial: k.banco, fecha_saldo_inicial: k.corte }); await reloadTable('cuentas'); }
+  if (fijar && k.dif !== null && Math.abs(k.dif) >= 0.01) { await DB.update('cuentas', cuentaId, { saldo_inicial: k.banco, fecha_saldo_inicial: k.corte, ...(S.v7 ? { saldo_actualizado: new Date().toISOString() } : {}) }); await reloadTable('cuentas'); }
 }
 const conciliacionDe = cid => (((S.ajustesRows || []).find(r => r.clave === 'conciliaciones') || {}).valor || {})[cid] || null;
 

@@ -102,6 +102,7 @@ async function loadAll() {
     S.v5 = !S.missing.has('patrimonio_mensual');
     S.v52 = !S.missing.has('metas') && !S.missing.has('partidas_previstas');
     S.v6 = await DB.tieneColumna('movimientos', 'reembolso_de');
+    S.v7 = await DB.tieneColumna('cuentas', 'saldo_actualizado');
     tables.forEach((t, i) => { if (t !== 'ajustes') S[t] = res[i]; });
     const regla = res[7].find(r => r.clave === 'regla_nomina');
     if (regla && regla.valor) { S.ajustes.nomina_dias = num(regla.valor.dias) || 5; S.ajustes.nomina_umbral = num(regla.valor.umbral); }

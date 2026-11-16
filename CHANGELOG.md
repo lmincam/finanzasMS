@@ -1,5 +1,9 @@
 # Historial de versiones
 
+## 5.5.2 — 16/11/2026 · Corrección: gastos del mismo día que una conciliación
+- Si fijabas el saldo de una cuenta (conciliar, editar el saldo de partida o fijar el del banco al importar) y después apuntabas un movimiento con esa misma fecha, el movimiento no se sumaba ni restaba. Ahora la app guarda el momento exacto en que fijas el saldo y cuenta los movimientos de ese día apuntados después. Lo mismo para la valoración de mercado de las inversiones.
+- Requiere ejecutar `sql/esquema_completo.sql` (bloque 9: columnas `cuentas.saldo_actualizado` y `valor_actualizado`). Sin él la app funciona como antes.
+
 ## 5.5.1 — 16/11/2026 · Bizum enviados
 - Los Bizum enviados siguen siendo gastos que categorizas tú. Por defecto no se recuerdan, pero si marcas "Recordar" sí se crea la regla (antes la casilla no tenía efecto).
 - Para los Bizum la palabra clave propuesta es el nombre completo (p. ej. "maria ruiz limpieza") y no solo el primer nombre.

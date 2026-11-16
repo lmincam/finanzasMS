@@ -17,17 +17,22 @@ const budgetOf = r => num(r.presupuesto_mensual) > 0 ? num(r.presupuesto_mensual
 const subtipoPorCuenta = c => c ? (c.tipo === 'inversion' ? 'inversion' : c.tipo === 'ahorro' ? 'ahorro' : 'liquidez') : 'liquidez';
 
 const Calc = {
-  movsDesde(cid, desde) { return S.movimientos.filter(m => m.cuenta_id === cid && (!desde || m.fecha > desde)); },
+  /** ¿El movimiento es posterior al saldo fijado? Días posteriores siempre; el mismo día, solo si se apuntó después de fijarlo. */
+  posterior(m, fecha, ts) {
+    if (!fecha || m.fecha > fecha) return true;
+    return m.fecha === fecha && !!ts && !!m.created_at && Date.parse(m.created_at) > Date.parse(ts);
+  },
+  movsDesde(cid, desde, ts) { return S.movimientos.filter(m => m.cuenta_id === cid && this.posterior(m, desde, ts)); },
   /** Saldo contable = saldo de partida + movimientos posteriores. */
-  saldo(c) { return round2(num(c.saldo_inicial) + sum(this.movsDesde(c.id, c.fecha_saldo_inicial), 'importe')); },
+  saldo(c) { return round2(num(c.saldo_inicial) + sum(this.movsDesde(c.id, c.fecha_saldo_inicial, c.saldo_actualizado), 'importe')); },
   /** Valor: para inversión usa el valor de mercado + aportaciones posteriores a esa valoración. */
   valor(c) {
     if (c.tipo === 'inversion' && c.valor_mercado !== null && c.valor_mercado !== undefined && c.valor_mercado !== '')
-      return round2(num(c.valor_mercado) + sum(this.movsDesde(c.id, c.fecha_valor_mercado || todayISO()), 'importe'));
+      return round2(num(c.valor_mercado) + sum(this.movsDesde(c.id, c.fecha_valor_mercado || todayISO(), c.valor_actualizado), 'importe'));
     return this.saldo(c);
   },
   /** Capital aportado neto a una cuenta hasta una fecha (incluida). */
-  aportadoA(c, fecha) { return round2(num(c.saldo_inicial) + sum(S.movimientos.filter(m => m.cuenta_id === c.id && m.fecha > c.fecha_saldo_inicial && m.fecha <= fecha), 'importe')); },
+  aportadoA(c, fecha) { return round2(num(c.saldo_inicial) + sum(S.movimientos.filter(m => m.cuenta_id === c.id && Calc.posterior(m, c.fecha_saldo_inicial, c.saldo_actualizado) && m.fecha <= fecha), 'importe')); },
   patrimonio() {
     const cuentas = S.cuentas.filter(c => c.activa !== false);
     const det = cuentas.map(c => ({ id: c.id, nombre: c.nombre, tipo: c.tipo, valor: this.valor(c) }));
@@ -171,7 +176,7 @@ function capitalDeMovimiento(m) {
   return Math.max(0, Math.min(abs, I.cuota) - interes);
 }
 /** Saldo de una cuenta al final de un día (null si es anterior al saldo de partida). */
-Calc.saldoA = (c, fecha) => fecha < c.fecha_saldo_inicial ? null : round2(num(c.saldo_inicial) + sum(S.movimientos.filter(m => m.cuenta_id === c.id && m.fecha > c.fecha_saldo_inicial && m.fecha <= fecha), 'importe'));
+Calc.saldoA = (c, fecha) => fecha < c.fecha_saldo_inicial ? null : round2(num(c.saldo_inicial) + sum(S.movimientos.filter(m => m.cuenta_id === c.id && Calc.posterior(m, c.fecha_saldo_inicial, c.saldo_actualizado) && m.fecha <= fecha), 'importe'));
 
 /* ---------- Inversiones ---------- */
 function invInfo(c) {
