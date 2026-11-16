@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.7.4 — 16/11/2026 · iPhone (app instalada): título nítido
+- En la app instalada, el contenido de la cabecera baja un poco para quedar fuera del difuminado que iOS 26 aplica bajo la barra de estado. En el navegador y en el ordenador no cambia nada.
+
 ## 5.7.3 — 16/11/2026 · iPhone (app instalada): franja superior sin neblina
 - El fondo de la página pasa a ser el azul de la cabecera y el gris claro va en una capa fija detrás del contenido. iOS 26 difumina la zona de la isla con el color de fondo de la página: ahora ese color es el mismo azul, así que no se nota.
 

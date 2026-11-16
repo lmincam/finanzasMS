@@ -263,3 +263,9 @@ code{background:#f1f5f9;padding:1px 6px;border-radius:5px;font-size:12.5px}
   .cal-item{font-size:13.5px;padding:4px 6px}
   .cal-foot{font-size:12.5px}
 }
+
+/* App instalada en iPhone (iOS 26): el sistema difumina una franja que va algo más abajo de la barra de estado.
+   Se baja el contenido de la cabecera lo justo para que quede por debajo de ese difuminado (sin efecto si no hay isla/notch). */
+@media (display-mode: standalone){
+  .topbar{padding-top:calc(12px + env(safe-area-inset-top) * 1.5)}
+}
