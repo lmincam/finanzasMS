@@ -1,5 +1,5 @@
 -- =====================================================================
---  PATRIMONIO FAMILIAR · ESQUEMA COMPLETO DE BASE DE DATOS (v5.1)
+--  PATRIMONIO FAMILIAR · ESQUEMA COMPLETO DE BASE DE DATOS (v5.2)
 --  ---------------------------------------------------------------------
 --  Un único script para Supabase → SQL Editor → New query → Run.
 --
@@ -521,6 +521,51 @@ where p.nombre = 'Vivienda' and p.parent_id is null
 
 
 -- #####################################################################
+--  BLOQUE 7 · Fase 3: previsión de tesorería y metas de ahorro
+-- #####################################################################
+-- Partidas previstas que añades a mano (pagas extra, IBI, matrícula del colegio…)
+create table if not exists public.partidas_previstas (
+  id               uuid primary key default gen_random_uuid(),
+  concepto         text not null,
+  tipo             text not null default 'gasto' check (tipo in ('gasto','ingreso')),
+  importe          numeric(12,2) not null,           -- siempre positivo
+  frecuencia_meses int not null default 12,          -- 0 = una sola vez, 1 = mensual, 3 = trimestral, 6, 12…
+  fecha_inicio     date not null,                     -- primera vez (marca también el día del mes)
+  fecha_fin        date,
+  categoria_id     uuid references public.categorias(id) on delete set null,
+  activa           boolean default true,
+  notas            text,
+  created_at       timestamptz default now()
+);
+-- Metas de ahorro (huchas virtuales o vinculadas a una cuenta)
+create table if not exists public.metas (
+  id                uuid primary key default gen_random_uuid(),
+  nombre            text not null,
+  icono             text default '🎯',
+  importe_objetivo  numeric(14,2) not null,
+  fecha_objetivo    date,
+  modo              text not null default 'manual' check (modo in ('manual','cuenta')),
+  cuenta_id         uuid references public.cuentas(id) on delete set null,
+  ahorrado          numeric(14,2) default 0,          -- modo manual: total apartado
+  aportaciones      jsonb default '[]'::jsonb,         -- [{fecha, importe, nota}]
+  prioridad         int default 2,
+  completada        boolean default false,
+  notas             text,
+  created_at        timestamptz default now()
+);
+do $$
+declare t text;
+begin
+  foreach t in array array['partidas_previstas','metas'] loop
+    execute format('alter table public.%I enable row level security', t);
+    execute format('drop policy if exists acceso_personal on public.%I', t);
+    execute format('create policy acceso_personal on public.%I for all to authenticated using (true) with check (true)', t);
+    execute format('grant select, insert, update, delete on public.%I to authenticated', t);
+  end loop;
+end $$;
+
+
+-- #####################################################################
 --  BLOQUE 5 · Seguridad: solo usuarios con sesión + espacio para copias
 -- #####################################################################
 -- Quita cualquier permiso del rol anónimo en las tablas de la app
@@ -529,7 +574,7 @@ declare t text;
 begin
   foreach t in array array['cuentas','categorias','movimientos','inmuebles','vehiculos','deudas','snapshots','ajustes',
                            'valoraciones','precios_m2','amortizaciones','amortizaciones_plan','aportaciones_periodicas',
-                           'posiciones','seguros','reglas_categoria','patrimonio_mensual'] loop
+                           'posiciones','seguros','reglas_categoria','patrimonio_mensual','partidas_previstas','metas'] loop
     if to_regclass('public.' || t) is not null then
       execute format('revoke all on public.%I from anon', t);
     end if;
@@ -557,7 +602,7 @@ select 'Tabla ' || t as elemento,
        case when to_regclass('public.' || t) is not null then '✅ OK' else '❌ FALTA' end as estado
 from unnest(array['cuentas','categorias','movimientos','inmuebles','vehiculos','deudas','snapshots','ajustes',
                   'valoraciones','precios_m2','amortizaciones','amortizaciones_plan','aportaciones_periodicas',
-                  'posiciones','seguros','reglas_categoria','patrimonio_mensual']) as t
+                  'posiciones','seguros','reglas_categoria','patrimonio_mensual','partidas_previstas','metas']) as t
 union all
 select 'Columna ' || tb || '.' || col,
        case when exists (select 1 from information_schema.columns

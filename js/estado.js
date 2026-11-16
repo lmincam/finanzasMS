@@ -11,7 +11,7 @@ const S = {
   cuentas: [], categorias: [], movimientos: [], inmuebles: [], vehiculos: [], deudas: [], snapshots: [],
   valoraciones: [], tablaValoraciones: true,
   // Tablas de la migración v4 (opcionales: si faltan, la app sigue funcionando y avisa)
-  seguros: [], amortizaciones: [], amortizaciones_plan: [], aportaciones_periodicas: [], posiciones: [], precios_m2: [], reglas_categoria: [], patrimonio_mensual: [],
+  seguros: [], amortizaciones: [], amortizaciones_plan: [], aportaciones_periodicas: [], posiciones: [], precios_m2: [], reglas_categoria: [], patrimonio_mensual: [], partidas_previstas: [], metas: [], prevH: 6, prevMetas: true,
   missing: new Set(), v4: true,
   deudaSel: null, invSel: null, deudaVista: { modo: 'plazo', anual: false, conPlan: true },
   ajustes: { nomina_dias: 5, nomina_umbral: 300, extra_umbral: 300, fondo_meses: 6 },
@@ -33,7 +33,7 @@ const TIPO_ACTIVO = { fondo: 'Fondo de inversión', etf: 'ETF', accion: 'Acción
 const CLASE_ACTIVO = { renta_variable: 'Renta variable', renta_fija: 'Renta fija', monetario: 'Monetario', liquidez: 'Liquidez', inmobiliario: 'Inmobiliario', materias_primas: 'Materias primas / oro', cripto: 'Cripto', otro: 'Otro' };
 const PALETTE = ['#1e3a8a', '#0891b2', '#16a34a', '#ca8a04', '#dc2626', '#7c3aed', '#db2777', '#ea580c', '#0d9488', '#64748b'];
 const TABS = [
-  ['dashboard', '📊 Dashboard'], ['cuentas', '💳 Cuentas y movimientos'], ['patrimonio', '🏠 Inmuebles y vehículos'],
+  ['dashboard', '📊 Dashboard'], ['cuentas', '💳 Cuentas y movimientos'], ['planificacion', '🎯 Previsión y metas'], ['patrimonio', '🏠 Inmuebles y vehículos'],
   ['inversiones', '📈 Inversiones'], ['deudas', '🏦 Deudas'], ['seguros', '🛡️ Seguros'], ['auditoria', '📸 Auditoría trimestral'], ['categorias', '🏷️ Categorías y presupuestos'], ['ajustes', '⚙️ Ajustes']
 ];
 

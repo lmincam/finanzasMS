@@ -136,6 +136,24 @@ function buildAlertas(months, st, P, rows) {
       add('blue', '🏦', `${d.nombre}: este mes toca amortizar ${fmtEUR(p.importe)}`, 'Según tu plan de amortizaciones. Cuando la hagas, regístrala en 🏦 Deudas para actualizar el préstamo y tu ahorro en intereses.');
   }
 
+  // 15) Previsión de tesorería: meses en los que la cuenta se queda corta
+  if (S.v52) {
+    try {
+      const P = calcularPrevision(6, S.prevMetas);
+      if (P.minimo.saldo < 0) add('red', '🔮', `Previsión: saldo negativo en ${ymLabel(P.minimo.ym)}`, `Con los cargos previstos, la cuenta operativa bajaría hasta <b>${fmtEUR(P.minimo.saldo, 0)}</b>. Revisa 🎯 Previsión y metas y prepara saldo desde el fondo de emergencia.`);
+      else if (P.colchon && P.minimo.saldo < P.colchon) add('amber', '🔮', `Previsión: ${ymLabel(P.minimo.ym)} viene cargado`, `El saldo operativo bajaría a ${fmtEUR(P.minimo.saldo, 0)}, menos de un mes de gastos (${fmtEUR(P.colchon, 0)}). Evita gastos extra ese mes o adelanta saldo.`);
+    } catch (e) { console.warn(e); }
+    // 16) Metas
+    const inf = S.metas.map(m => ({ m, x: metaInfo(m) }));
+    for (const { m, x } of inf) {
+      if (x.estado === 'retrasada') add('amber', '🎯', `${m.nombre}: vas por detrás`, `Necesitas apartar ${fmtEUR(x.necesariaMes)}/mes y tu ritmo es ${fmtEUR(x.ritmo)}/mes. ${x.fechaEstimada ? `A este ritmo llegarías en ${ymLabel(x.fechaEstimada, true)}.` : ''}`);
+      else if (x.estado === 'vencida') add('amber', '🎯', `${m.nombre}: fecha superada`, `Te faltan ${fmtEUR(x.restante, 0)}. Ajusta la fecha objetivo o el importe.`);
+      else if (x.conseguida && !m.completada) add('green', '🎉', `${m.nombre}: ¡meta conseguida!`, 'Márcala como conseguida y decide el siguiente objetivo.');
+    }
+    const nec = sum(inf.filter(o => !o.x.conseguida), o => o.x.necesariaMes || 0);
+    if (hist && nec > 0 && nec > hist.ahorro) add('amber', '🎯', `Tus metas piden ${fmtEUR(nec, 0)}/mes y ahorras ${fmtEUR(hist.ahorro, 0)}/mes`, 'No llegas a todas a tiempo: prioriza, alarga alguna fecha o ajusta importes.');
+  }
+
   const ord = { red: 0, amber: 1, blue: 2, green: 3 };
   return A.sort((a, b) => ord[a.nivel] - ord[b.nivel]);
 }

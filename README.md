@@ -21,6 +21,8 @@ js/
   cuentas.js          Pestaña Cuentas y movimientos + registro rápido
   reglas.js           Motor de reglas de categorización (predefinidas + aprendidas)
   importador.js       Importador de extractos de Unicaja
+  prevision.js        Previsión de tesorería (recurrentes, partidas previstas)
+  metas.js            Metas de ahorro y pestaña Previsión y metas
   inversiones.js      Pestaña Inversiones (global + detalle, posiciones, aportaciones periódicas)
   inmuebles.js        Pestaña Inmuebles y vehículos
   deudas.js           Pestaña Deudas (vista general + detalle, simulador, amortizaciones)

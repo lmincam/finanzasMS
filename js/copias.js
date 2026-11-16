@@ -14,7 +14,7 @@
 
 /** Tablas en orden de restauración (primero las que otras referencian). */
 const TABLAS_COPIA = ['cuentas', 'categorias', 'inmuebles', 'vehiculos', 'deudas', 'movimientos', 'snapshots', 'valoraciones', 'precios_m2',
-  'amortizaciones', 'amortizaciones_plan', 'aportaciones_periodicas', 'posiciones', 'seguros', 'reglas_categoria', 'patrimonio_mensual', 'ajustes'];
+  'amortizaciones', 'amortizaciones_plan', 'aportaciones_periodicas', 'posiciones', 'seguros', 'reglas_categoria', 'patrimonio_mensual', 'partidas_previstas', 'metas', 'ajustes'];
 const COPIAS_GUARDADAS = 12, COPIA_CADA_DIAS = 7;
 
 const Copias = {

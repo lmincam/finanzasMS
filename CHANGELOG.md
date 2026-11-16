@@ -1,5 +1,13 @@
 # Historial de versiones
 
+## 5.2.0 — 16/11/2026 · Fase 3: previsión de tesorería y metas
+- Nueva pestaña **🎯 Previsión y metas**.
+- **Previsión de tesorería** a 3, 6 o 12 meses del dinero en cuentas operativas: detecta los ingresos y recibos recurrentes de tu historial (nómina, luz, suscripciones, colegio…) y los combina con cuotas de préstamos, recibos de seguros, aportaciones periódicas, plan de amortizaciones, gasto variable estimado y aportación a metas. Gráfico, detalle por mes, próximos 30 días y aviso de meses en los que la cuenta se queda corta.
+- **Partidas previstas** manuales (pagas extra, IBI, matrícula…) y posibilidad de descartar recurrentes detectados.
+- **Metas de ahorro** como hucha virtual o vinculadas a una cuenta: progreso, aportación mensual necesaria, ritmo real, fecha estimada y estado. Botón para crear la meta del fondo de emergencia con el importe calculado.
+- Alertas nuevas en el Dashboard: meses con saldo previsto bajo o negativo, metas retrasadas o conseguidas, metas que piden más de lo que ahorras.
+- SQL: ejecutar de nuevo `sql/esquema_completo.sql` (bloque 7).
+
 ## 5.1.0 — 16/11/2026 · Fase 2: números exactos
 - **Conciliación con el saldo del banco**: el importador lee la columna Saldo del Excel y comprueba que el saldo calculado coincide con el del banco tras el último movimiento. Si no cuadra, lo avisa con la diferencia y permite fijar el saldo del banco como punto de control. Cada cuenta muestra si cuadra.
 - **Cuotas de préstamos separadas en intereses y capital**: los intereses cuentan como gasto operativo y el capital como ahorro (reduce deuda). Categoría de la cuota configurable en cada préstamo (por defecto "Hipoteca"). Nueva subcategoría "Amortización anticipada" que cuenta entera como ahorro. Desglose de la cuota del mes en el detalle del préstamo.
