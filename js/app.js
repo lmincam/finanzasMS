@@ -21,6 +21,7 @@ function openMenu() { const d = $('#drawer'); if (!d) return; d.classList.add('o
 function closeMenu() { const d = $('#drawer'); if (!d || !d.classList.contains('open')) return false; d.classList.remove('open'); d.setAttribute('aria-hidden', 'true'); document.body.classList.remove('no-scroll'); return true; }
 function render() {
   _deudaCache = new Map();
+  const ob = $('#offline-bar'); if (ob) { ob.hidden = !S.offline; if (S.offline) { const d = new Date(S.offline); ob.innerHTML = `📴 Sin conexión · datos guardados el ${d.toLocaleDateString('es-ES')} a las ${d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} · solo lectura`; } }
   destroyCharts();
   renderTabs();
   const el = $('#tab-' + S.tab);
@@ -64,6 +65,7 @@ function bindEvents() {
   const h = location.hash.slice(1); if (TABS.some(t => t[0] === h)) S.tab = h;
   setupChartDefaults();
   bindEvents();
+  iniciarPWA();
   if (!window.supabase) { toast('No se pudo cargar la librería de Supabase. Revisa tu conexión.', 'err', 6000); return; }
   arrancarAuth();
 })();

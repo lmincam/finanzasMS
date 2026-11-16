@@ -20,6 +20,7 @@ function renderAjustes() {
           <div class="full actions">${hard ? '' : '<button class="btn ghost" data-action="cfg-clear">Olvidar</button>'}<button class="btn primary" data-action="cfg-save-conn" ${hard ? 'disabled' : ''}>Guardar</button></div>
         </div></div>
     </div>
+    ${renderAppCard()}
     ${renderCopiasCard()}
     <div class="grid-2e">
       <div class="card"><div class="card-head"><h3>⏭ Regla de desfase de nómina</h3></div>

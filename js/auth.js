@@ -138,6 +138,7 @@ Object.assign(Actions, {
   'auth-modo': el => renderLogin(el.dataset.m),
   'auth-logout': async () => {
     if (!(await confirmDlg('¿Cerrar sesión en este dispositivo?', 'Cerrar sesión', false))) return;
+    await borrarCopiaLocal(); // los datos guardados en el dispositivo no deben quedarse tras cerrar sesión
     await DB.client.auth.signOut();
   },
   'auth-cambiar': () => openForm({ title: 'Cambiar contraseña', fields: [

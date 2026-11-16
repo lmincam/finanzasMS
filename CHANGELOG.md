@@ -1,5 +1,12 @@
 # Historial de versiones
 
+## 5.4.0 — 16/11/2026 · App instalable, sin conexión y avisos
+- **App instalable (PWA)**: icono propio, se abre a pantalla completa y arranca al instante (`manifest.json`, `sw.js`, carpeta `icons/`).
+- **Sin cobertura**: abre con los últimos datos guardados en el dispositivo, en modo solo lectura y con una barra que lo indica. La copia local se borra al cerrar sesión.
+- **Avisos al abrir la app** con las alertas importantes (máximo 3 al día, sin repetir el mismo en una semana). Se activan por dispositivo en ⚙️ Ajustes → App en el móvil.
+- Las versiones nuevas se aplican solas al abrir la app.
+- Nuevo módulo `js/pwa.js`. Sin cambios de SQL.
+
 ## 5.3.1 — 16/11/2026 · Corrección
 - Al abrir un formulario, el cursor ya no salta al primer campo si has empezado a escribir en otro (podía hacer que lo tecleado acabara en el campo equivocado). Ajuste visual en el recuadro de supuestos de la proyección.
 

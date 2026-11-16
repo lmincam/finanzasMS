@@ -13,6 +13,9 @@ const getConn = () => ({
   url: (SUPABASE_URL || localStorage.getItem('pf_sb_url') || '').trim(),
   key: (SUPABASE_ANON_KEY || localStorage.getItem('pf_sb_key') || '').trim()
 });
+/** Sin conexión la app funciona en modo solo lectura con la última copia guardada en el dispositivo. */
+function soloLectura() { if (S.offline) throw new Error('Sin conexión: la app está en modo solo lectura. Los cambios no se pueden guardar ahora.'); }
+const esErrorRed = e => !navigator.onLine || /failed to fetch|network|load failed|fetch/i.test((e && e.message) || '');
 const DB = {
   client: null,
   init() {
@@ -36,34 +39,41 @@ const DB = {
     return out;
   },
   async insert(table, rows) {
+    soloLectura();
     const { data, error } = await this.client.from(table).insert(rows).select();
     if (error) throw error; return data;
   },
   async update(table, id, patch) {
+    soloLectura();
     const { data, error } = await this.client.from(table).update(patch).eq('id', id).select();
     if (error) throw error; return data;
   },
   async updateIn(table, ids, patch) {
+    soloLectura();
     for (let i = 0; i < ids.length; i += 200) {
       const { error } = await this.client.from(table).update(patch).in('id', ids.slice(i, i + 200));
       if (error) throw error;
     }
   },
   async upsertMany(table, rows, onConflict = 'id') {
+    soloLectura();
     for (let i = 0; i < rows.length; i += 500) {
       const { error } = await this.client.from(table).upsert(rows.slice(i, i + 500), { onConflict });
       if (error) throw error;
     }
   },
   async remove(table, id) {
+    soloLectura();
     const { error } = await this.client.from(table).delete().eq('id', id);
     if (error) throw error;
   },
   async removeWhere(table, col, val) {
+    soloLectura();
     const { error } = await this.client.from(table).delete().eq(col, val);
     if (error) throw error;
   },
   async upsert(table, row, onConflict) {
+    soloLectura();
     const { data, error } = await this.client.from(table).upsert(row, onConflict ? { onConflict } : undefined).select();
     if (error) throw error; return data;
   }
@@ -99,7 +109,13 @@ async function loadAll() {
     setConn('ok', 'Conectado');
     for (const fn of AfterLoad) { try { await fn(); } catch (e) { console.error(e); toast('Aviso: ' + (e.message || e), 'warn', 5000); } }
   } catch (e) {
-    console.error(e); S.connected = false;
+    console.error(e);
+    if (esErrorRed(e) && typeof cargarCopiaLocal === 'function' && await cargarCopiaLocal()) {
+      setConn('err', 'Sin conexión');
+      toast('Sin conexión: mostrando los datos guardados en este dispositivo (solo lectura)', 'warn', 6000);
+      return;
+    }
+    S.connected = false;
     setConn('err', 'Error');
     const msg = /relation|does not exist|schema cache/i.test(e.message || '') ? 'Faltan las tablas: ejecuta el script SQL en Supabase.' : (e.message || String(e));
     toast('No se pudo cargar: ' + msg, 'err', 6000);

@@ -7,6 +7,9 @@ Interfaz en **GitHub Pages**, datos en **Supabase**.
 
 ```
 index.html            Estructura de la página y carga de módulos (en orden)
+manifest.json         Datos de la app instalable (nombre, iconos, colores)
+sw.js                 Service worker: abre al instante y sin conexión
+icons/                Iconos de la app
 css/estilos.css       Todo el diseño
 js/
   config.js           Versión de la app y claves de Supabase (vacías: se configuran en Ajustes)
@@ -33,6 +36,7 @@ js/
   ajustes.js          Pestaña Ajustes
   auth.js             Inicio de sesión (Supabase Auth)
   copias.js           Copias de seguridad automáticas y restauración
+  pwa.js              App instalable, modo sin conexión y avisos
   app.js              Navegación, eventos y arranque (se carga el último)
 sql/esquema_completo.sql  Base de datos completa en UN ÚNICO script, ejecutable las veces que quieras
 CHANGELOG.md          Qué cambia en cada versión

@@ -196,6 +196,7 @@ body.locked .sticky,body.locked main,body.locked .fab,body.locked #drawer{displa
 .auth-logo .brand small{color:var(--muted);opacity:1}
 .auth-links{display:flex;justify-content:space-between;margin-top:14px;font-size:13px}
 .user-chip{width:34px;height:34px;border-radius:50%;border:0;background:#22c55e;color:#fff;font-weight:700;cursor:pointer;font-size:15px}
+#offline-bar{background:#b45309;color:#fff;text-align:center;font-size:13px;font-weight:600;padding:7px 12px}
 code{background:#f1f5f9;padding:1px 6px;border-radius:5px;font-size:12.5px}
 @media (max-width:900px){
   .grid-2,.grid-2e{grid-template-columns:1fr}
