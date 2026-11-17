@@ -1,5 +1,9 @@
 # Historial de versiones
 
+## 5.9.1 — 17/11/2026 · Diseño del Dashboard
+- Indicadores con fondo suave de su color: ingresos en verde, gastos en rojo, ahorro e inversión en amarillo, y liquidez y patrimonio en azul claro. Liquidez disponible va ahora antes que patrimonio neto.
+- Selector de periodo rediseñado: modos arriba (en el móvil, en dos filas de tres), debajo ‹ mes › con el mes escrito como botón que abre el selector, y 📅 Calendario siempre en el mismo sitio. En "Mes" ya no se repite el nombre del mes; en el resto de modos se indica el rango.
+
 ## 5.9.0 — 17/11/2026 · Dashboard: ahorro líquido, detalle y año en curso
 - **Capacidad de ahorro líquida**: ingresos − todo lo que sale en gastos, con la cuota del préstamo completa. El capital amortizado ya no se suma (no es dinero disponible: es vivienda); se muestra aparte. Gastos operativos sigue sin incluir ese capital. Las alertas de tasa de ahorro y la línea "Ahorro líquido" del gráfico usan el mismo criterio.
 - **Ingresos y Gastos operativos se pueden pulsar**: abren el detalle del periodo con el resumen por categoría (cargos, devoluciones de Bizum y capital desglosados) y la lista de movimientos, que se pueden abrir para corregir.

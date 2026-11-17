@@ -320,3 +320,27 @@ code{background:#f1f5f9;padding:1px 6px;border-radius:5px;font-size:12.5px}
   .det-cat{grid-template-columns:auto 1fr auto}.det-cat .bar{grid-column:2/-1;order:5}
   .det-mov{grid-template-columns:1fr auto}.det-f{grid-column:1/-1}
 }
+
+/* ---------- Colores de los indicadores ---------- */
+.kpi.pos{background:linear-gradient(180deg,#fff,#f0fdf4)}
+.kpi.neg{background:linear-gradient(180deg,#fff,#fef2f2)}
+.kpi.sky{border-left-color:var(--navy);background:linear-gradient(180deg,#fff,#eff6ff)}
+/* ---------- Selector de periodo ---------- */
+.card.period.per-main{display:flex;flex-direction:column;align-items:stretch;gap:12px}
+.per-modes{align-self:flex-start;max-width:100%;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+.per-modes::-webkit-scrollbar{display:none}
+.per-modes button{white-space:nowrap;flex:none}
+.per-sel{display:flex;align-items:center;gap:10px}
+.per-sel .per-cal{margin-left:auto;flex:none}
+.per-sel .pin .btn{min-width:36px;justify-content:center}
+.mpick{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:150px;height:34px;padding:0 14px;border:1px solid var(--line2);border-radius:9px;background:#fff;font-weight:600;color:var(--navy);cursor:pointer;white-space:nowrap;text-transform:capitalize}
+.mpick:hover{border-color:var(--navy3)}
+.period .mpick .mp-input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0;margin:0}
+.per-info{font-size:13px;color:var(--slate)}
+.per-info .period-label{font-weight:600;color:var(--navy)}
+@media (max-width:640px){
+  .per-modes{align-self:stretch;display:grid;grid-template-columns:repeat(3,1fr);overflow:visible}
+  .per-modes button{padding:7px 4px}
+  .mpick{min-width:0;flex:1}
+  .per-sel .pin{flex:1;min-width:0}
+}

@@ -33,9 +33,11 @@ function renderDashboard() {
   const nM = months.length;
   const p = S.period;
   const modes = [['mes', 'Mes'], ['2m', '2 meses'], ['3m', '3 meses'], ['6m', '6 meses'], ['anio', 'Año'], ['custom', 'Personalizado']];
+  // Selector de mes: ‹ [noviembre 2026] ›. El texto es un botón; encima va un <input type=month> invisible que abre el selector nativo.
+  const mesPick = (id, val, txt) => `<label class="mpick"><span>${txt}</span><input type="month" class="mp-input" id="${id}" value="${val}" aria-label="Elegir mes"></label>`;
   const inputs = p.mode === 'custom'
-    ? `<div class="pin"><span class="small muted">De</span><input type="month" id="p-from" value="${p.from}"><span class="small muted">a</span><input type="month" id="p-to" value="${p.to}"></div>`
-    : `<div class="pin"><button class="btn sm ghost" data-action="period-shift" data-d="-1">‹</button><input type="month" id="p-ref" value="${p.ref}" title="${p.mode === 'anio' ? 'Cualquier mes del año a analizar' : 'Mes final del periodo'}"><button class="btn sm ghost" data-action="period-shift" data-d="1">›</button></div>`;
+    ? `<div class="pin"><span class="small muted">De</span>${mesPick('p-from', p.from, ymLabel(p.from, true))}<span class="small muted">a</span>${mesPick('p-to', p.to, ymLabel(p.to, true))}</div>`
+    : `<div class="pin"><button class="btn sm ghost" data-action="period-shift" data-d="-1" aria-label="Anterior">‹</button>${mesPick('p-ref', p.ref, p.mode === 'anio' ? p.ref.slice(0, 4) : ymLabel(p.ref))}<button class="btn sm ghost" data-action="period-shift" data-d="1" aria-label="Siguiente">›</button></div>`;
 
   // Datos para gráficos
   const chartMonths = months.length < 3 ? Array.from({ length: 6 }, (_, i) => addMonths(months[months.length - 1], i - 5)) : months;
@@ -52,13 +54,13 @@ function renderDashboard() {
 
   el.innerHTML = `
     ${snapshotBanner()}
-    <div class="card period">
-      <div class="seg">${modes.map(([k, l]) => `<button data-action="period-mode" data-mode="${k}" class="${p.mode === k ? 'active' : ''}">${l}</button>`).join('')}</div>
-      ${inputs}
-      <div class="period-label">${periodLabel(months)}</div>
-      <button class="btn sm primary" data-action="cal-open" title="Ver los gastos de cada día">📅 Calendario</button>
-      <div class="sp"></div>
-      <span class="small muted">Ingresos según <b>mes de imputación</b> (regla de nómina)</span>
+    <div class="card period per-main">
+      <div class="seg per-modes">${modes.map(([k, l]) => `<button data-action="period-mode" data-mode="${k}" class="${p.mode === k ? 'active' : ''}">${l}</button>`).join('')}</div>
+      <div class="per-sel">
+        ${inputs}
+        <button class="btn sm primary per-cal" data-action="cal-open" title="Ver los gastos de cada día">📅 Calendario</button>
+      </div>
+      <div class="per-info">${p.mode !== 'mes' ? `<span class="period-label">${periodLabel(months)}</span> · ` : ''}<span class="small muted">Ingresos según <b>mes de imputación</b> (regla de nómina)</span></div>
     </div>
 
     <div class="kpis">
@@ -66,9 +68,9 @@ function renderDashboard() {
       ${kpiLink('gastos', 'Gastos operativos <button class="info-btn" data-action="kpi-info" data-k="gastos" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(st.gastos), (nM > 1 ? `Media ${fmtEUR(st.gastos / nM)}/mes · ` : '') + (st.capital > 0 ? `sin <b>${fmtEUR(st.capital)}</b> de capital amortizado` : 'sin transferencias internas'), 'neg')}
       ${kpi('Capacidad de ahorro <button class="info-btn" data-action="kpi-info" data-k="ahorro" title="¿De dónde sale este dato?">ⓘ</button>', `<span class="${st.ahorro >= 0 ? '' : 'neg'}">${fmtEUR(st.ahorro)}</span>`, `Líquido, en tus cuentas · tasa <b>${fmtPct(tasaAh)}</b>${st.capital > 0 ? `<br>+ ${fmtEUR(st.capital, 0)} a capital de deuda (no líquido)` : ''}`, 'yellow')}
       ${kpi('Tasa de inversión <button class="info-btn" data-action="kpi-info" data-k="inversion" title="¿De dónde sale este dato?">ⓘ</button>', fmtPct(tasaInv), `Invertido: ${fmtEUR(st.aport.inversion)} · A reserva: ${fmtEUR(st.aport.ahorro)}`, 'yellow')}
+      ${kpi('Liquidez disponible <button class="info-btn" data-action="kpi-info" data-k="liquidez" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(P.liquidez), `Operativa ${fmtEUR(P.operativa, 0)} · Fondo emerg. ${fmtEUR(P.reserva, 0)}`, 'sky')}
       ${kpi('Patrimonio neto total <button class="info-btn" data-action="kpi-info" data-k="patrimonio" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(P.neto, 0), (() => { const prev = S.patrimonio_mensual.filter(x => x.anio_mes < ymOf(todayISO())).sort((a, b) => a.anio_mes < b.anio_mes ? 1 : -1)[0];
-        return prev ? `<span class="${P.neto - num(prev.patrimonio_neto) >= 0 ? 'pos' : 'neg'}"><b>${signed(P.neto - num(prev.patrimonio_neto))}</b></span> vs ${ymLabel(prev.anio_mes, true)}` : `Activos ${fmtEUR(P.activos, 0)} · Deudas ${fmtEUR(P.deudas, 0)}`; })(), 'navy')}
-      ${kpi('Liquidez disponible <button class="info-btn" data-action="kpi-info" data-k="liquidez" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(P.liquidez), `Operativa ${fmtEUR(P.operativa, 0)} · Fondo emerg. ${fmtEUR(P.reserva, 0)}`, '')}
+        return prev ? `<span class="${P.neto - num(prev.patrimonio_neto) >= 0 ? 'pos' : 'neg'}"><b>${signed(P.neto - num(prev.patrimonio_neto))}</b></span> vs ${ymLabel(prev.anio_mes, true)}` : `Activos ${fmtEUR(P.activos, 0)} · Deudas ${fmtEUR(P.deudas, 0)}`; })(), 'sky')}
     </div>
 
     ${renderAnioEnCurso(P)}
@@ -208,3 +210,6 @@ Object.assign(Changes, {
   'p-from': el => { if (el.value) { S.period.from = el.value; render(); } },
   'p-to': el => { if (el.value) { S.period.to = el.value; render(); } }
 });
+
+// El mes se elige pulsando el texto: en ordenador se abre el calendario nativo (en el móvil lo abre el propio input invisible)
+document.addEventListener('click', e => { const i = e.target.closest('.mp-input'); if (i && i.showPicker) { try { i.showPicker(); } catch (err) { /* sin soporte */ } } });
