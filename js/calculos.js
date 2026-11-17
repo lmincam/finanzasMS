@@ -30,7 +30,7 @@ const fijoManual = id => { const c = catById(id); if (!c) return null; if (c.gas
   const p = c.parent_id ? catById(c.parent_id) : null; return p && (p.gasto_fijo === true || p.gasto_fijo === false) ? p.gasto_fijo : null; };
 /** Gastado en el año natural del mes indicado (enero → ese mes, por mes de imputación) en esas categorías. */
 const gastadoEnAnio = (ids, hastaYm) => { const set = new Set(ids), y = hastaYm.slice(0, 4);
-  return round2(-sum(S.movimientos.filter(m => m.tipo === 'gasto' && set.has(m.categoria_id) && ymOf(m.mes_imputacion) >= y + '-01' && ymOf(m.mes_imputacion) <= hastaYm), 'importe')); };
+  return round2(-sum(S.movimientos.filter(m => m.tipo === 'gasto' && set.has(m.categoria_id) && mesDe(m) >= y + '-01' && mesDe(m) <= hastaYm), 'importe')); };
 const subtipoPorCuenta = c => c ? (c.tipo === 'inversion' ? 'inversion' : c.tipo === 'ahorro' ? 'ahorro' : 'liquidez') : 'liquidez';
 
 /** Milisegundos de una marca de tiempo de Supabase (admite microsegundos, que Safari no siempre entiende). */
@@ -143,6 +143,72 @@ function inmuebleInfo(i) {
 }
 
 /* ---------- Periodo del dashboard ---------- */
+/* ---------- Mes de nómina ----------
+   Cada "mes" va del día en que cobras la nómina al día antes del siguiente cobro:
+   "Noviembre" = 28 oct → 27 nov si la nómina de noviembre llega el 28 de octubre.
+   Así los gastos de los últimos días de octubre (pagados ya con esa nómina) cuentan en noviembre. */
+const addDias = (iso, n) => { const d = new Date(Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10) + n)); return d.toISOString().slice(0, 10); };
+const mesNominaActivo = () => S.ajustes.mes_nomina !== false;
+let _ciclos = null;
+/** Inicio de cada mes de nómina detectado: { 'AAAA-MM': 'AAAA-MM-DD' } y el desfase habitual para los meses sin cobro detectado. */
+function ciclosNomina() {
+  const key = S.movimientos.length + '|' + (S.movimientos[0] || {}).id + '|' + S.ajustes.nomina_umbral + '|' + S.categorias.length + '|' + todayISO();
+  if (_ciclos && _ciclos.key === key && _ciclos.ref === S.movimientos) return _ciclos;
+  const umbral = Math.max(300, num(S.ajustes.nomina_umbral));
+  const esNomina = m => m.tipo === 'ingreso' && num(m.importe) > 0 && (num(m.importe) >= umbral || /nomina/.test(normText(catName(m.categoria_id) || '')));
+  const inicio = {};
+  for (const m of S.movimientos) {
+    if (!esNomina(m)) continue;
+    // Mes que paga: el imputado (regla de nómina) o, si no se movió, el siguiente cuando se cobra a partir del día 20
+    const ym = ymOf(m.mes_imputacion) !== ymOf(m.fecha) ? ymOf(m.mes_imputacion) : (+m.fecha.slice(8, 10) >= 20 ? addMonths(ymOf(m.fecha), 1) : ymOf(m.fecha));
+    // solo cobros cercanos al cambio de mes (del día 15 del mes anterior al 15 de ese mes)
+    if (m.fecha < addMonths(ym, -1) + '-15' || m.fecha > ym + '-15') continue;
+    if (!inicio[ym] || m.fecha < inicio[ym]) inicio[ym] = m.fecha;
+  }
+  // Día habitual de cobro: p. ej. el 27 del mes anterior (o el 1 del propio mes si cobras a principios)
+  const antes = Object.entries(inicio).filter(([ym, f]) => ymOf(f) < ym).map(([, f]) => +f.slice(8, 10));
+  const despues = Object.entries(inicio).filter(([ym, f]) => ymOf(f) === ym).map(([, f]) => +f.slice(8, 10));
+  const desfase = antes.length >= despues.length && antes.length ? { prev: true, dia: Math.round(median(antes)) } : { prev: false, dia: despues.length ? Math.round(median(despues)) : 1 };
+  const detectados = Object.keys(inicio).sort();
+  _ciclos = { key, ref: S.movimientos, inicio, desfase, ultimo: detectados[detectados.length - 1] || null, memo: new WeakMap() };
+  return _ciclos;
+}
+/** Primer día del mes de nómina ym (detectado, o estimado con el día habitual de cobro). */
+function inicioCiclo(ym) {
+  if (!mesNominaActivo()) return ym + '-01';
+  const C = ciclosNomina();
+  if (C.inicio[ym]) return C.inicio[ym];
+  const base = C.desfase.prev ? addMonths(ym, -1) : ym, [by, bm] = base.split('-').map(Number);
+  let f = `${base}-${pad(Math.min(C.desfase.dia, daysInMonth(by, bm)))}`;
+  // Si aún no ha llegado la nómina que abre este mes, el mes anterior sigue abierto hasta que llegue
+  const hoy = todayISO();
+  if (C.ultimo && ym > C.ultimo && f <= hoy) f = addDias(hoy, 1);
+  return f;
+}
+/** Rango del mes de nómina: { ini, fin } (fin = día antes del siguiente cobro, estimado si aún no ha llegado). */
+const rangoCiclo = ym => ({ ini: inicioCiclo(ym), fin: addDias(inicioCiclo(addMonths(ym, 1)), -1) });
+/** Mes de nómina al que pertenece una fecha. */
+function cicloDe(fecha) {
+  let ym = ymOf(fecha);
+  if (!mesNominaActivo()) return ym;
+  if (fecha >= inicioCiclo(addMonths(ym, 1))) return addMonths(ym, 1);
+  if (fecha < inicioCiclo(ym)) return addMonths(ym, -1);
+  return ym;
+}
+/** Mes actual (de nómina). */
+const mesActual = () => cicloDe(todayISO());
+/** Mes contable de un movimiento. Si se imputó a mano (o por la regla) a otro mes, manda eso; si no, su mes de nómina.
+ *  Una devolución (Bizum de un gasto compartido) va al mismo mes que el gasto que devuelve. */
+function mesDe(m) {
+  if (m.reembolso_de) { const o = S.movimientos.find(x => x.id === m.reembolso_de); if (o && o !== m) return mesDe(o); }
+  const imp = ymOf(m.mes_imputacion);
+  if (!mesNominaActivo() || imp !== ymOf(m.fecha)) return imp;
+  const C = ciclosNomina(), c = C.memo.get(m);
+  if (c && c[0] === m.fecha && c[1] === m.mes_imputacion) return c[2];
+  const r = cicloDe(m.fecha); C.memo.set(m, [m.fecha, m.mes_imputacion, r]); return r;
+}
+const fmtRango = ym => { const r = rangoCiclo(ym); return `${fmtDate(r.ini).slice(0, 5)} – ${fmtDate(r.fin).slice(0, 5)}`; };
+
 function periodMonths() {
   const p = S.period;
   switch (p.mode) {
@@ -154,7 +220,7 @@ function periodMonths() {
 }
 function periodStats(months) {
   const set = new Set(months);
-  const movs = S.movimientos.filter(m => set.has(ymOf(m.mes_imputacion)));
+  const movs = S.movimientos.filter(m => set.has(mesDe(m)));
   const ingresos = sum(movs.filter(m => m.tipo === 'ingreso'), 'importe');
   const gastosCaja = -sum(movs.filter(m => m.tipo === 'gasto'), 'importe');
   // La parte de capital de las cuotas de préstamos y las amortizaciones anticipadas no es gasto: reduce deuda (ahorro)

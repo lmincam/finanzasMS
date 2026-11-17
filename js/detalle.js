@@ -69,7 +69,7 @@ function baseAnio(y) {
   return null;
 }
 function renderAnioEnCurso(P) {
-  const hoy = todayISO(), y = +hoy.slice(0, 4), ym = ymOf(hoy);
+  const hoy = todayISO(), ym = mesActual(), y = +ym.slice(0, 4);
   const ms = Array.from({ length: +ym.slice(5, 7) }, (_, i) => `${y}-${pad(i + 1)}`);
   const st = periodStats(ms), nMes = ms.length;
   const base = baseAnio(y);
@@ -94,7 +94,7 @@ function renderAnioEnCurso(P) {
 Object.assign(Actions, {
   'dash-detalle': el => { S.dashDet = el.dataset.k; S.dashCal = false; render(); window.scrollTo(0, 0); },
   'det-close': () => { S.dashDet = null; if (S.periodPrev) { S.period = S.periodPrev; S.periodPrev = null; } render(); },
-  'ytd-detalle': () => { const hoy = todayISO(); S.periodPrev = S.periodPrev || { ...S.period }; S.period = { ...S.period, mode: 'custom', from: hoy.slice(0, 4) + '-01', to: ymOf(hoy) }; S.dashDet = 'ingresos'; render(); window.scrollTo(0, 0); },
+  'ytd-detalle': () => { const hoy = todayISO(); S.periodPrev = S.periodPrev || { ...S.period }; S.period = { ...S.period, mode: 'custom', from: mesActual().slice(0, 4) + '-01', to: mesActual() }; S.dashDet = 'ingresos'; render(); window.scrollTo(0, 0); },
   'ytd-base': () => {
     const y = +todayISO().slice(0, 4), b = baseAnio(y);
     openForm({ title: `Patrimonio neto a 1 de enero de ${y}`, submitLabel: 'Guardar',

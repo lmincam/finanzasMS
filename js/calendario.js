@@ -10,15 +10,17 @@
 
 const DIAS_SEM = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
-/** Gastos del calendario: gastos por fecha de operación (sin amortizaciones de deuda, que son ahorro). Los reembolsos restan. */
+/** Gastos del calendario: los gastos de esos meses (de nómina), colocados en su fecha de operación. Sin amortizaciones de deuda; las devoluciones restan.
+ *  Devuelve { dias: { fecha: [movs] }, porMes: { ym: [fechas] } }. */
 function gastosPorDia(months) {
-  const set = new Set(months), dias = {};
+  const set = new Set(months), dias = {}, porMes = {};
   for (const m of S.movimientos) {
-    if (m.tipo !== 'gasto' || !set.has(ymOf(m.fecha)) || esCatAmortizacion(m.categoria_id)) continue;
-    (dias[m.fecha] = dias[m.fecha] || []).push(m);
+    if (m.tipo !== 'gasto' || esCatAmortizacion(m.categoria_id)) continue;
+    const ym = mesDe(m); if (!set.has(ym)) continue;
+    (dias[m.fecha] = dias[m.fecha] || []).push(m); (porMes[ym] = porMes[ym] || []).push(m.fecha);
   }
   for (const k in dias) dias[k].sort((a, b) => num(a.importe) - num(b.importe));
-  return dias;
+  return { dias, porMes };
 }
 const totalDia = movs => round2(-sum(movs, 'importe'));
 
@@ -30,30 +32,35 @@ function itemCal(m) {
     <span class="cal-imp ${reemb ? 'pos' : ''}">${reemb ? '−' : ''}${fmtEUR(Math.abs(imp))}</span></button>`;
 }
 
-function mesCalendario(ym, dias, maxDia) {
-  const [y, mo] = ym.split('-').map(Number), n = daysInMonth(y, mo), hoy = todayISO();
-  const offset = (new Date(Date.UTC(y, mo - 1, 1)).getUTCDay() + 6) % 7; // lunes = 0
-  const totMes = round2(sum(Object.entries(dias).filter(([f]) => ymOf(f) === ym), ([, v]) => totalDia(v)));
-  const conGasto = Object.keys(dias).filter(f => ymOf(f) === ym && totalDia(dias[f]) > 0).length;
-  const transcurridos = ym < ymOf(hoy) ? n : ym === ymOf(hoy) ? +hoy.slice(8, 10) : 0;
+const MES_CORTO = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+function mesCalendario(ym, G, maxDia) {
+  const hoy = todayISO(), R = rangoCiclo(ym), fs = (G.porMes[ym] || []).sort();
+  // Del inicio al fin del mes de nómina (ampliado si algún gasto se imputó a mano a este mes con otra fecha)
+  const ini = fs.length && fs[0] < R.ini ? fs[0] : R.ini, fin = fs.length && fs[fs.length - 1] > R.fin ? fs[fs.length - 1] : R.fin;
+  const fechas = []; for (let f = ini; f <= fin && fechas.length < 70; f = addDias(f, 1)) fechas.push(f);
+  const enMes = f => (G.dias[f] || []).filter(m => mesDe(m) === ym);
+  const totMes = round2(sum(fechas, f => totalDia(enMes(f))));
+  const conGasto = fechas.filter(f => totalDia(enMes(f)) > 0).length;
+  const transcurridos = fechas.filter(f => f <= hoy).length;
+  const offset = (new Date(ini + 'T00:00:00Z').getUTCDay() + 6) % 7; // lunes = 0
   let celdas = '';
   for (let i = 0; i < offset; i++) celdas += '<div class="cal-cell cal-empty"></div>';
-  for (let d = 1; d <= n; d++) {
-    const f = `${ym}-${pad(d)}`, movs = dias[f] || [], tot = totalDia(movs);
+  fechas.forEach((f, i) => {
+    const movs = enMes(f), tot = totalDia(movs), d = +f.slice(8, 10);
     const nivel = tot > 0 && maxDia > 0 ? Math.min(4, Math.ceil((tot / maxDia) * 4)) : 0;
-    const dow = (offset + d - 1) % 7;
-    celdas += `<div class="cal-cell ${movs.length ? 'cal-has' : 'cal-none'} cal-h${nivel} ${f === hoy ? 'cal-today' : ''} ${dow >= 5 ? 'cal-we' : ''}">
-      <div class="cal-head"><span class="cal-num"><span class="cal-dow">${DIAS_SEM[dow]}</span> ${d}</span>${movs.length ? `<b class="cal-tot">${fmtEUR(tot)}</b>` : ''}</div>
+    const dow = (offset + i) % 7, conMes = i === 0 || d === 1;
+    celdas += `<div class="cal-cell ${movs.length ? 'cal-has' : 'cal-none'} cal-h${nivel} ${f === hoy ? 'cal-today' : ''} ${dow >= 5 ? 'cal-we' : ''} ${f > hoy ? 'cal-fut' : ''}">
+      <div class="cal-head"><span class="cal-num"><span class="cal-dow">${DIAS_SEM[dow]}</span> ${d}${conMes ? ` <span class="cal-mes">${MES_CORTO[+f.slice(5, 7) - 1]}</span>` : ''}</span>${movs.length ? `<b class="cal-tot">${fmtEUR(tot)}</b>` : ''}</div>
       ${movs.length ? `<div class="cal-list">${movs.map(itemCal).join('')}</div>${movs.length > 1 ? `<div class="cal-foot">Gasto total del día: <b>${fmtEUR(tot)}</b></div>` : ''}` : ''}
     </div>`;
-  }
+  });
   return `<div class="card cal-month">
-    <div class="card-head"><h3>${ymLabel(ym)}</h3><span class="sub">Total: <b>${fmtEUR(totMes)}</b> · ${conGasto} día(s) con gasto${transcurridos ? ` · media ${fmtEUR(totMes / transcurridos)}/día` : ''}</span></div>
+    <div class="card-head"><div><h3>${ymLabel(ym)}</h3>${mesNominaActivo() ? `<div class="small muted">Mes de nómina: del ${fmtDate(R.ini)} al ${fmtDate(R.fin)}</div>` : ''}</div><span class="sub">Total: <b>${fmtEUR(totMes)}</b> · ${conGasto} día(s) con gasto${transcurridos ? ` · media ${fmtEUR(totMes / transcurridos)}/día` : ''}</span></div>
     <div class="cal-grid">${DIAS_SEM.map((d, i) => `<div class="cal-wd ${i >= 5 ? 'cal-we' : ''}">${d}</div>`).join('')}${celdas}</div></div>`;
 }
 
 function renderCalendario(el, months) {
-  const p = S.period, dias = gastosPorDia(months);
+  const p = S.period, G = gastosPorDia(months), dias = G.dias;
   const totales = Object.values(dias).map(totalDia).filter(v => v > 0).sort((a, b) => a - b);
   const maxDia = totales.length ? totales[Math.floor(totales.length * 0.9)] || totales[totales.length - 1] : 0; // escala de color robusta a un día atípico
   const top = Object.entries(dias).map(([f, v]) => ({ f, t: totalDia(v) })).sort((a, b) => b.t - a.t)[0];
@@ -65,15 +72,15 @@ function renderCalendario(el, months) {
       ${nav}
       <div class="period-label">📅 ${periodLabel(months)}</div>
       <div class="sp"></div>
-      <span class="small muted">Gastos por <b>fecha de operación</b>. Pulsa un gasto para verlo o corregirlo.</span>
+      <span class="small muted">Cada gasto en su <b>fecha de operación</b>. Pulsa un gasto para verlo o corregirlo.</span>
     </div>
     <div class="kpis">
       ${kpi('Gasto del periodo', fmtEUR(total), `${Object.keys(dias).length} día(s) con gastos`, 'neg')}
       ${kpi('Día de más gasto', top ? fmtEUR(top.t) : '—', top ? fmtDate(top.f) : 'Sin gastos', '')}
     </div>
-    ${months.map(ym => mesCalendario(ym, dias, maxDia)).join('')}
+    ${months.map(ym => mesCalendario(ym, G, maxDia)).join('')}
     <div class="small muted" style="margin:4px 2px 14px">No incluye transferencias internas ni amortizaciones de deuda. Las devoluciones (Bizum de un gasto compartido) aparecen en verde y restan del día.
-      El total del calendario puede diferir de “Gastos operativos” del Dashboard, que va por <b>mes de imputación</b>.</div>`;
+      Son los mismos meses que el Dashboard; la diferencia con “Gastos operativos” es que aquí la cuota del préstamo va completa (con su parte de capital).</div>`;
 }
 
 Object.assign(Actions, {

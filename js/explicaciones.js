@@ -9,9 +9,9 @@
 
 function explicacion(k) {
   const months = periodMonths(), st = periodStats(months), P = Calc.patrimonio(), nM = months.length;
-  const per = `<b>${periodLabel(months)}</b>`;
+  const per = `<b>${periodLabel(months)}</b>${mesNominaActivo() ? ` (mes de nómina: del ${fmtDate(rangoCiclo(months[0]).ini)} al ${fmtDate(rangoCiclo(months[months.length - 1]).fin)})` : ''}`;
   const linea = (l, v, cls = '') => `<div class="exp-l ${cls}"><span>${l}</span><b class="num">${v}</b></div>`;
-  const nomina = `La <b>regla de nómina</b> (⚙️ Ajustes) imputa al mes siguiente los ingresos de al menos ${fmtEUR(S.ajustes.nomina_umbral, 0)} cobrados en los últimos ${S.ajustes.nomina_dias} días laborables del mes: la nómina de finales de octubre cuenta como ingreso de noviembre, que es el mes que paga.`;
+  const nomina = `${mesNominaActivo() ? 'Con el <b>mes de nómina</b> (⚙️ Ajustes) cada mes empieza el día en que cobras y termina el día antes del siguiente cobro, así que ingresos y gastos se cuentan sobre el mismo tramo de días. ' : ''}La <b>regla de nómina</b> (⚙️ Ajustes) imputa al mes siguiente los ingresos de al menos ${fmtEUR(S.ajustes.nomina_umbral, 0)} cobrados en los últimos ${S.ajustes.nomina_dias} días laborables del mes: la nómina de finales de octubre cuenta como ingreso de noviembre, que es el mes que paga.`;
   const D = {
     ingresos: () => {
       const xs = st.movs.filter(m => m.tipo === 'ingreso').sort((a, b) => num(b.importe) - num(a.importe));

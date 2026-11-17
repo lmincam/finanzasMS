@@ -106,7 +106,8 @@ async function loadAll() {
     S.v8 = await DB.tieneColumna('categorias', 'presupuesto_anual');
     tables.forEach((t, i) => { if (t !== 'ajustes') S[t] = res[i]; });
     const regla = res[7].find(r => r.clave === 'regla_nomina');
-    if (regla && regla.valor) { S.ajustes.nomina_dias = num(regla.valor.dias) || 5; S.ajustes.nomina_umbral = num(regla.valor.umbral); }
+    if (regla && regla.valor) { S.ajustes.nomina_dias = num(regla.valor.dias) || 5; S.ajustes.nomina_umbral = num(regla.valor.umbral); S.ajustes.mes_nomina = regla.valor.mes_nomina !== false; }
+    if (!S._periodoIni) { S._periodoIni = true; const mA = mesActual(); S.period.ref = mA; S.period.to = mA; S.period.from = addMonths(mA, -2); }
     S.ajustesRows = res[7];
     const alertas = res[7].find(r => r.clave === 'alertas');
     if (alertas && alertas.valor) { S.ajustes.extra_umbral = num(alertas.valor.extra_umbral) || 300; S.ajustes.fondo_meses = num(alertas.valor.fondo_meses) || 6; }

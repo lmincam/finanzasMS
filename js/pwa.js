@@ -72,7 +72,7 @@ async function avisosAlAbrir() {
   let enviados = {}; try { enviados = JSON.parse(localStorage.getItem('pf_avisos_enviados') || '{}'); } catch (e) { enviados = {}; }
   const hoy = todayISO();
   for (const k of Object.keys(enviados)) if (diasEntre(enviados[k], hoy) > 30) delete enviados[k];
-  const ym = ymOf(hoy), st = periodStats([ym]), P = Calc.patrimonio();
+  const ym = mesActual(), st = periodStats([ym]), P = Calc.patrimonio();
   const rows = budgetRows(st.movs.filter(m => m.tipo === 'gasto'), 1, [ym]), oc = alertasOcultas();
   const A = buildAlertas([ym], st, P, rows).filter(a => (a.nivel === 'red' || a.nivel === 'amber') && !(oc[a.key] && oc[a.key] >= hoy)).filter(a => !enviados[a.t] || diasEntre(enviados[a.t], hoy) >= 7);
   const txt = h => String(h).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();

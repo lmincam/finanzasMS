@@ -29,9 +29,9 @@ function renderAnualidadesCard() {
   if (!items.length) return `<div class="card"><div class="card-head"><h3>🗓️ Anualidades</h3>${selCuenta}</div>
     <div class="small muted">Aún no tienes pagos anuales. En 🏷️ Categorías, edita una categoría (p. ej. Seguros) y pon su presupuesto como <b>Anual</b>: aquí verás cuánto pasar cada mes a ${ca ? `<b>${esc(ca.nombre)}</b>` : 'tu cuenta de anualidades'}.</div></div>`;
 
-  const total = round2(sum(items, 'mensual')), hoy = todayISO(), ym = ymOf(hoy);
+  const total = round2(sum(items, 'mensual')), hoy = todayISO(), ym = mesActual();
   // Lo que ya has pasado este mes: entradas en la cuenta de anualidades (transferencias desde otras cuentas)
-  const pasado = ca ? round2(sum(S.movimientos.filter(m => m.cuenta_id === ca.id && ymOf(m.fecha) === ym && num(m.importe) > 0 && m.tipo === 'transferencia'), 'importe')) : 0;
+  const pasado = ca ? round2(sum(S.movimientos.filter(m => m.cuenta_id === ca.id && cicloDe(m.fecha) === ym && num(m.importe) > 0 && m.tipo === 'transferencia'), 'importe')) : 0;
   const falta = round2(Math.max(0, total - pasado));
   const saldo = ca ? Calc.valor(ca) : null;
   // Cargos previstos en los próximos 3 meses frente al saldo apartado

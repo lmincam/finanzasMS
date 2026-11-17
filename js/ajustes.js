@@ -28,6 +28,8 @@ function renderAjustes() {
         <div class="form-grid">
           <div><label>Últimos días laborables (N)</label><input type="number" id="cfg-dias" min="1" max="15" value="${esc(S.ajustes.nomina_dias)}"></div>
           <div><label>Importe mínimo (€)</label><input id="cfg-umbral" inputmode="decimal" value="${esc(numInput(S.ajustes.nomina_umbral))}"></div>
+          <div class="full"><label class="chk"><input type="checkbox" id="cfg-mesnom" ${mesNominaActivo() ? 'checked' : ''}> <b>Mes de nómina</b>: cada mes va del día en que cobras al día antes del siguiente cobro (los gastos de después de cobrar cuentan en el mes de esa nómina)</label>
+            <small class="hint">${mesNominaActivo() ? `Mes actual: <b>${ymLabel(mesActual())}</b>, del ${fmtDate(rangoCiclo(mesActual()).ini)} al ${fmtDate(rangoCiclo(mesActual()).fin)}${ciclosNomina().inicio[addMonths(mesActual(), 1)] ? '' : ' (fin estimado hasta que llegue la próxima nómina)'}.` : 'Desactivado: se usan meses naturales (del 1 al último día).'}</small></div>
           <div class="full small muted">Ejemplo con N = ${S.ajustes.nomina_dias}: en ${ymLabel(ymOf(todayISO()))} se imputarían al mes siguiente los ingresos desde el ${ejemploVentana()}.</div>
           <div class="full actions"><button class="btn primary" data-action="cfg-save-regla" ${S.connected ? '' : 'disabled'}>Guardar regla</button></div>
         </div></div>
@@ -72,7 +74,7 @@ Object.assign(Actions, {
   'cfg-clear': async () => { if (!(await confirmDlg('¿Borrar la URL y la clave guardadas en este dispositivo?', 'Olvidar'))) return; try { await DB.client.auth.signOut(); } catch (e) { /* noop */ } localStorage.removeItem('pf_sb_url'); localStorage.removeItem('pf_sb_key'); location.reload(); },
   'cfg-save-regla': async el => {
     const dias = parseInt($('#cfg-dias').value, 10) || 5, umbral = num($('#cfg-umbral').value);
-    const r = await withSaving(el, () => DB.upsert('ajustes', { clave: 'regla_nomina', valor: { dias, umbral }, updated_at: new Date().toISOString() }, 'clave'), 'Regla guardada ✓');
-    if (r !== FAIL) { S.ajustes.nomina_dias = dias; S.ajustes.nomina_umbral = umbral; render(); }
+    const r = await withSaving(el, () => DB.upsert('ajustes', { clave: 'regla_nomina', valor: { dias, umbral, mes_nomina: $('#cfg-mesnom').checked }, updated_at: new Date().toISOString() }, 'clave'), 'Regla guardada ✓');
+    if (r !== FAIL) { S.ajustes.nomina_dias = dias; S.ajustes.nomina_umbral = umbral; S.ajustes.mes_nomina = $('#cfg-mesnom').checked; _ciclos = null; const mA = mesActual(); S.period.ref = mA; S.period.to = mA; render(); }
   }
 });

@@ -149,7 +149,7 @@ function calcularPrevision(horizonte = S.prevH, incluirMetas = S.prevMetas) {
 }
 /** Salidas de caja medias al mes (para el colchón operativo). */
 function gastoMensualMedio() {
-  const h = mediaHistorica(ymOf(todayISO()), 6);
+  const h = mediaHistorica(mesActual(), 6);
   return h && h.gastosCaja > 0 ? h.gastosCaja : 0;
 }
 

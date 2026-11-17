@@ -11,7 +11,7 @@ const median = arr => { if (!arr.length) return 0; const a = [...arr].sort((x, y
 /** Medias mensuales de los N meses completos anteriores a refYm que tengan datos. */
 function mediaHistorica(refYm, n = 6) {
   const ms = Array.from({ length: n }, (_, i) => addMonths(refYm, -(i + 1)))
-    .filter(m => S.movimientos.some(x => ymOf(x.mes_imputacion) === m && (x.tipo === 'gasto' || x.tipo === 'ingreso')));
+    .filter(m => S.movimientos.some(x => (x.tipo === 'gasto' || x.tipo === 'ingreso') && mesDe(x) === m));
   if (!ms.length) return null;
   const st = periodStats(ms);
   const porRaiz = {};
@@ -21,7 +21,7 @@ function mediaHistorica(refYm, n = 6) {
 }
 /** Gasto mensual de una categoría (con sus subcategorías) en los meses indicados: [{ total, n }]. */
 function gastoCatPorMes(catId, ms) {
-  return ms.map(ym => { const xs = S.movimientos.filter(m => m.tipo === 'gasto' && ymOf(m.mes_imputacion) === ym && m.categoria_id && (m.categoria_id === catId || (catById(m.categoria_id) || {}).parent_id === catId));
+  return ms.map(ym => { const xs = S.movimientos.filter(m => m.tipo === 'gasto' && mesDe(m) === ym && m.categoria_id && (m.categoria_id === catId || (catById(m.categoria_id) || {}).parent_id === catId));
     return { total: -sum(xs, 'importe'), n: xs.length }; });
 }
 /** ¿Es un gasto fijo (hipoteca, alquiler, cuota del gimnasio…)? Cuota de un préstamo, o importe casi idéntico cada mes con 1-2 cargos. */
@@ -41,9 +41,11 @@ const claveAlerta = (nivel, t) => nivel + ':' + String(t).replace(/[-+]?[\d.,]+\
 
 function buildAlertas(months, st, P, rows) {
   const A = []; const add = (nivel, ic, t, txt, key, dias) => A.push({ nivel, ic, t, txt, key: key || claveAlerta(nivel, t), dias: dias || 30 });
-  const today = todayISO(), curYm = ymOf(today), [cy, cm, cd] = today.split('-').map(Number);
+  // Progreso dentro del mes (de nómina): día cd de los diasMes que tiene
+  const today = todayISO(), curYm = mesActual(), RC = rangoCiclo(curYm);
+  const diasMes = Math.max(1, Math.round((Date.parse(RC.fin) - Date.parse(RC.ini)) / 864e5) + 1), cd = Math.max(1, Math.round((Date.parse(today) - Date.parse(RC.ini)) / 864e5) + 1);
   const nM = months.length, enCurso = months.includes(curYm), soloMesActual = nM === 1 && months[0] === curYm;
-  const frac = cd / daysInMonth(cy, cm);
+  const frac = Math.min(1, cd / diasMes);
   const hist = mediaHistorica(months[0], 6);
   const gastoMes = (hist && hist.gastosCaja > 0) ? hist.gastosCaja : (st.gastosCaja / nM);
   const ingMes = (hist && hist.ingresos > 0) ? hist.ingresos : (st.ingresos / nM);
@@ -70,21 +72,21 @@ function buildAlertas(months, st, P, rows) {
       continue;
     }
     if (exceso >= 5) { conAvisoPres.add(r.catId);
-      add('red', '🚨', `Presupuesto superado: ${r.nombre}`, `Has gastado ${fmtEUR(r.spent)} de ${fmtEUR(r.bud)}: te has pasado <b>${fmtEUR(exceso)}</b>${soloMesActual && frac < 0.97 ? ` y quedan ${daysInMonth(cy, cm) - cd} días de mes` : ''}.`, `pres:${r.catId}:${ymKey}`); }
+      add('red', '🚨', `Presupuesto superado: ${r.nombre}`, `Has gastado ${fmtEUR(r.spent)} de ${fmtEUR(r.bud)}: te has pasado <b>${fmtEUR(exceso)}</b>${soloMesActual && frac < 0.97 ? ` y quedan ${diasMes - cd} días de mes` : ''}.`, `pres:${r.catId}:${ymKey}`); }
     else if (soloMesActual && cd >= 7 && frac < 0.9 && nMovsCat(r.catId) >= 3 && proyeccion(r) > r.bud * 1.1) { conAvisoPres.add(r.catId);
-      const quedan = daysInMonth(cy, cm) - cd;
-      add('amber', '⚠️', `${r.nombre}: a este ritmo te pasarás`, `Llevas ${fmtEUR(r.spent)} de ${fmtEUR(r.bud)} a día ${cd} y acabarías el mes en <b>${fmtEUR(proyeccion(r))}</b>. Para no pasarte, no superes ${fmtEUR(Math.max(0, r.bud - r.spent) / quedan)}/día los ${quedan} días que quedan.`, `ritmo:${r.catId}:${ymKey}`); }
+      const quedan = diasMes - cd;
+      add('amber', '⚠️', `${r.nombre}: a este ritmo te pasarás`, `Llevas ${fmtEUR(r.spent)} de ${fmtEUR(r.bud)} en el día ${cd} de ${diasMes} del mes y acabarías el mes en <b>${fmtEUR(proyeccion(r))}</b>. Para no pasarte, no superes ${fmtEUR(Math.max(0, r.bud - r.spent) / quedan)}/día los ${quedan} días que quedan.`, `ritmo:${r.catId}:${ymKey}`); }
   }
 
   // 2) Gastos extraordinarios (importe alto y muy por encima de lo habitual en su categoría)
   const umbral = num(S.ajustes.extra_umbral) || 300;
   const desde = addMonths(months[0], -12);
-  const previos = S.movimientos.filter(m => m.tipo === 'gasto' && ymOf(m.mes_imputacion) >= addMonths(desde, -2) && ymOf(m.mes_imputacion) < months[0]);
+  const previos = S.movimientos.filter(m => m.tipo === 'gasto' && mesDe(m) >= addMonths(desde, -2) && mesDe(m) < months[0]);
   // Un cargo anual que ya pasó hace 10-14 meses por un importe parecido (IBI, seguro, ITV…) no es extraordinario: es esperado
   const esAnual = m => previos.some(x => x.categoria_id === m.categoria_id && Math.abs(num(x.importe) - num(m.importe)) <= Math.abs(num(m.importe)) * 0.2
     && Math.abs(monthsDiff(x.fecha, m.fecha)) >= 10 && Math.abs(monthsDiff(x.fecha, m.fecha)) <= 14);
   const extras = st.movs.filter(m => m.tipo === 'gasto' && -num(m.importe) >= umbral && m.categoria_id && !esCatAmortizacion(m.categoria_id) && !catAnualDe(m.categoria_id) && !esAnual(m)).filter(m => {
-    const h = previos.filter(x => x.categoria_id === m.categoria_id && ymOf(x.mes_imputacion) >= desde).map(x => -num(x.importe));
+    const h = previos.filter(x => x.categoria_id === m.categoria_id && mesDe(x) >= desde).map(x => -num(x.importe));
     return h.length >= 2 ? -num(m.importe) > 2.5 * median(h) : -num(m.importe) >= 3 * umbral;
   }).sort((a, b) => num(a.importe) - num(b.importe));
   if (extras.length) add('amber', '💥', `${extras.length} gasto(s) extraordinario(s): ${fmtEUR(-sum(extras, 'importe'))}`,
@@ -123,7 +125,7 @@ function buildAlertas(months, st, P, rows) {
 
     // 6) Dinero ocioso en cuenta corriente/efectivo
     //    Se mira también el saldo a fin del mes pasado: justo después de cobrar la nómina siempre parece que sobra.
-    const finPrev = diaAnterior(curYm + '-01');
+    const finPrev = diaAnterior(RC.ini);
     const opPrev = sum(S.cuentas.filter(c => c.activa !== false && (c.tipo === 'corriente' || c.tipo === 'efectivo')), c => { const v = Calc.saldoA(c, finPrev); return v === null ? Calc.valor(c) : v; });
     if (Math.min(P.operativa, opPrev) > 2 * gastoMes && Math.min(P.operativa, opPrev) - 1.5 * gastoMes > 500)
       add('blue', '💤', `${fmtEUR(P.operativa - 1.5 * gastoMes, 0)} ociosos en la cuenta corriente`, `Tienes ${fmtEUR(P.operativa, 0)} en cuenta corriente y efectivo, más de 2 meses de gastos. Con 1-1,5 meses de colchón operativo suele bastar: mueve el exceso al fondo de emergencia${P.reserva / gastoMes >= obj ? ' o, como ya está completo, a inversión' : ''}.`, 'ocioso', 30);

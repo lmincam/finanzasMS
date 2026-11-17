@@ -30,7 +30,7 @@ ${tipo === 'gasto' ? badgeFijo(c) : ''}
 function badgeFijo(c) {
   if (c.gasto_fijo === true) return ' <span class="badge" title="Marcado por ti como gasto fijo">📌 fijo</span>';
   if (c.gasto_fijo === false || presAnual(c) || catAnualDe(c.id)) return '';
-  return esGastoFijo(c.id, ymOf(todayISO())) ? ' <span class="badge" title="La app lo detecta como fijo: importe casi igual cada mes. Puedes cambiarlo al editar la categoría.">fijo · auto</span>' : '';
+  return esGastoFijo(c.id, mesActual()) ? ' <span class="badge" title="La app lo detecta como fijo: importe casi igual cada mes. Puedes cambiarlo al editar la categoría.">fijo · auto</span>' : '';
 }
 function openCatForm(cat, tipo, parentId) {
   const t = cat ? cat.tipo : tipo;

@@ -27,7 +27,7 @@ function aportacionAuto() {
   return Math.max(0, sum(S.movimientos.filter(m => inv.has(m.cuenta_id) && m.tipo === 'transferencia' && m.fecha >= desde), 'importe') / 12);
 }
 /** Gasto anual de referencia: gastos operativos medios de los últimos 6 meses × 12 (sin capital de deuda). */
-function gastoAnualAuto() { const h = mediaHistorica(ymOf(todayISO()), 6); return h ? h.gastos * 12 : 0; }
+function gastoAnualAuto() { const h = mediaHistorica(mesActual(), 6); return h ? h.gastos * 12 : 0; }
 
 /** Deuda pendiente total al final de un año, según el calendario de cada préstamo. */
 function deudaFinAnio(anio) {

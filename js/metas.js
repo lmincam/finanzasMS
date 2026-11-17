@@ -41,7 +41,7 @@ function renderMetasSection() {
   const metas = [...S.metas].sort((a, b) => (num(a.prioridad) - num(b.prioridad)) || ((a.fecha_objetivo || '9') < (b.fecha_objetivo || '9') ? -1 : 1));
   const infos = metas.map(m => ({ m, x: metaInfo(m) })), act = infos.filter(o => !o.x.conseguida);
   const totObj = sum(act, o => o.x.obj), totAh = sum(act, o => o.x.ahorrado), totNec = sum(act, o => o.x.necesariaMes || 0);
-  const h = mediaHistorica(ymOf(todayISO()), 6), ahorroMedio = h ? h.ahorro : null;
+  const h = mediaHistorica(mesActual(), 6), ahorroMedio = h ? h.ahorro : null;
   const hayFondo = S.metas.some(m => m.modo === 'cuenta' && cuentaById(m.cuenta_id) && cuentaById(m.cuenta_id).tipo === 'ahorro');
   const fondo = S.cuentas.find(c => c.tipo === 'ahorro' && c.activa !== false), gm = gastoMensualMedio();
   return `

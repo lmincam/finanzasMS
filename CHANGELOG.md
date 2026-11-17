@@ -1,5 +1,12 @@
 # Historial de versiones
 
+## 5.10.0 — 17/11/2026 · Mes de nómina
+- Cada "mes" va del día en que cobras la nómina al día antes del siguiente cobro (p. ej. noviembre = 27 oct → 26 nov). Los gastos de después de cobrar cuentan en el mes de esa nómina, así que ingresos y gastos se comparan sobre el mismo tramo y la capacidad de ahorro cuadra.
+- El inicio de cada mes se detecta con la fecha real de la nómina. Mientras no llega la siguiente, el fin se estima con tu día habitual de cobro, y si la nómina se retrasa, el mes sigue abierto hasta que entre.
+- Se aplica en toda la app: Dashboard, presupuestos, avisos (el ritmo de gasto usa los días del mes de nómina), calendario (muestra del día de cobro al día anterior al siguiente), detalle, año en curso, anualidades, metas y proyecciones.
+- Los movimientos que imputaste a mano a otro mes siguen donde los pusiste. Las devoluciones de gastos compartidos van al mes del gasto que devuelven.
+- Se puede desactivar en ⚙️ Ajustes → Regla de nómina para volver a meses naturales.
+
 ## 5.9.1 — 17/11/2026 · Diseño del Dashboard
 - Indicadores con fondo suave de su color: ingresos en verde, gastos en rojo, ahorro e inversión en amarillo, y liquidez y patrimonio en azul claro. Liquidez disponible va ahora antes que patrimonio neto.
 - Selector de periodo rediseñado: modos arriba (en el móvil, en dos filas de tres), debajo ‹ mes › con el mes escrito como botón que abre el selector, y 📅 Calendario siempre en el mismo sitio. En "Mes" ya no se repite el nombre del mes; en el resto de modos se indica el rango.

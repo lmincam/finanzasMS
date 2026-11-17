@@ -60,7 +60,9 @@ function renderDashboard() {
         ${inputs}
         <button class="btn sm primary per-cal" data-action="cal-open" title="Ver los gastos de cada día">📅 Calendario</button>
       </div>
-      <div class="per-info">${p.mode !== 'mes' ? `<span class="period-label">${periodLabel(months)}</span> · ` : ''}<span class="small muted">Ingresos según <b>mes de imputación</b> (regla de nómina)</span></div>
+      <div class="per-info">${p.mode !== 'mes' ? `<span class="period-label">${periodLabel(months)}</span> · ` : ''}${mesNominaActivo()
+        ? `<span class="small muted">Mes de nómina: del <b>${fmtDate(rangoCiclo(months[0]).ini)}</b> al <b>${fmtDate(rangoCiclo(months[months.length - 1]).fin)}</b>${months.includes(mesActual()) && !ciclosNomina().inicio[addMonths(mesActual(), 1)] ? ' (fin estimado: hasta que llegue la próxima nómina)' : ''}</span>`
+        : '<span class="small muted">Meses naturales · ingresos según <b>mes de imputación</b> (regla de nómina)</span>'}</div>
     </div>
 
     <div class="kpis">
