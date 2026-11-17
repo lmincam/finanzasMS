@@ -78,6 +78,7 @@ const PROV = { alava: ['alava', 'araba', 'araba alava', 'alava araba'], albacete
 function provDe(txt) {
   const base = norm(txt).replace(/[()]/g, ' ').replace(/[^a-z/, ]/g, ' ').replace(/\s+/g, ' ').trim();
   const partes = new Set(base.split(/[\/,]/).map(x => x.trim()).filter(Boolean));
+  partes.add(norm(String(txt).split('(')[0]).replace(/[^a-z ]/g, ' ').replace(/\s+/g, ' ').trim());   // "Madrid (Comunidad de)" → "madrid"
   for (const x of [...partes]) partes.add(x.replace(/^(a|la|las|illes|islas|provincia de) /, '').replace(/ (a|la|las|illes)$/, '').trim());
   for (const [k, al] of Object.entries(PROV)) if (al.some(a => partes.has(a))) return k;
   return null;

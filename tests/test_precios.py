@@ -50,6 +50,7 @@ def test_indice_vivienda_ine():
     assert g['2026T1'] == 2.0 and g['2026T2'] == 2.0
     assert v['series']['p:leon_p']['2026T2'] == 1.0
     assert v['series']['p:coruna']['2026T2'] == 1.0
+    assert v['series']['p:madrid']['2026T2'] == 1.0
     assert 'sb_secret_prueba' not in r.stdout + r.stderr
 
 

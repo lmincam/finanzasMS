@@ -15,7 +15,7 @@ const t76201 = [
 ];
 // Ministerio de Vivienda: CSV "largo" con ; y coma decimal, vivienda libre/protegida y antigüedad
 const csv = ['Provincia;Régimen;Antigüedad;Periodo;Valor (€/m2)',
-  ...[['Granada', ['2025T4', '1.500,00'], ['2026T1', '1.530,00'], ['2026T2', '1.560,60']], ['Castilla y León', ['2026T1', '9.999,00'], ['2026T2', '1,00']], ['León', ['2026T1', '1.000,00'], ['2026T2', '1.010,00']], ['Coruña (A)', ['2026T1', '1.200,00'], ['2026T2', '1.212,00']]]
+  ...[['Granada', ['2025T4', '1.500,00'], ['2026T1', '1.530,00'], ['2026T2', '1.560,60']], ['Castilla y León', ['2026T1', '9.999,00'], ['2026T2', '1,00']], ['León', ['2026T1', '1.000,00'], ['2026T2', '1.010,00']], ['Coruña (A)', ['2026T1', '1.200,00'], ['2026T2', '1.212,00']], ['Madrid (Comunidad de)', ['2026T1', '4.000,00'], ['2026T2', '4.040,00']]]
     .flatMap(([p, ...qs]) => qs.flatMap(([q, v]) => [`${p};Libre;Total;${q};${v}`, `${p};Protegida;Total;${q};800,00`, `${p};Libre;Hasta 5 años;${q};5.000,00`]))].join('\r\n');
 globalThis.fetch = async (url, opts = {}) => {
   const u = new URL(url); const ok = b => ({ ok: true, status: 200, text: async () => JSON.stringify(b), json: async () => b });
