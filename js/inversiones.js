@@ -137,50 +137,84 @@ function renderInversiones() {
   S.invSel = null;
   const el = $('#tab-inversiones');
   const inv = S.cuentas.filter(c => c.tipo === 'inversion').sort(byOrden), act = inv.filter(c => c.activa !== false);
-  const infos = inv.map(c => ({ c, x: invInfo(c) })), A = infos.filter(o => o.c.activa !== false);
-  const totVal = sum(A, o => o.x.valor), totAp = sum(A, o => o.x.aportado), totPlus = totVal - totAp;
-  const anio = todayISO().slice(0, 4);
-  const apAnio = sum(S.movimientos.filter(m => m.tipo === 'transferencia' && act.some(c => c.id === m.cuenta_id) && m.fecha.startsWith(anio)), 'importe');
-  const meses = Array.from({ length: 12 }, (_, i) => addMonths(ymOf(todayISO()), i - 11));
-  const dProd = distribucion(act, 'producto'), dClase = distribucion(act, 'clase'), dReg = distribucion(act, 'region');
-  const planes = S.aportaciones_periodicas.filter(p => inv.some(c => c.id === p.cuenta_id));
+  const infos = act.map(c => ({ c, x: invInfo(c), A: valorAutoCuenta(c) }));
+  const totVal = sum(infos, o => o.x.valor), totAp = sum(infos, o => o.x.aportado), totPlus = totVal - totAp;
+  const cambios = infos.filter(o => o.A && o.A.cambio !== null), cambioDia = cambios.length ? sum(cambios, o => o.A.cambio) : null;
+  const t = tirInversion(act);
+  const mensual = aportacionMensual();
+  const dimDist = S.invDist || 'producto', dist = distribucion(act, dimDist);
+  const avisos = avisosInversion(act);
 
   el.innerHTML = `
-    <div class="section-head"><div><h2>📈 Inversiones · visión global</h2><div class="small muted">Todas tus cuentas de inversión. Pulsa una cuenta para ver su detalle.</div></div>
+    <div class="section-head"><div><h2>📈 Inversiones</h2><div class="small muted">${act.length} cuenta(s)${cambios.length ? ` · 📡 precios de cierre del ${fmtDate(cambios[0].A.fecha)}` : ''}</div></div>
       <button class="btn" data-action="inv-new">+ Cuenta de inversión</button></div>
     ${bannerV4()}
-    ${!S.tablaValoraciones ? '<div class="banner amber">Ejecuta <code>sql/02_migracion_v2_inversiones.sql</code> para guardar el histórico de valoraciones.</div>' : ''}
-    ${renderPreciosCard()}
-    <div class="kpis">
-      ${kpi('Valor de la cartera', fmtEUR(totVal), `${act.length} cuenta(s)`, 'navy')}
-      ${kpi('Capital aportado neto', fmtEUR(totAp), 'Aportaciones − retiradas')}
-      ${kpi('Plusvalía latente', `<span class="${totPlus >= 0 ? 'pos' : 'neg'}">${signed(totPlus)}</span>`, `Rentabilidad acumulada: <b>${totAp > 0 ? fmtPct(totPlus / totAp) : '—'}</b>`, totPlus >= 0 ? 'pos' : 'neg')}
-      ${kpi(`Aportado en ${anio}`, fmtEUR(apAnio), `Periódicas: <b>${fmtEUR(aportacionMensual())}/mes</b> (${fmtEUR(aportacionMensual() * 12, 0)}/año)`)}
-      ${(t => kpi('Rentabilidad anual (TIR)', t.tir !== null ? `<span class="${t.tir >= 0 ? 'pos' : 'neg'}">${fmtPct(t.tir, 2)}</span>` : '—',
-        t.tir !== null ? `Real (descontando ${fmtNum(supuestos().inflacion, 1)} % de inflación): <b>${fmtPct((1 + t.tir) / (1 + supuestos().inflacion / 100) - 1, 2)}</b> · desde ${fmtDate(t.desde)}${t.dias < 365 ? ' · <span class="warn-t">menos de 1 año: anualizada puede exagerar</span>' : ''}` : esc(t.motivo || ''), t.tir !== null && t.tir >= 0 ? 'pos' : ''))(tirInversion(act))}
-    </div>
-    <div class="grid-2e">${infos.map(({ c, x }) => { const top = distribucion([c], 'producto').slice(0, 3);
-      return `<div class="card inv-card ${c.activa === false ? 'off' : ''}" style="--acc:${esc(c.color || '#7c3aed')};margin-bottom:0;cursor:pointer" data-action="inv-open" data-id="${c.id}">
-        <div class="asset-head"><div class="asset-ico">📈</div><div style="flex:1"><h3>${esc(c.nombre)}</h3><div class="small muted">${esc(c.entidad || '')}${x.tieneVM ? ` · valorada ${fmtDate(c.fecha_valor_mercado)}` : ' · sin valoración'}</div></div><span class="btn sm">Ver detalle →</span></div>
-        <div class="metrics">${metric('Valor', fmtEUR(x.valor, 0))}${metric('Aportado', fmtEUR(x.aportado, 0))}${metric('Plusvalía', x.tieneVM ? signed(x.plus) : '—', x.plus >= 0 ? 'pos' : 'neg')}${(t => metric('TIR anual', t.tir !== null ? fmtPct(t.tir, 1) : '—', t.tir >= 0 ? 'pos' : 'neg'))(tirInversion([c]))}</div>
-        ${top.length ? `<div class="small muted" style="margin-top:10px">${top.map(t => `${esc(t.label)} <b>${fmtPct(t.pct, 0)}</b>`).join(' · ')}</div>` : ''}
-        ${aportacionMensual(c.id) ? `<div class="small" style="margin-top:6px">🔁 ${fmtEUR(aportacionMensual(c.id))}/mes automáticos</div>` : ''}
-      </div>`; }).join('') || '<div class="card empty">No tienes cuentas de inversión.</div>'}</div>
-    <div style="height:16px"></div>
-    ${bloqueDistribucion('ch-inv-loc', dProd, '🧩 Asset Location global', 'Qué % de toda tu cartera está en cada producto')}
-    <div class="grid-2e">${bloqueDistribucion('ch-inv-clase', dClase, 'Por clase de activo', 'Renta variable, fija, monetario…')}${bloqueDistribucion('ch-inv-reg', dReg, 'Por región', 'Exposición geográfica')}</div>
-    <div class="grid-2">
-      <div class="card"><div class="card-head"><h3>Evolución: valor vs. aportado</h3><span class="sub">Según tus valoraciones</span></div>${S.valoraciones.length ? '<div class="chart-box"><canvas id="ch-inv-evo"></canvas></div>' : '<div class="empty">Cada “Actualizar valor” guarda un punto del histórico.</div>'}</div>
-      <div class="card"><div class="card-head"><h3>🔁 Aportaciones periódicas</h3></div>${S.v4 ? listaAportPeriodicas(planes, true) : bannerV4()}</div>
-    </div>
-    <div class="card"><div class="card-head"><h3>Aportaciones netas por mes</h3><span class="sub">Últimos 12 meses</span></div><div class="chart-box sm"><canvas id="ch-inv-ap"></canvas></div></div>`;
+    ${avisos}
+    ${heroInversion({ valor: totVal, aportado: totAp, plus: totPlus, cambio: cambioDia, t, mensual, titulo: 'Valor total de la cartera' })}
 
-  chartDistribucion('ch-inv-loc', dProd); chartDistribucion('ch-inv-clase', dClase); chartDistribucion('ch-inv-reg', dReg);
-  chartEvolucion('ch-inv-evo', inv);
-  mkChart('ch-inv-ap', { type: 'bar', data: { labels: meses.map(m => ymLabel(m, true)),
-    datasets: act.map((c, i) => ({ label: c.nombre, backgroundColor: c.color || PALETTE[i % PALETTE.length], borderRadius: 4, stack: 'a',
-      data: meses.map(m => round2(sum(S.movimientos.filter(x => x.cuenta_id === c.id && x.tipo === 'transferencia' && ymOf(x.fecha) === m), 'importe'))) })) },
-    options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { x: { stacked: true, grid: { display: false } }, y: { ...euroAxis, stacked: true } } } });
+    <div class="inv-cuentas">${infos.map(({ c, x, A }) => `
+      <div class="card inv-card2" style="--acc:${esc(c.color || '#7c3aed')}" data-action="inv-open" data-id="${c.id}" role="button" tabindex="0">
+        <div class="ic2-head"><div><h3>${esc(c.nombre)}</h3><div class="small muted">${esc(c.entidad || '')}${A ? ' · 📡 automático' : x.tieneVM ? ` · valor manual ${fmtDate(c.fecha_valor_mercado)}` : ' · sin valorar'}</div></div><span class="ic2-go">›</span></div>
+        <div class="ic2-val">${fmtEUR(x.valor)}</div>
+        <div class="ic2-row"><span>Invertido de tu bolsillo</span><b class="num">${fmtEUR(x.aportado)}</b></div>
+        <div class="ic2-row"><span>Ganancia</span><b class="num ${x.plus >= 0 ? 'pos' : 'neg'}">${signed(x.plus)} · ${x.aportado > 0 ? fmtPct(x.plus / x.aportado) : '—'}</b></div>
+        ${A && A.cambio !== null ? `<div class="ic2-row"><span>Último día</span><b class="num ${A.cambio >= 0 ? 'pos' : 'neg'}">${signed(A.cambio)} · ${fmtPct(A.pctCambio, 2)}</b></div>` : ''}
+        ${aportacionMensual(c.id) ? `<div class="ic2-foot">🔁 ${fmtEUR(aportacionMensual(c.id))}/mes${(p => p ? ` · próxima ${fmtDate(proximaAportacion(p))}` : '')(S.aportaciones_periodicas.find(p => p.cuenta_id === c.id && p.activo !== false && proximaAportacion(p)))}</div>` : ''}
+      </div>`).join('') || '<div class="card empty">No tienes cuentas de inversión.</div>'}</div>
+
+    <div class="grid-2">
+      <div class="card"><div class="card-head"><h3>Evolución: valor vs. lo invertido</h3><span class="sub">La distancia entre las dos líneas es tu ganancia</span></div>
+        ${S.valoraciones.some(v => act.some(c => c.id === v.cuenta_id)) ? '<div class="chart-box"><canvas id="ch-inv-evo"></canvas></div>' : '<div class="empty">Se irá dibujando con cada valoración diaria.</div>'}</div>
+      ${tarjetaDistribucion('ch-inv-dist', dist, dimDist, '¿En qué está invertido?')}
+    </div>
+
+    <details class="card inv-more"><summary><b>⚙️ Precios automáticos y aportaciones</b> <span class="small muted">· estado de la descarga diaria y planes mensuales</span></summary>
+      <div style="margin-top:12px">${renderPreciosCard()}</div>
+      <div class="card" style="box-shadow:none;border:1px solid var(--line)"><div class="card-head"><h3>🔁 Aportaciones periódicas</h3></div>${S.v4 ? listaAportPeriodicas(S.aportaciones_periodicas.filter(p => inv.some(c => c.id === p.cuenta_id)), true) : bannerV4()}</div>
+    </details>`;
+
+  chartDistribucion('ch-inv-dist', dist);
+  chartEvolucion('ch-inv-evo', act);
+}
+
+/** Bloque principal: valor, invertido, ganancia, variación del día y TIR. */
+function heroInversion({ valor, aportado, plus, cambio, t, mensual, titulo }) {
+  return `<div class="card inv-hero">
+    <div class="ih-main"><div class="l">${titulo}</div><div class="ih-val">${fmtEUR(valor)}</div>
+      ${cambio !== null && cambio !== undefined ? `<div class="ih-dia ${cambio >= 0 ? 'pos' : 'neg'}">${cambio >= 0 ? '▲' : '▼'} ${signed(cambio)} el último día</div>` : ''}</div>
+    <div class="ih-grid">
+      <div><div class="l">Invertido de tu bolsillo</div><div class="v num">${fmtEUR(aportado)}</div><div class="s">Aportaciones − retiradas</div></div>
+      <div><div class="l">Ganancia</div><div class="v num ${plus >= 0 ? 'pos' : 'neg'}">${signed(plus)}</div><div class="s">${aportado > 0 ? `${plus >= 0 ? '+' : ''}${fmtPct(plus / aportado)} sobre lo invertido` : '—'}</div></div>
+      <div><div class="l">Rentabilidad anual (TIR)</div><div class="v num ${t.tir !== null && t.tir >= 0 ? 'pos' : t.tir !== null ? 'neg' : ''}">${t.tir !== null ? fmtPct(t.tir, 2) : '—'}</div><div class="s">${t.tir !== null ? (t.dias < 365 ? 'Menos de 1 año: orientativa' : `Real: ${fmtPct((1 + t.tir) / (1 + supuestos().inflacion / 100) - 1, 2)} tras inflación`) : esc(t.motivo || '')}</div></div>
+      <div><div class="l">Aportas</div><div class="v num">${fmtEUR(mensual)}/mes</div><div class="s">${fmtEUR(mensual * 12, 0)} al año</div></div>
+    </div></div>`;
+}
+/** Distribución con selector Producto / Clase / Región en una sola tarjeta. */
+function tarjetaDistribucion(id, dist, dim, titulo) {
+  const tabs = [['producto', 'Producto'], ['clase', 'Clase'], ['region', 'Región']];
+  return `<div class="card"><div class="card-head"><h3>${titulo}</h3><div class="seg seg-sm">${tabs.map(([k, l]) => `<button data-action="inv-dist" data-k="${k}" class="${dim === k ? 'active' : ''}">${l}</button>`).join('')}</div></div>
+    ${dist.length ? `<div class="dist-wrap"><div class="chart-box sm"><canvas id="${id}"></canvas></div>
+      <div class="brk">${dist.map((x, i) => `<div class="r" style="grid-template-columns:1fr 60px 90px"><span><span class="cdot" style="background:${colorDe(x, i)}"></span>${esc(x.label)}</span>
+        <span class="right num"><b>${fmtPct(x.pct, 1)}</b></span><span class="right num small">${fmtEUR(x.val, 0)}</span></div>`).join('')}</div></div>`
+      : '<div class="empty">Añade los productos de cada cuenta (ISIN, fondo, ETF…) para ver la distribución.</div>'}</div>`;
+}
+/** Solo lo que requiere atención: precios que fallan, productos sin participaciones, repartos que no suman 100 %, valoraciones viejas. */
+function avisosInversion(cuentas) {
+  const out = [];
+  const est = ((S.ajustesRows || []).find(r => r.clave === 'precios_estado') || {}).valor;
+  const fallos = est && est.resultados ? est.resultados.filter(r => !r.ok) : [];
+  if (fallos.length) out.push(`📡 No hay precio automático para ${fallos.map(f => esc(f.nombre || f.isin)).join(', ')}. Revisa el ISIN en el producto.`);
+  if (est && est.ejecutado && diasEntre(est.ejecutado.slice(0, 10), todayISO()) > 4) out.push(`📡 La descarga de precios no se ejecuta desde el ${fmtDate(est.ejecutado.slice(0, 10))}. Revisa la tarea en GitHub (Actions → Precios diarios).`);
+  for (const c of cuentas) {
+    const ps = S.posiciones.filter(p => p.cuenta_id === c.id), auto = ps.filter(tieneAuto);
+    const sinPart = ps.filter(p => p.isin && !(num(p.participaciones) > 0));
+    if (S.v10 && sinPart.length) out.push(`<b>${esc(c.nombre)}</b>: indica las participaciones de ${sinPart.map(p => esc(p.nombre)).join(', ')} para que se valore solo.`);
+    const sumPct = sum(auto, p => num(p.porcentaje));
+    if (auto.length > 1 && aportacionMensual(c.id) && Math.abs(sumPct - 100) > 0.5) out.push(`<b>${esc(c.nombre)}</b>: el reparto de la aportación suma ${fmtNum(sumPct, 1)} % (debería ser 100 %). Ajusta el % de cada producto.`);
+    const x = invInfo(c);
+    if (!valorAutoCuenta(c) && x.diasVal !== null && x.diasVal > 60) out.push(`<b>${esc(c.nombre)}</b>: el valor se actualizó hace ${x.diasVal} días.`);
+  }
+  return out.length ? `<div class="banner amber inv-avisos">${out.map(t => `<div>⚠ ${t}</div>`).join('')}</div>` : '';
 }
 
 /* =====================================================================
@@ -188,58 +222,68 @@ function renderInversiones() {
    ===================================================================== */
 function renderInversionDetalle(c) {
   const el = $('#tab-inversiones');
-  const x = invInfo(c), P = posicionesCuenta(c);
-  const dProd = distribucion([c], 'producto'), dClase = distribucion([c], 'clase'), dReg = distribucion([c], 'region');
-  const planes = S.aportaciones_periodicas.filter(p => p.cuenta_id === c.id);
-  const ultimos = S.movimientos.filter(m => m.tipo === 'transferencia' && m.cuenta_id === c.id).sort((a, b) => a.fecha < b.fecha ? 1 : -1).slice(0, 15);
+  const x = invInfo(c), P = posicionesCuenta(c), A = valorAutoCuenta(c);
+  const dimDist = S.invDistD || 'clase', dist = distribucion([c], dimDist);
+  const planes = S.aportaciones_periodicas.filter(p => p.cuenta_id === c.id), plan = planes.find(p => p.activo !== false);
   const vals = S.valoraciones.filter(v => v.cuenta_id === c.id).sort((a, b) => a.fecha < b.fecha ? 1 : -1);
+  const mensual = aportacionMensual(c.id);
+  const totPeso = sum(P.ps, p => num(p.porcentaje));
 
   el.innerHTML = `
-    <div class="section-head"><div style="display:flex;gap:10px;align-items:center"><button class="btn sm ghost" data-action="inv-back">← Visión global</button>
-      <div><h2>${esc(c.nombre)}</h2><div class="small muted">${esc(c.entidad || '')}${valorAutoCuenta(c) ? ` · 📡 valor automático (cierre del ${fmtDate(valorAutoCuenta(c).fecha)})` : x.tieneVM ? ` · valorada a ${fmtDate(c.fecha_valor_mercado)}` : ' · sin valoración de mercado'}</div></div></div>
-      <div class="btn-row"><button class="btn sm primary" data-action="cuenta-valor" data-id="${c.id}">Actualizar valor</button>
-        <button class="btn sm" data-action="quick-open" data-tipo="transferencia" data-destino="${c.id}">+ Aportación puntual</button>
-        <button class="btn sm ghost" data-action="inv-aportado" data-id="${c.id}">Ajustar aportado</button>
-        <button class="mini" data-action="cuenta-edit" data-id="${c.id}">✎</button><button class="mini" data-action="cuenta-del" data-id="${c.id}">🗑</button></div></div>
+    <div class="section-head"><div style="display:flex;gap:10px;align-items:center"><button class="btn sm ghost" data-action="inv-back">← Inversiones</button>
+      <div><h2>${esc(c.nombre)}</h2><div class="small muted">${esc(c.entidad || '')}${A ? ` · 📡 valor automático · cierre del ${fmtDate(A.fecha)}` : x.tieneVM ? ` · valor manual del ${fmtDate(c.fecha_valor_mercado)}` : ' · sin valoración de mercado'}</div></div></div>
+      <div class="btn-row"><button class="btn sm primary" data-action="quick-open" data-tipo="transferencia" data-destino="${c.id}">+ Aportación puntual</button>
+        ${A ? '' : `<button class="btn sm" data-action="cuenta-valor" data-id="${c.id}">Actualizar valor</button>`}
+        <button class="mini" data-action="cuenta-edit" data-id="${c.id}" title="Editar cuenta">✎</button><button class="mini" data-action="cuenta-del" data-id="${c.id}" title="Eliminar">🗑</button></div></div>
     ${bannerV4()}
-    ${x.diasVal !== null && x.diasVal > 90 ? `<div class="banner amber">La última valoración tiene ${x.diasVal} días. Actualízala para que el patrimonio sea fiel.</div>` : ''}
-    <div class="kpis">
-      ${kpi('Valor actual', fmtEUR(x.valor), x.tieneVM ? 'Valoración + aportaciones posteriores' : 'Sin valoración: igual al aportado', 'navy')}
-      ${kpi('Aportado neto', fmtEUR(x.aportado), `Últimos 12 meses: ${fmtEUR(x.ap12)}`)}
-      ${kpi('Plusvalía', x.tieneVM ? `<span class="${x.plus >= 0 ? 'pos' : 'neg'}">${signed(x.plus)}</span>` : '—', `Rentabilidad: <b>${fmtPct(x.rent, 2)}</b>`, x.plus >= 0 ? 'pos' : 'neg')}
-      ${kpi('Aportación periódica', fmtEUR(aportacionMensual(c.id)) + '/mes', `${fmtEUR(aportacionMensual(c.id) * 12, 0)} al año`)}
-      ${(t => kpi('Rentabilidad anual (TIR)', t.tir !== null ? `<span class="${t.tir >= 0 ? 'pos' : 'neg'}">${fmtPct(t.tir, 2)}</span>` : '—',
-        t.tir !== null ? `Real: <b>${fmtPct((1 + t.tir) / (1 + supuestos().inflacion / 100) - 1, 2)}</b> · tiene en cuenta cuándo aportaste cada euro` : esc(t.motivo || ''), t.tir !== null && t.tir >= 0 ? 'pos' : ''))(tirInversion([c]))}
-    </div>
+    ${avisosInversion([c])}
+    ${heroInversion({ valor: x.valor, aportado: x.aportado, plus: x.plus, cambio: A ? A.cambio : null, t: tirInversion([c]), mensual, titulo: 'Valor de la cuenta' })}
 
-    <div class="card"><div class="card-head"><h3>🧩 Asset Location · ${esc(c.nombre)}</h3>${S.v4 ? `<button class="btn sm" data-action="pos-new" data-id="${c.id}">+ Añadir producto</button>` : ''}</div>
-      ${P.exceso ? `<div class="banner red">Los productos suman ${fmtEUR(P.asignado)}, más que el valor de la cuenta (${fmtEUR(P.V)}). Revisa importes o porcentajes, o actualiza el valor de la cuenta.</div>` : ''}
-      ${P.ps.length && P.resto > 0.5 ? `<div class="banner blue">Quedan ${fmtEUR(P.resto)} (${fmtPct(P.resto / P.V, 1)}) sin asignar a ningún producto.</div>` : ''}
-      ${dProd.length ? `<div class="grid-2e" style="align-items:center"><div class="chart-box"><canvas id="ch-acc-loc"></canvas></div>
-        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Producto</th><th>Tipo / clase</th><th class="right">%</th><th class="right">Valor</th><th></th></tr></thead><tbody>
-        ${P.ps.map((p, i) => `<tr><td><span class="cdot" style="background:${PALETTE[i % PALETTE.length]}"></span><b>${esc(p.nombre)}</b>${p.isin ? `<div class="small muted">${esc(p.isin)} ${isinValido(p.isin) ? '<span class="pos">✓</span>' : '<span class="neg" title="ISIN con formato o dígito de control incorrecto">⚠</span>'} · <a href="https://www.google.com/search?q=${encodeURIComponent(p.isin)}" target="_blank" rel="noopener">ficha</a></div>` : ''}</td>
-          <td class="small">${TIPO_ACTIVO[p.tipo_activo] || ''}<br><span class="muted">${CLASE_ACTIVO[p.clase] || ''}${p.region ? ' · ' + esc(p.region) : ''}</span></td>
-          <td class="right num"><b>${P.V ? fmtPct(p.val / Math.max(P.V, P.asignado), 1) : '—'}</b></td><td class="right num">${fmtEUR(p.val)}${p.auto ? `<div class="small muted" title="Precio de cierre de ${fmtDate(p.auto.fecha)}${p.auto.fuente ? ' · ' + esc(p.auto.fuente) : ''}">📡 ${fmtNum(p.auto.acciones, 3)} × ${fmtNum(p.auto.precio, 4)} · ${fmtDate(p.auto.fecha).slice(0, 5)}</div>` : ''}</td>
-          <td><button class="mini" data-action="pos-edit" data-id="${p.id}">✎</button><button class="mini" data-action="pos-del" data-id="${p.id}">🗑</button></td></tr>`).join('')}
-        ${P.resto > 0.5 ? `<tr><td class="muted">Sin asignar</td><td></td><td class="right num muted">${fmtPct(P.resto / P.V, 1)}</td><td class="right num muted">${fmtEUR(P.resto)}</td><td></td></tr>` : ''}
-        </tbody></table></div></div>`
-        : `<div class="empty">Indica en qué está invertida esta cuenta: añade cada fondo, ETF o acción con su ISIN y el % (o el importe) que representa.${S.v4 ? '' : '<br>' + bannerV4()}</div>`}
+    <div class="card"><div class="card-head"><div><h3>🧩 Tus productos</h3><div class="small muted">${A ? 'Participaciones actuales = las que indicaste + las compradas con cada aportación posterior' : 'Indica ISIN y participaciones de cada producto para que se valore solo'}</div></div>
+      ${S.v4 ? `<button class="btn sm" data-action="pos-new" data-id="${c.id}">+ Producto</button>` : ''}</div>
+      ${P.ps.length ? `<div class="tbl-wrap"><table class="tbl prod-tbl"><thead><tr><th>Producto</th><th class="right">Reparto aportación</th><th class="right">Participaciones</th><th class="right">Precio</th><th class="right">Valor</th><th class="right">Peso real</th><th></th></tr></thead><tbody>
+        ${P.ps.map((p, i) => { const a = p.auto, pesoReal = P.V ? p.val / Math.max(P.V, P.asignado) : null, obj = num(p.porcentaje) / 100, desv = obj && pesoReal !== null ? pesoReal - obj : null;
+          return `<tr><td data-l=""><span class="cdot" style="background:${PALETTE[i % PALETTE.length]}"></span><b>${esc(p.nombre)}</b>${p.isin ? `<div class="small muted">${esc(p.isin)}${isinValido(p.isin) ? '' : ' <span class="neg" title="ISIN con formato o dígito de control incorrecto">⚠</span>'}${p.isin ? ` · <a href="https://www.morningstar.es/es/funds/SecuritySearchResults.aspx?search=${esc(p.isin)}" target="_blank" rel="noopener">ficha</a>` : ''}</div>` : ''}</td>
+            <td class="right num" data-l="Reparto">${num(p.porcentaje) ? `${fmtNum(num(p.porcentaje), 1)} %${mensual ? `<div class="small muted">${fmtEUR(mensual * obj)}/mes</div>` : ''}` : '<span class="muted">—</span>'}</td>
+            <td class="right num" data-l="Particip.">${a ? `<b>${fmtNum(a.acciones, 4)}</b>${a.acciones - a.base > 0.00005 ? `<div class="small pos">+${fmtNum(a.acciones - a.base, 4)} desde ${fmtDate(p.fecha_participaciones).slice(0, 5)}</div>` : ''}` : (num(p.participaciones) ? fmtNum(num(p.participaciones), 4) : '<span class="muted">—</span>')}</td>
+            <td class="right num" data-l="Precio">${a ? `${fmtNum(a.precio, 4)}<div class="small ${a.pctDia === null ? 'muted' : a.pctDia >= 0 ? 'pos' : 'neg'}">${a.pctDia === null ? fmtDate(a.fecha).slice(0, 5) : `${a.pctDia >= 0 ? '+' : ''}${fmtPct(a.pctDia, 2)} · ${fmtDate(a.fecha).slice(0, 5)}`}</div>` : '<span class="muted">—</span>'}</td>
+            <td class="right num" data-l="Valor"><b>${fmtEUR(p.val)}</b></td>
+            <td class="right num" data-l="Peso real">${pesoReal !== null ? fmtPct(pesoReal, 1) : '—'}${desv !== null && Math.abs(desv) >= 0.05 ? `<div class="small warn-t" title="Se ha desviado del reparto que eliges">${desv > 0 ? '+' : ''}${fmtNum(desv * 100, 1)} pp</div>` : ''}</td>
+            <td><button class="mini" data-action="pos-edit" data-id="${p.id}">✎</button><button class="mini" data-action="pos-del" data-id="${p.id}">🗑</button></td></tr>`; }).join('')}
+        ${P.resto > 0.5 && !A ? `<tr><td class="muted">Sin asignar</td><td></td><td></td><td></td><td class="right num muted">${fmtEUR(P.resto)}</td><td class="right num muted">${fmtPct(P.resto / P.V, 1)}</td><td></td></tr>` : ''}
+        </tbody></table></div>
+        ${totPeso && Math.abs(totPeso - 100) > 0.5 ? `<div class="small warn-t" style="margin-top:6px">El reparto suma ${fmtNum(totPeso, 1)} %: debería sumar 100 %.</div>` : ''}`
+        : `<div class="empty">Añade cada fondo, ETF o acción con su ISIN, sus participaciones y el % de la aportación mensual que va a cada uno.${S.v4 ? '' : '<br>' + bannerV4()}</div>`}
     </div>
-    <div class="grid-2e">${bloqueDistribucion('ch-acc-clase', dClase, 'Por clase de activo', '')}${bloqueDistribucion('ch-acc-reg', dReg, 'Por región', '')}</div>
 
     <div class="grid-2e">
-      <div class="card"><div class="card-head"><h3>🔁 Aportaciones periódicas</h3>${S.v4 ? `<button class="btn sm" data-action="ap-new" data-id="${c.id}">+ Programar</button>` : ''}</div>
-        ${S.v4 ? listaAportPeriodicas(planes, false) + '<p class="small muted">Se registran solas cada mes como transferencia desde la cuenta de origen. Si luego el cargo aparece en el Excel de Unicaja, el importador lo marca como ya registrado para no duplicarlo.</p>' : bannerV4()}</div>
-      <div class="card"><div class="card-head"><h3>Últimas aportaciones y retiradas</h3></div>
-        <div class="top-list">${ultimos.length ? ultimos.map(m => { const o = cuentaById(m.cuenta_contraria_id); return `<div class="it"><div class="c"><b>${fmtDate(m.fecha)}</b> ${m.origen === 'auto' ? '<span class="badge blue">periódica</span>' : ''}<div class="small muted">${num(m.importe) >= 0 ? 'desde' : 'hacia'} ${esc(o ? o.nombre : '?')} · ${esc(m.concepto || '')}</div></div><div class="num ${num(m.importe) >= 0 ? 'pos' : 'neg'}">${signed(num(m.importe))}</div></div>`; }).join('') : '<div class="empty">Sin movimientos todavía.</div>'}</div></div>
+      <div class="card"><div class="card-head"><h3>🔁 Aportación mensual</h3>${S.v4 ? `<button class="btn sm" data-action="ap-new" data-id="${c.id}">+ Programar</button>` : ''}</div>
+        ${plan ? `<div class="ap-plan"><div class="ap-big">${fmtEUR(plan.importe)}<span>/mes</span></div><div class="small muted">Día ${plan.dia_mes} desde ${esc((cuentaById(plan.cuenta_origen_id) || {}).nombre || '?')}${proximaAportacion(plan) ? ` · próxima el <b>${fmtDate(proximaAportacion(plan))}</b>` : ''}</div></div>
+          ${A && P.ps.some(p => p.auto) ? `<div class="cz-list" style="margin-top:10px">${P.ps.filter(p => p.auto).map(p => `<div><span>${esc(p.nombre)}</span><span class="num">${fmtEUR(num(plan.importe) * p.auto.peso)} ≈ <b>${fmtNum(num(plan.importe) * p.auto.peso / p.auto.precio, 4)}</b> part.</span></div>`).join('')}</div>
+            <div class="small muted">Cada mes se registra sola la transferencia, y las participaciones de cada producto suben según este reparto al precio del día en que entra el dinero.</div>` : ''}
+          <div style="margin-top:8px">${listaAportPeriodicas(planes, false)}</div>`
+        : (S.v4 ? '<div class="empty">Programa tu aportación mensual: se registrará sola cada mes y comprará participaciones según el reparto de cada producto.</div>' : bannerV4())}
+      </div>
+      <div class="card"><div class="card-head"><h3>🧾 Últimas compras</h3><span class="sub">${A ? 'Participaciones compradas con cada aportación' : 'Aportaciones y retiradas'}</span></div>
+        ${A && A.compras.length ? `<div class="top-list">${A.compras.slice(0, 8).map(cm => `<div class="it"><div class="c"><b>${fmtDate(cm.fecha)}</b> ${cm.auto ? '<span class="badge blue">mensual</span>' : ''}
+            <div class="small muted">${cm.items.map(it => `${esc(it.nombre)}: ${fmtNum(it.acciones, 4)} a ${fmtNum(it.precio, 4)}`).join(' · ')}</div></div><div class="num ${cm.importe >= 0 ? 'pos' : 'neg'}">${signed(cm.importe)}</div></div>`).join('')}</div>`
+          : (() => { const ult = S.movimientos.filter(m => m.tipo === 'transferencia' && m.cuenta_id === c.id).sort((a, b) => a.fecha < b.fecha ? 1 : -1).slice(0, 8);
+            return ult.length ? `<div class="top-list">${ult.map(m => `<div class="it"><div class="c"><b>${fmtDate(m.fecha)}</b> ${m.origen === 'auto' ? '<span class="badge blue">mensual</span>' : ''}<div class="small muted">${esc(m.concepto || '')}</div></div><div class="num ${num(m.importe) >= 0 ? 'pos' : 'neg'}">${signed(num(m.importe))}</div></div>`).join('')}</div>` : '<div class="empty">Sin movimientos todavía.</div>'; })()}
+      </div>
     </div>
+
     <div class="grid-2">
-      <div class="card"><div class="card-head"><h3>Evolución de la cuenta</h3></div>${vals.length ? '<div class="chart-box"><canvas id="ch-acc-evo"></canvas></div>' : '<div class="empty">Sin valoraciones guardadas.</div>'}</div>
-      <div class="card"><div class="card-head"><h3>Histórico de valoraciones</h3></div>
-        ${vals.length ? `<div class="tbl-wrap" style="max-height:320px;overflow:auto"><table class="tbl"><thead><tr><th>Fecha</th><th class="right">Valor</th><th class="right">Aportado</th><th class="right">Plusvalía</th><th></th></tr></thead><tbody>
-          ${vals.map(v => { const ap = apVal(v), pl = num(v.valor) - ap; return `<tr><td class="small">${fmtDate(v.fecha)}</td><td class="right num">${fmtEUR(v.valor)}</td><td class="right num">${fmtEUR(ap)}</td><td class="right num ${pl >= 0 ? 'pos' : 'neg'}">${signed(pl)}</td><td><button class="mini" data-action="val-del" data-id="${v.id}">🗑</button></td></tr>`; }).join('')}</tbody></table></div>` : '<div class="empty">—</div>'}</div>
-    </div>`;
-  chartDistribucion('ch-acc-loc', dProd); chartDistribucion('ch-acc-clase', dClase); chartDistribucion('ch-acc-reg', dReg);
+      <div class="card"><div class="card-head"><h3>Evolución: valor vs. lo invertido</h3></div>${vals.length ? '<div class="chart-box"><canvas id="ch-acc-evo"></canvas></div>' : '<div class="empty">Se irá dibujando con cada valoración diaria.</div>'}</div>
+      ${tarjetaDistribucion('ch-acc-dist', dist, dimDist, 'Diversificación')}
+    </div>
+
+    <details class="card inv-more"><summary><b>📋 Histórico de valoraciones y ajustes</b> <span class="small muted">· ${vals.length} valoraciones</span></summary>
+      <div class="btn-row" style="margin:12px 0"><button class="btn sm" data-action="cuenta-valor" data-id="${c.id}">Fijar valor a mano</button><button class="btn sm ghost" data-action="inv-aportado" data-id="${c.id}">Ajustar lo invertido</button></div>
+      ${vals.length ? `<div class="tbl-wrap" style="max-height:320px;overflow:auto"><table class="tbl"><thead><tr><th>Fecha</th><th class="right">Valor</th><th class="right">Invertido</th><th class="right">Ganancia</th><th></th></tr></thead><tbody>
+        ${vals.map(v => { const ap = apVal(v), pl = num(v.valor) - ap; return `<tr><td class="small">${fmtDate(v.fecha)}</td><td class="right num">${fmtEUR(v.valor)}</td><td class="right num">${fmtEUR(ap)}</td><td class="right num ${pl >= 0 ? 'pos' : 'neg'}">${signed(pl)}</td><td><button class="mini" data-action="val-del" data-id="${v.id}">🗑</button></td></tr>`; }).join('')}
+      </tbody></table></div>` : ''}
+    </details>`;
+  chartDistribucion('ch-acc-dist', dist);
   chartEvolucion('ch-acc-evo', [c]);
 }
 
@@ -250,7 +294,7 @@ const FIELDS_POS = [
   { name: 'tipo_activo', label: 'Tipo de producto', type: 'select', options: Object.entries(TIPO_ACTIVO).map(([v, l]) => ({ v, l })) },
   { name: 'clase', label: 'Clase de activo', type: 'select', options: Object.entries(CLASE_ACTIVO).map(([v, l]) => ({ v, l })) },
   { name: 'region', label: 'Región', ph: 'Global, EEUU, Europa, Emergentes…' },
-  { name: 'porcentaje', label: '% de la cuenta', type: 'number', ph: 'Ej: 70', hint: 'Rellena el % …' },
+  { name: 'porcentaje', label: '% de cada aportación (reparto)', type: 'number', ph: 'Ej: 70', hint: 'Cuánto de cada aportación mensual va a este producto. Entre todos deben sumar 100 %' },
   { name: 'valor', label: '… o el valor en € (prevalece sobre el %)', type: 'number' },
   { name: 'participaciones', label: '📡 Participaciones', type: 'number', cls: 'v10', hint: 'Con el ISIN y las participaciones, el valor se actualiza solo cada día' },
   { name: 'fecha_participaciones', label: 'A fecha de', type: 'date', cls: 'v10', hint: 'Las aportaciones posteriores se suman solas' },
@@ -289,6 +333,7 @@ Views.inversiones = renderInversiones;
 Object.assign(Actions, {
   'inv-open': el => { S.invSel = el.dataset.id; render(); window.scrollTo({ top: 0 }); },
   'inv-back': () => { S.invSel = null; render(); },
+  'inv-dist': el => { if (S.invSel) S.invDistD = el.dataset.k; else S.invDist = el.dataset.k; render(); },
   'cuenta-valor': el => {
     const c = cuentaById(el.dataset.id);
     openForm({ title: `Valor de mercado · ${c.nombre}`, intro: `<p class="small muted">Introduce el valor total actual de la cartera (lo que muestra ${esc(c.entidad || 'el bróker')}). Las aportaciones posteriores a esta fecha se sumarán automáticamente.</p>`,

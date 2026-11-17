@@ -1,5 +1,13 @@
 # Historial de versiones
 
+## 5.14.0 — 17/11/2026 · Pestaña Inversiones rediseñada
+- **Resumen arriba**: valor total, variación del último día, invertido de tu bolsillo, ganancia (€ y %), rentabilidad anual (TIR) y aportación mensual.
+- **Avisos solo cuando hace falta**: ISIN sin precio, descarga diaria parada, productos sin participaciones, reparto que no suma 100 % o valor manual antiguo.
+- Tarjetas de cuenta más claras (valor, invertido, ganancia, último día y próxima aportación). Distribución en una sola tarjeta con pestañas Producto / Clase / Región. Precios automáticos y planes, en un desplegable.
+- **Detalle de cuenta**: tabla de productos con reparto de la aportación (% y €/mes), participaciones actuales (incluidas las compradas desde la fecha indicada), precio con variación del día, valor y peso real frente al reparto elegido.
+- **Aportación mensual**: cuántas participaciones compra cada mes en cada producto. **Últimas compras**: participaciones y precio de cada aportación.
+- Las aportaciones mensuales se convierten solas en participaciones según el % de cada producto, y actualizan tanto lo invertido como el valor de la cartera.
+
 ## 5.13.0 — 17/11/2026 · Valor de las inversiones automático por ISIN
 - Tarea diaria en GitHub Actions (`.github/workflows/precios.yml` + `scripts/precios.mjs`): descarga el precio de cierre de cada ISIN de tus productos desde EODHD (clave gratuita) o Yahoo Finance, y lo guarda en la tabla `precios`. Se ejecuta de lunes a viernes por la noche (ETF y acciones) y a primera hora del día siguiente (valor liquidativo de los fondos). También se puede lanzar a mano.
 - Cada producto admite **participaciones** y su fecha. Valor = participaciones × último precio. Las aportaciones y retiradas posteriores se convierten solas en participaciones al precio de su día, repartidas según el % de cada producto.

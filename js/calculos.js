@@ -498,19 +498,27 @@ function valorAutoCuenta(c) {
   const sumPct = sum(autos, p => num(p.porcentaje));
   const valBase = new Map(autos.map(p => [p.id, num(p.participaciones) * ult.get(p.id).precio])), totBase = sum([...valBase.values()], v => v) || 1;
   const peso = p => autos.length === 1 ? 1 : (autos.every(x => num(x.porcentaje) > 0) ? num(p.porcentaje) / sumPct : valBase.get(p.id) / totBase);
-  const pos = new Map(); let valor = 0, fecha = hoy;
+  const pos = new Map(), compras = new Map(); let valor = 0, fecha = hoy, cambio = 0, fechaPrev = null;
+  const movs = S.movimientos.filter(m => m.cuenta_id === c.id && num(m.importe)).sort((a, b) => a.fecha < b.fecha ? -1 : 1);
   for (const p of autos) {
     const u = ult.get(p.id), desde = p.fecha_participaciones || '0000-00-00';
     let acc = num(p.participaciones);
-    for (const m of S.movimientos) {
-      if (m.cuenta_id !== c.id || m.fecha <= desde || m.fecha > u.fecha || !num(m.importe)) continue;
-      const px = precioEn(p.isin, m.fecha, 'despues'); if (px && px.precio > 0) acc += num(m.importe) * peso(p) / px.precio;
+    for (const m of movs) {
+      if (m.fecha <= desde || m.fecha > u.fecha) continue;
+      const px = precioEn(p.isin, m.fecha, 'despues'); if (!(px && px.precio > 0)) continue;
+      const imp = num(m.importe) * peso(p), n = imp / px.precio; acc += n;
+      const cm = compras.get(m.id) || { fecha: m.fecha, importe: num(m.importe), auto: m.origen === 'auto', items: [] };
+      cm.items.push({ id: p.id, nombre: p.nombre, importe: round2(imp), acciones: n, precio: px.precio, fechaPrecio: px.fecha }); compras.set(m.id, cm);
     }
     const v = round2(acc * u.precio); valor += v; if (u.fecha < fecha) fecha = u.fecha;
-    pos.set(p.id, { acciones: acc, precio: u.precio, fecha: u.fecha, valor: v, fuente: u.fuente });
+    // Variación del último día con precio: participaciones × (último precio − anterior)
+    const prev = precioEn(p.isin, addDias(u.fecha, -1));
+    if (prev) { cambio += acc * (u.precio - prev.precio); if (!fechaPrev || prev.fecha < fechaPrev) fechaPrev = prev.fecha; }
+    pos.set(p.id, { acciones: acc, base: num(p.participaciones), precio: u.precio, fecha: u.fecha, valor: v, fuente: u.fuente, peso: peso(p), cambioDia: prev ? round2(acc * (u.precio - prev.precio)) : null, pctDia: prev && prev.precio ? u.precio / prev.precio - 1 : null });
   }
   valor += sum(ps.filter(p => !tieneAuto(p)), p => num(p.valor));
-  return { valor: round2(valor), fecha, pos };
+  return { valor: round2(valor), fecha, pos, cambio: fechaPrev ? round2(cambio) : null, fechaPrev, pctCambio: fechaPrev && valor - cambio ? cambio / (valor - cambio) : null,
+    compras: [...compras.values()].sort((a, b) => a.fecha < b.fecha ? 1 : -1) };
 }
 
 function posicionesCuenta(c) {
