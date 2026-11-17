@@ -59,3 +59,26 @@ def test_usuario_no_autorizado(abrir, navegador):
     assert page.evaluate('S.movimientos.length') == 0
     page.close()
     assert not errores
+
+
+def test_importar_desde_icono(app):
+    """Ya no hay tarjeta fija de importación: el icono pide la cuenta y el archivo en una ventana."""
+    a = app
+    a.ir('cuentas')
+    assert a.ev("document.querySelector('#import-card').hidden") is True
+    assert a.page.locator('.acc-btns .btn').count() == 4
+    a.page.click('[data-action="imp-open"]'); a.page.wait_for_timeout(150)
+    assert a.page.locator('.modal #imp-cuenta').count() == 1
+    assert a.page.locator('.modal #imp-file').count() == 1
+    a.page.click('.modal [data-close]'); a.page.wait_for_timeout(100)
+    assert a.page.locator('.modal').count() == 0
+
+
+def test_devolucion_indica_el_gasto(app):
+    a = app
+    a.ev("""(() => { const g = S.movimientos.find(m => /Tasca/.test(m.concepto)); S.v6 = true;
+        S.movimientos.push({ ...g, id: 'dv1', concepto: 'Bizum de Ana', importe: 66.5, reembolso_de: g.id, fecha: '2026-11-08', mes_imputacion: '2026-11-01' }); })()""")
+    a.ir('cuentas')
+    fila = a.texto('.mv[data-id="dv1"]')
+    assert 'Devolución de' in fila and 'Restaurante La Tasca' in fila
+    assert 'Te devolvieron' in a.texto(f".mv[data-id=\"{a.ev('S.movimientos.find(m => /Tasca/.test(m.concepto)).id')}\"]")

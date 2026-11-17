@@ -57,17 +57,16 @@ function renderDashboard() {
   el.innerHTML = `
     ${snapshotBanner()}
     ${bannerCierre()}
-    <div class="card period per-main">
+    <div class="per-bar">
       <div class="seg per-modes">${modes.map(([k, l]) => `<button data-action="period-mode" data-mode="${k}" class="${p.mode === k ? 'active' : ''}">${l}</button>`).join('')}</div>
       <div class="per-sel">
         ${inputs}
-        <button class="btn sm primary per-cal" data-action="cal-open" title="Ver los gastos de cada día">📅 Calendario</button>
+        <div class="per-info">${p.mode !== 'mes' ? `<span class="period-label">${periodLabel(months)}</span><br>` : ''}<span class="small muted" title="${mesNominaActivo() ? 'Mes de nómina: de un cobro al día antes del siguiente' : 'Meses naturales'}">${fmtDate(rangoCiclo(months[0]).ini)} – ${fmtDate(rangoCiclo(months[months.length - 1]).fin)}</span></div>
       </div>
-      <div class="per-info">${p.mode !== 'mes' ? `<span class="period-label">${periodLabel(months)}</span> · ` : ''}<span class="small muted" title="${mesNominaActivo() ? 'Mes de nómina: de un cobro al día antes del siguiente' : 'Meses naturales'}">📅 ${fmtDate(rangoCiclo(months[0]).ini)} – ${fmtDate(rangoCiclo(months[months.length - 1]).fin)}</span></div>
+      <button class="btn primary per-cal" data-action="cal-open" data-noico title="Ver los gastos de cada día"><span class="emo">📅</span> Calendario</button>
     </div>
 
-    <div class="kpi-zona">
-      <div class="kpi-flujo">
+    <div class="kpi-grid">
         ${kpiLink('ingresos', 'Ingresos <button class="info-btn" data-action="kpi-info" data-k="ingresos" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(st.ingresos), '', 'pos')}
         ${kpiLink('gastos', 'Gastos operativos <button class="info-btn" data-action="kpi-info" data-k="gastos" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(st.gastos), '', 'neg')}
         ${(() => { const pos = st.ahorro >= 0, tit = nM === 1 ? 'Balance mensual' : `Balance del periodo · ${nM} meses`;
@@ -81,28 +80,27 @@ function renderDashboard() {
             </div></div>`; })()}
         ${kpi('Tasa de ahorro <button class="info-btn" data-action="kpi-info" data-k="tasa-ahorro" title="¿De dónde sale este dato?">ⓘ</button>', fmtPct(tasaAh), '', 'yellow')}
         ${kpi('Tasa de inversión <button class="info-btn" data-action="kpi-info" data-k="inversion" title="¿De dónde sale este dato?">ⓘ</button>', fmtPct(tasaInv), '', 'yellow')}
-      </div>
-      <div class="kpi-hoy">
         ${kpi('Liquidez disponible <button class="info-btn" data-action="kpi-info" data-k="liquidez" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(P.liquidez, 0), '', 'sky')}
         ${kpi('Patrimonio neto <button class="info-btn" data-action="kpi-info" data-k="patrimonio" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(P.neto, 0), (() => { const prev = S.patrimonio_mensual.filter(x => x.anio_mes < ymOf(todayISO())).sort((a, b) => a.anio_mes < b.anio_mes ? 1 : -1)[0];
         return prev ? `<span class="${P.neto - num(prev.patrimonio_neto) >= 0 ? 'pos' : 'neg'}"><b>${signed(P.neto - num(prev.patrimonio_neto))}</b></span> vs ${ymLabel(prev.anio_mes, true)}` : ''; })(), 'sky', true)}
-      </div>
     </div>
 
     ${renderAnioEnCurso(P)}
 
     ${renderAlertas(months, st, P, rows)}
 
-    <div class="grid-2">
+    <div class="grid-2 dash-charts">
       <div class="card"><div class="card-head"><h3>Ingresos vs. gastos</h3></div><div class="chart-box"><canvas id="ch-ig"></canvas></div></div>
       <div class="card"><div class="card-head"><h3>¿Dónde se ha gastado?</h3></div>
         ${donut.length ? '<div class="chart-box"><canvas id="ch-cat"></canvas></div>' : '<div class="empty">Sin gastos en el periodo</div>'}</div>
     </div>
 
+    <div class="dash-bottom">
     ${renderBudgetCard(rows, nM, totBud, totSpent)}
 
-    <div class="card"><div class="card-head"><h3>Mayores gastos</h3></div>
+    <div class="card top-card"><div class="card-head"><h3>Mayores gastos</h3></div>
       <div class="top-list">${topGastos.length ? topGastos.slice(0, 5).map(m => `<div class="it" data-action="mov-edit" data-id="${m.id}" style="cursor:pointer"><div class="c"><b>${esc(m.concepto || '—')}</b><div class="small muted">${fmtDate(m.fecha)} · ${esc(catName(m.categoria_id) || 'Sin categoría')}</div></div><div class="num neg">${fmtEUR(num(m.importe))}</div></div>`).join('') : '<div class="empty">—</div>'}</div></div>
+    </div>
 `;
 
   mkChart('ch-ig', {
@@ -113,7 +111,7 @@ function renderDashboard() {
         { label: 'Ingresos', data: perMonth.map(x => round2(x.ing)), backgroundColor: '#16a34a', borderRadius: 5, order: 2, stack: 'i' },
         { label: 'Gastos operativos', data: perMonth.map(x => round2(x.gas)), backgroundColor: '#dc2626', borderRadius: 5, order: 2, stack: 'g' },
         ...(perMonth.some(x => x.cap > 0) ? [{ label: 'Capital de deuda amortizado', data: perMonth.map(x => round2(x.cap)), backgroundColor: '#fca5a5', borderRadius: 5, order: 2, stack: 'g' }] : []),
-        { type: 'line', label: 'Ahorro líquido', data: perMonth.map(x => round2(x.ah)), borderColor: '#0f1f3a', backgroundColor: '#0f1f3a', tension: .3, pointRadius: 3, order: 1 }
+        { type: 'line', label: 'Ahorro líquido', data: perMonth.map(x => round2(x.ah)), borderColor: Tema.oscuro() ? '#ffffff' : '#0f1f3a', backgroundColor: Tema.oscuro() ? '#ffffff' : '#0f1f3a', tension: .3, pointRadius: 3, order: 1 }
       ]
     },
     options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { y: { ...euroAxis, stacked: true }, x: { grid: { display: false }, stacked: true } } }

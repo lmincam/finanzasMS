@@ -37,22 +37,27 @@ function renderCuentas() {
 
   el.innerHTML = `
     <div class="section-head"><div><h2>Cuentas</h2><div class="small muted">Liquidez ${fmtEUR(P.liquidez)}</div></div>
-      <div class="btn-row"><button class="btn" data-action="cuenta-new">+ Cuenta</button><button class="btn primary" data-action="quick-open" data-tipo="gasto">+ Movimiento</button><button class="btn" data-action="quick-open" data-tipo="transferencia">⇄ Transferencia</button></div></div>
+      <div class="acc-btns">
+        <button class="btn" data-action="cuenta-new">+ Cuenta</button>
+        <button class="btn" data-action="quick-open" data-tipo="gasto">+ Movimiento</button>
+        <button class="btn" data-action="quick-open" data-tipo="transferencia">⇄ Transferencia</button>
+        <button class="btn btn-ico" data-action="imp-open" title="Importar extracto del banco (Excel o CSV)" aria-label="Importar extracto del banco">${icono('upload')}</button>
+      </div></div>
     <div class="acc-grid">${cards || '<div class="card empty">Sin cuentas</div>'}</div>
     ${renderAnualidadesCard()}
 
     ${renderPendientesCard()}
-    <div class="card" id="import-card"></div>
+    <div class="card" id="import-card" hidden></div>
 
     <div class="card">
-      <div class="card-head"><h3>Movimientos</h3><div class="btn-row">
-        <button class="btn sm" data-action="mov-regla" title="Imputa al mes siguiente los ingresos de los últimos días laborables del mes">⏭ Aplicar regla de nómina</button></div></div>
+      <div class="card-head mv-head"><h3>Movimientos</h3>
+        <button class="btn sm" data-action="mov-regla" title="Imputa al mes siguiente los ingresos de los últimos días laborables del mes">⏭ Regla de nómina</button></div>
       <div class="mov-filters">
         <input type="month" id="mf-mes" value="${S.movFilter.mes || ''}" title="Mes (fecha de operación)">
         <select id="mf-cuenta">${accOpts(S.movFilter.cuenta, { empty: 'Todas las cuentas', soloActivas: false })}</select>
         <select id="mf-tipo"><option value="">Todos los tipos</option>${Object.entries(TIPO_MOV).map(([k, l]) => `<option value="${k}" ${S.movFilter.tipo === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
         <input class="q" id="mf-q" type="search" placeholder="Buscar concepto…" value="${esc(S.movFilter.q)}">
-        <button class="btn sm ghost" data-action="mov-allmonths">Todos los meses</button>
+        <button class="btn ghost mf-all" data-action="mov-allmonths">Todos los meses</button>
       </div>
       <div id="mov-list"></div>
     </div>`;
@@ -84,7 +89,14 @@ function movRow(m) {
   const c = catById(m.categoria_id), r = c ? rootOf(c) : null, color = isT ? '#94a3b8' : (c && c.color) || (r && r.color) || '#cbd5e1';
   const sub = isT ? `${imp < 0 ? '→' : '←'} ${esc((cuentaById(m.cuenta_contraria_id) || {}).nombre || '?')}` : esc(catName(m.categoria_id) || 'Sin categoría');
   const tags = [];
-  if (S.v6 && m.reembolso_de) tags.push('<span class="badge green">↩ devolución</span>');
+  if (S.v6 && m.reembolso_de) {
+    const o = S.movimientos.find(x => x.id === m.reembolso_de);
+    tags.push(o ? `<span class="mv-ref">↩ Devolución de <b>${esc(o.concepto || '—')}</b> · ${fmtDate(o.fecha).slice(0, 5)} · ${fmtEUR(num(o.importe))}</span>` : '<span class="badge green">↩ devolución</span>');
+  }
+  if (S.v6 && !m.reembolso_de && imp < 0) {
+    const dev = S.movimientos.filter(x => x.reembolso_de === m.id);
+    if (dev.length) tags.push(`<span class="mv-ref">↩ Te devolvieron <b>${fmtEUR(sum(dev, 'importe'))}</b>${dev.length === 1 && dev[0].concepto ? ` (${esc(dev[0].concepto)})` : ''}</span>`);
+  }
   if (S.v6 && num(m.a_cobrar) > 0) { const i = infoCompartido(m); tags.push(`<span class="badge ${i.pendiente > 0.01 ? 'amber' : 'green'}">👥 ${i.pendiente > 0.01 ? `te deben ${fmtEUR(i.pendiente)}` : 'cobrado'}</span>`); }
   if (!isT && ymOf(m.mes_imputacion) !== ymOf(m.fecha)) tags.push(`<span class="badge blue">→ ${ymLabel(ymOf(m.mes_imputacion), true)}</span>`);
   if (!isT && !m.categoria_id) tags.push('<span class="badge amber">sin categoría</span>');
@@ -92,8 +104,8 @@ function movRow(m) {
     <span class="mv-dot" style="background:${esc(color)}"></span>
     <div class="mv-main"><div class="mv-con">${esc(m.concepto || '—')}</div>
       <div class="mv-sub">${sub} · ${esc(cta ? cta.nombre : '?')}${tags.length ? ' ' + tags.join(' ') : ''}</div></div>
-    <div class="mv-amt ${isT ? 'muted' : imp >= 0 ? 'pos' : 'neg'}">${signed(imp)}</div>
     <button class="mv-more" data-action="mov-menu" data-id="${m.id}" aria-label="Más acciones">⋯</button>
+    <div class="mv-amt ${isT ? 'muted' : imp >= 0 ? 'pos' : 'neg'}">${signed(imp)}</div>
   </div>`;
 }
 /** Menú de acciones de un movimiento (en lugar de muchos botones pequeños en cada fila). */

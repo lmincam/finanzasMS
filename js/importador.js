@@ -10,14 +10,8 @@
 function renderImport() {
   const box = $('#import-card'); if (!box) return;
   const D = S.importData;
-  if (!D) {
-    box.innerHTML = `<div class="card-head"><h3>📥 Importar extracto</h3><span class="sub">Excel o CSV del banco</span></div>
-      <div class="form-grid">
-        <div><label>Cuenta del extracto</label><select id="imp-cuenta">${accOpts(S.importCuenta)}</select></div>
-        <div><label>Archivo</label><input type="file" id="imp-file" accept=".xlsx,.xls,.csv,.txt"></div>
-      </div>`;
-    return;
-  }
+  box.hidden = !D;
+  if (!D) { box.innerHTML = ''; return; }
   if (D.stage === 'map') {
     const keys = [['fecha', 'Fecha *'], ['concepto', 'Concepto banco'], ['anot', 'Anotaciones (tu concepto)'], ['importe', 'Importe (con signo)'], ['cargo', 'Cargo (si va separado)'], ['abono', 'Abono (si va separado)'], ['saldo', 'Saldo (para conciliar)']];
     box.innerHTML = `<div class="card-head"><h3>📥 ${esc(D.fileName)}</h3><span class="sub">${D.data.length} filas detectadas · cabecera en fila ${D.headerRow + 1}</span></div>
@@ -400,7 +394,20 @@ ChangeFilters.push(t => {
   return false;
 });
 
+/** Icono de importar: pide la cuenta del extracto y después el archivo. */
+function abrirImportar() {
+  if (!S.connected) { toast('Configura primero Supabase en Ajustes', 'warn'); return; }
+  const md = modal(`<h3>Importar extracto del banco</h3>
+    <p class="small muted" style="margin-top:0">Excel (.xlsx, .xls) o CSV descargado de la web del banco.</p>
+    <label>¿De qué cuenta es el extracto?</label><select id="imp-cuenta">${accOpts(S.importCuenta)}</select>
+    <div class="actions" style="margin-top:16px"><button class="btn ghost" data-close>Cancelar</button>
+      <label class="btn primary imp-pick">${icono('upload')} Elegir archivo<input type="file" id="imp-file" accept=".xlsx,.xls,.csv,.txt" hidden></label></div>`);
+  md.el.querySelector('[data-close]').addEventListener('click', md.close);
+  md.el.addEventListener('change', e => { if (e.target.id === 'imp-file' && e.target.files && e.target.files[0]) setTimeout(() => md.close(), 0); });
+}
+
 Object.assign(Actions, {
+  'imp-open': () => abrirImportar(),
   'imp-cancel': () => { S.importData = null; renderImport(); },
   'imp-back': () => { S.importData.stage = 'map'; renderImport(); },
   'imp-process': () => impProcess(),
@@ -418,6 +425,6 @@ Object.assign(Changes, {
     if (!S.importCuenta) { toast('Selecciona la cuenta del extracto', 'warn'); return; }
     loading(true, 'Leyendo archivo…');
     try { await impReadFile(f); } catch (e) { console.error(e); toast('No se pudo leer el archivo: ' + e.message, 'err'); }
-    finally { loading(false); renderImport(); }
+    finally { loading(false); renderImport(); const c = $('#import-card'); if (c && !c.hidden) c.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   }
 });

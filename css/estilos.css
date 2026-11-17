@@ -340,7 +340,7 @@ code{background:var(--bg);padding:1px 6px;border-radius:5px;font-size:12.5px}
 .per-sel .pin .btn{min-width:36px;justify-content:center}
 .mpick{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:150px;height:34px;padding:0 14px;border:1px solid var(--line2);border-radius:9px;background:var(--card);font-weight:600;color:var(--ink);cursor:pointer;white-space:nowrap;text-transform:capitalize}
 .mpick:hover{border-color:var(--ink)}
-.period .mpick .mp-input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0;margin:0}
+.mpick .mp-input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0;margin:0}
 .per-info{font-size:13px;color:var(--slate)}
 .per-info .period-label{font-weight:600;color:var(--ink)}
 @media (max-width:640px){
@@ -526,3 +526,102 @@ body.locked .bottomnav{display:none}
 .seg-btn{display:inline-flex;align-items:center;gap:6px}
 .seg-btn .i{width:16px;height:16px}
 .user-chip.active{box-shadow:0 0 0 2px var(--navy),0 0 0 4px #86efac}
+
+/* ===== Inicio v5.18: barra de periodo en una línea y rejilla de indicadores alineada ===== */
+.per-bar{display:flex;align-items:center;gap:14px 18px;flex-wrap:wrap;margin:2px 0 18px}
+.per-bar .per-sel{display:flex;align-items:center;gap:12px;flex:1 1 auto}
+.per-bar .per-info{line-height:1.25}
+.per-bar .per-cal{flex:none;margin-left:auto}
+.per-cal .emo{font-size:15px;line-height:1}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:22px}
+.kpi-grid .kpi{border-left:0;border-radius:16px;padding:18px 20px;min-height:112px;box-shadow:0 1px 2px rgba(15,23,42,.05);border:1px solid var(--line)}
+.kpi-grid .kpi .l{font-size:11.5px;letter-spacing:.06em}
+.kpi-grid .kpi .v{font-size:28px;margin-top:10px}
+.kpi-grid .kpi-wide{grid-column:span 2;align-items:center}
+.kpi-grid .bal-main .v{font-size:34px}
+.kpi-grid .kpi.pos .v{color:var(--green)}.kpi-grid .kpi.neg .v{color:var(--red)}
+.kpi-grid .kpi::before{content:'';position:absolute;left:20px;top:0;width:36px;height:3px;border-radius:0 0 3px 3px;background:var(--ink);opacity:.8}
+.kpi-grid .kpi.pos::before,.kpi-grid .kpi.bal-pos::before{background:#16a34a}
+.kpi-grid .kpi.neg::before,.kpi-grid .kpi.bal-neg::before{background:#dc2626}
+.kpi-grid .kpi.yellow::before{background:#eab308}
+.ytd .kpi{border-left:0;border-radius:16px;padding:18px 20px;border:1px solid var(--line);box-shadow:0 1px 2px rgba(15,23,42,.05)}
+.ytd{gap:16px;margin-bottom:22px}
+.dash-charts{gap:16px}
+.dash-bottom{display:block}
+@media (min-width:1150px){
+  .dash-charts{grid-template-columns:3fr 2fr}
+  .dash-bottom{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:16px;align-items:start}
+  .dash-bottom>.card{margin-bottom:16px}
+  .alerts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  #alert-more{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  #alert-more[hidden]{display:none}
+}
+@media (max-width:1000px){ .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px} }
+@media (max-width:640px){
+  .per-bar{gap:10px;margin-bottom:14px}
+  .per-bar .per-modes{flex:1 1 100%}
+  .per-bar .per-sel{flex:1 1 100%}
+  .per-bar .per-cal{margin-left:0;flex:1 1 100%;justify-content:center}
+  .kpi-grid{gap:10px}
+  .kpi-grid .kpi{padding:14px 15px;min-height:0}
+  .kpi-grid .kpi .v{font-size:22px}
+  .kpi-grid .bal-main .v{font-size:28px}
+}
+.per-bar .pin{display:flex;align-items:center;gap:6px}
+.per-bar .pin .btn{min-width:36px;justify-content:center}
+
+/* ===== Calendario v5.18: celdas neutras, el gasto del día se marca con una barra de color ===== */
+.cal-cell{background:var(--card);border:1px solid var(--line);position:relative;overflow:hidden;gap:6px}
+.cal-none{background:var(--card2)}
+.cal-we.cal-none{background:var(--bg)}
+.cal-has{--heat:#f59e0b}
+.cal-h1{background:var(--card);--heat:#fbbf24}.cal-h2{background:var(--card);--heat:#f59e0b}.cal-h3{background:var(--card);--heat:#ea580c}.cal-h4{background:var(--card);--heat:#dc2626}
+.cal-has::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--heat)}
+.cal-has .cal-head{padding-left:4px}
+.cal-num{font-size:13px;font-weight:700;color:var(--txt)}
+.cal-tot{font-size:12px;font-weight:700;color:#fff;background:var(--heat);border-radius:999px;padding:1px 8px}
+.cal-h1 .cal-tot{color:#422006}
+.cal-list{gap:3px;padding-left:4px}
+.cal-item{background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:7px;padding:3px 6px}
+.cal-item:hover{background:var(--card3);box-shadow:none;border-color:var(--line2)}
+.cal-con{-webkit-line-clamp:1}
+.cal-foot{padding-left:4px;color:var(--muted)}
+.cal-today{outline:2px solid var(--blue);outline-offset:-2px}
+@media (max-width:760px){
+  .cal-cell{padding:10px 12px 10px 14px}
+  .cal-con{-webkit-line-clamp:2}
+  .cal-tot{font-size:13.5px}
+}
+@media (min-width:761px){
+  .cal-item{flex-wrap:wrap;row-gap:1px}
+  .cal-item .cal-con{flex:1 1 calc(100% - 14px);-webkit-line-clamp:2}
+  .cal-item .cal-imp{margin-left:auto;font-size:11.5px}
+}
+
+/* ===== Movimientos v5.18 ===== */
+.acc-btns{display:flex;gap:8px;align-items:stretch}
+.acc-btns .btn{height:40px;padding:0 16px;justify-content:center;white-space:nowrap;font-weight:600}
+.btn-ico{width:40px;padding:0!important;flex:none}
+.btn-ico .i{width:19px;height:19px}
+.imp-pick{cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.mv-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.mv{grid-template-columns:8px minmax(0,1fr) 32px auto}
+.mv-more{order:0}
+.mv-ref{display:inline-block;font-size:11.5px;color:var(--green);background:var(--green-soft);border:1px solid var(--line);border-radius:6px;padding:1px 6px;margin-top:3px;max-width:100%;white-space:normal;line-height:1.35;vertical-align:bottom}
+.mv-ref b{font-weight:600}
+@media (max-width:760px){
+  .section-head .acc-btns{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) 40px}
+  .acc-btns .btn{padding:0 6px;font-size:13px}
+  .mov-filters{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .mov-filters>*{min-width:0;width:100%;height:40px;margin:0}
+  .mov-filters .q{grid-column:1/-1;order:-1}
+  .mov-filters .mf-all{justify-content:center}
+  .mv{grid-template-columns:8px minmax(0,1fr) 28px auto;gap:8px}
+  .mv-more{width:28px}
+  .mv-con{font-size:14.5px}
+}
+.mv{grid-template-columns:8px minmax(0,1fr) 32px 118px}
+@media (max-width:760px){ .mv{grid-template-columns:8px minmax(0,1fr) 28px minmax(84px,auto)} }
+/* Botón principal visible sobre fondo oscuro */
+:root[data-theme="dark"] .btn.primary{background:#2b4a85;border-color:#2b4a85;color:#fff}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .btn.primary{background:#2b4a85;border-color:#2b4a85;color:#fff} }

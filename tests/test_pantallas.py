@@ -48,9 +48,8 @@ def test_estructura_dashboard(app):
     """Evita volver a publicar la tarjeta de balance descolocada (un </div> de menos la rompió una vez)."""
     a = app
     a.ir('dashboard')
-    assert a.ev("[...document.querySelectorAll('.kpi-flujo > .kpi')].length") == 5
-    assert a.ev("document.querySelector('.kpi-wide > .bal-calc') !== null")
-    assert a.ev("document.querySelector('.kpi-hoy').children.length") == 2
+    assert a.ev("[...document.querySelectorAll('.kpi-grid > .kpi')].length") == 7
+    assert a.ev("document.querySelector('.kpi-grid > .kpi-wide > .bal-calc') !== null")
     assert a.ev("document.querySelector('.ytd') !== null")
 
 

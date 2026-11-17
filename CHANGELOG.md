@@ -1,5 +1,14 @@
 # Historial de versiones
 
+## 5.18.0 — 17/11/2026 · Inicio más limpio, calendario y movimientos
+- **Inicio (ordenador)** rediseñado con la misma información: el periodo en una sola línea; indicadores en una rejilla alineada de 4 columnas (Ingresos · Gastos · Balance mensual / Tasas · Liquidez · Patrimonio); avisos en dos columnas; gráfico de ingresos vs. gastos más ancho; presupuesto y mayores gastos uno al lado del otro.
+- Botón **📅 Calendario** con el emoji de nuevo.
+- **Calendario**: celdas del color de la tarjeta (se ve bien en modo oscuro). El gasto del día se marca con una barra lateral y el total en una etiqueta de color (amarillo → rojo según lo alto que sea). En el ordenador cada gasto muestra el concepto completo y el importe debajo.
+- La línea de **ahorro** del gráfico Ingresos vs. gastos es blanca en modo oscuro.
+- **Movimientos**: las devoluciones (Bizum…) dicen a qué gasto corresponden ("↩ Devolución de Restaurante La Tasca · 07/11 · −200 €") y el gasto original muestra cuánto te han devuelto.
+- Botones **+ Cuenta**, **+ Movimiento** y **⇄ Transferencia** iguales, y al lado un **icono para importar el extracto** del banco: pregunta la cuenta y abre el selector de archivo. Ya no hay tarjeta fija "Importar extracto"; la revisión aparece solo al subir un archivo.
+- Móvil: filtros sin solapes (buscador arriba, después mes/cuenta y tipo/todos los meses), y en cada movimiento primero **⋯** y después el **importe**, alineado.
+
 ## 5.17.1 — 17/11/2026 · Ajustes desde el círculo de usuario
 - Ajustes se abre tocando el **círculo de usuario** (arriba a la derecha), que se resalta mientras estás en Ajustes. En el móvil la barra inferior queda con 4 secciones y el **+** en el centro.
 
