@@ -497,7 +497,10 @@ function valorAutoCuenta(c) {
   // Reparto de las aportaciones nuevas: por % si todos lo tienen; si no, en proporción a su valor
   const sumPct = sum(autos, p => num(p.porcentaje));
   const valBase = new Map(autos.map(p => [p.id, num(p.participaciones) * ult.get(p.id).precio])), totBase = sum([...valBase.values()], v => v) || 1;
-  const peso = p => autos.length === 1 ? 1 : (autos.every(x => num(x.porcentaje) > 0) ? num(p.porcentaje) / sumPct : valBase.get(p.id) / totBase);
+  // Reparto de cada aportación: el % que indicas en cada producto (un producto con 0 % o vacío no recibe nada).
+  // Solo si ningún producto tiene % se reparte en proporción a su valor.
+  const conPct = sumPct > 0;
+  const peso = p => autos.length === 1 ? 1 : conPct ? num(p.porcentaje) / sumPct : valBase.get(p.id) / totBase;
   const pos = new Map(), compras = new Map(); let valor = 0, fecha = hoy, cambio = 0, fechaPrev = null;
   const movs = S.movimientos.filter(m => m.cuenta_id === c.id && num(m.importe)).sort((a, b) => a.fecha < b.fecha ? -1 : 1);
   for (const p of autos) {

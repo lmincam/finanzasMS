@@ -259,7 +259,7 @@ function renderInversionDetalle(c) {
     <div class="grid-2e">
       <div class="card"><div class="card-head"><h3>🔁 Aportación mensual</h3>${S.v4 ? `<button class="btn sm" data-action="ap-new" data-id="${c.id}">+ Programar</button>` : ''}</div>
         ${plan ? `<div class="ap-plan"><div class="ap-big">${fmtEUR(plan.importe)}<span>/mes</span></div><div class="small muted">Día ${plan.dia_mes} desde ${esc((cuentaById(plan.cuenta_origen_id) || {}).nombre || '?')}${proximaAportacion(plan) ? ` · próxima el <b>${fmtDate(proximaAportacion(plan))}</b>` : ''}</div></div>
-          ${A && P.ps.some(p => p.auto) ? `<div class="cz-list" style="margin-top:10px">${P.ps.filter(p => p.auto).map(p => `<div><span>${esc(p.nombre)}</span><span class="num">${fmtEUR(num(plan.importe) * p.auto.peso)} ≈ <b>${fmtNum(num(plan.importe) * p.auto.peso / p.auto.precio, 4)}</b> part.</span></div>`).join('')}</div>
+          ${A && P.ps.some(p => p.auto) ? `<div class="cz-list" style="margin-top:10px">${P.ps.filter(p => p.auto && p.auto.peso > 0).map(p => `<div><span>${esc(p.nombre)} <span class="muted small">${fmtPct(p.auto.peso, 1)}</span></span><span class="num">${fmtEUR(num(plan.importe) * p.auto.peso)} ≈ <b>${fmtNum(num(plan.importe) * p.auto.peso / p.auto.precio, 4)}</b> part.</span></div>`).join('')}</div>
             <div class="small muted">Cada mes se registra sola la transferencia, y las participaciones de cada producto suben según este reparto al precio del día en que entra el dinero.</div>` : ''}
           <div style="margin-top:8px">${listaAportPeriodicas(planes, false)}</div>`
         : (S.v4 ? '<div class="empty">Programa tu aportación mensual: se registrará sola cada mes y comprará participaciones según el reparto de cada producto.</div>' : bannerV4())}

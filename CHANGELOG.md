@@ -1,5 +1,9 @@
 # Historial de versiones
 
+## 5.14.1 — 17/11/2026 · Corrección del reparto de la aportación
+- Si algún producto de la cuenta tenía el % vacío o a 0 (por ejemplo, un fondo al que ya no aportas), la app ignoraba todos los % y repartía la aportación según el valor de cada producto. Ahora siempre usa el % de cada producto, y el que tiene 0 % no recibe nada. Solo si ningún producto tiene % se reparte por valor.
+- La tarjeta "Aportación mensual" muestra el % aplicado a cada producto.
+
 ## 5.14.0 — 17/11/2026 · Pestaña Inversiones rediseñada
 - **Resumen arriba**: valor total, variación del último día, invertido de tu bolsillo, ganancia (€ y %), rentabilidad anual (TIR) y aportación mensual.
 - **Avisos solo cuando hace falta**: ISIN sin precio, descarga diaria parada, productos sin participaciones, reparto que no suma 100 % o valor manual antiguo.
