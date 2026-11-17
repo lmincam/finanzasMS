@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.21.1 — 17/11/2026
+- Patrimonio vuelve a sus recuadros en rejilla (Lo que tenéis · Lo que debéis · Seguimiento). El carrusel se queda solo en Alertas y consejos de Inicio.
+
 ## 5.21.0 — 17/11/2026 · Carruseles
 - **Alertas y consejos** de Inicio en un carrusel infinito, en orden de importancia (alertas, avisos, consejos). Avanza despacio, se para al tocarlo o pasar el ratón y se puede arrastrar.
 - **Patrimonio**: los recuadros (liquidez, inversiones, inmuebles, vehículos, hipoteca, préstamos, evolución) en el mismo carrusel justo debajo del reparto del patrimonio, con una etiqueta "Lo que tenéis / Lo que debéis".

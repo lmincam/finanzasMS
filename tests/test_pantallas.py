@@ -61,7 +61,7 @@ def test_navegacion_movil(movil):
     a.page.click('#bottomnav [data-action="sec"][data-sec="patrimonio"]'); a.page.wait_for_timeout(200)
     assert a.ev('S.tab') == 'patrimonio'
     assert a.ev("document.querySelector('#subtabs').hidden") is True
-    a.page.locator('.crs-it:not([aria-hidden]) .pz-box[data-k="vehiculos"]').click(force=True); a.page.wait_for_timeout(200)
+    a.page.click('.pz-box[data-k="vehiculos"]'); a.page.wait_for_timeout(200)
     assert a.ev('S.tab') == 'vehiculos'
     a.page.click('#subtabs button:has-text("Volver a Patrimonio")'); a.page.wait_for_timeout(200)
     assert a.ev('S.tab') == 'patrimonio'
@@ -87,16 +87,10 @@ def test_ajustes_desde_el_circulo_de_usuario(movil):
 
 
 def test_carruseles(app):
-    """Alertas de Inicio y recuadros de Patrimonio en carrusel infinito, en orden (alertas rojas primero)."""
+    """Alertas de Inicio en carrusel infinito, en orden (alertas rojas primero); Patrimonio sin carrusel."""
     a = app
     a.ir('dashboard'); a.page.wait_for_timeout(300)
     niveles = a.ev("[...document.querySelectorAll('.crs-alertas .crs-it:not([aria-hidden]) .alert')].map(x => x.classList[1])")
     orden = {'red': 0, 'amber': 1, 'blue': 2, 'green': 3}
     assert niveles and [orden[n] for n in niveles] == sorted(orden[n] for n in niveles)
-    a.ir('patrimonio'); a.page.wait_for_timeout(300)
-    ks = a.ev("[...document.querySelectorAll('.crs-pz .crs-it:not([aria-hidden]) .pz-box')].map(x => x.dataset.k)")
-    assert ks == ['liquidez', 'inversiones', 'inmuebles', 'vehiculos', 'hipoteca', 'prestamos', 'evolucion']
-    assert a.ev("document.querySelector('.crs-pz').dataset.on") == '1'
-    assert a.page.locator('.crs-pz .crs-it[aria-hidden]').count() == 14          # copias para el bucle
-    a.page.locator('.crs-pz .crs-it:not([aria-hidden]) .pz-box[data-k="inmuebles"]').click(force=True); a.page.wait_for_timeout(200)
-    assert a.ev('S.tab') == 'inmuebles'
+    assert a.page.locator('#tab-patrimonio [data-crs]').count() == 0
