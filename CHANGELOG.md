@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.17.1 — 17/11/2026 · Ajustes desde el círculo de usuario
+- Ajustes se abre tocando el **círculo de usuario** (arriba a la derecha), que se resalta mientras estás en Ajustes. En el móvil la barra inferior queda con 4 secciones y el **+** en el centro.
+
 ## 5.17.0 — 17/11/2026 · Nuevo diseño
 - **Navegación en 5 secciones**: Inicio, Movimientos, Patrimonio (inversiones, inmuebles y vehículos, deudas, seguros, evolución), Planificar (previsión y metas, presupuestos, proyección) y Ajustes. En el móvil van en una **barra inferior** con el botón **+** en el centro; dentro de cada sección, sub-pestañas arriba. Recuerda la última sub-pestaña de cada sección.
 - **Iconos propios** (SVG, mismo trazo en toda la app) en lugar de emojis en títulos, avisos y botones.

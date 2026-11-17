@@ -57,7 +57,7 @@ def test_estructura_dashboard(app):
 def test_navegacion_movil(movil):
     """En el móvil: barra inferior con 5 secciones + botón de añadir, y sub-pestañas dentro de cada sección."""
     a = movil
-    assert a.page.locator('#bottomnav .bn-item').count() == 5
+    assert a.page.locator('#bottomnav .bn-item').count() == 4
     assert a.page.locator('#bottomnav .bn-plus').count() == 1
     a.page.click('#bottomnav [data-action="sec"][data-sec="patrimonio"]'); a.page.wait_for_timeout(200)
     assert a.ev('S.tab') == 'inversiones'
@@ -78,3 +78,9 @@ def test_modo_oscuro(abrir):
     a.page.click('[data-action="tema"][data-v="light"]'); a.page.wait_for_timeout(150)
     assert a.ev("document.documentElement.dataset.theme") == 'light'
     assert a.ev("getComputedStyle(document.querySelector('.card')).backgroundColor") == 'rgb(255, 255, 255)'
+
+
+def test_ajustes_desde_el_circulo_de_usuario(movil):
+    a = movil
+    a.page.click('#user-chip'); a.page.wait_for_timeout(200)
+    assert a.ev('S.tab') == 'ajustes'

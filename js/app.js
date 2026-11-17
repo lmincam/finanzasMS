@@ -17,7 +17,8 @@ function renderTabs() {
   const bn = $('#bottomnav');
   if (bn) bn.innerHTML = SECCIONES.slice(0, 2).map(x => btnSec(x, 'bn-item')).join('')
     + `<button class="bn-plus" data-action="quick-open" data-tipo="gasto" aria-label="Registrar movimiento">${icono('plus')}</button>`
-    + SECCIONES.slice(2).map(x => btnSec(x, 'bn-item')).join('');
+    + SECCIONES.slice(2).filter(x => x.k !== 'ajustes').map(x => btnSec(x, 'bn-item')).join('');
+  const uc = $('#user-chip'); if (uc) uc.classList.toggle('active', S.tab === 'ajustes');
   const sub = $('#subtabs');
   if (sub) { sub.hidden = sec.tabs.length < 2;
     sub.innerHTML = sec.tabs.length < 2 ? '' : `<div class="subtabs-in">${sec.tabs.map(k => `<button class="${k === S.tab ? 'active' : ''}" data-action="tab" data-tab="${k}">${esc(nombre(k))}</button>`).join('')}</div>`;
