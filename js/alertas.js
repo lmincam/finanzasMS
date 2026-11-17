@@ -225,14 +225,12 @@ function renderAlertas(months, st, P, rows) {
   A = A.filter(a => !(oc[a.key] && oc[a.key] >= hoy));
   if (!A.length) return nOcultos ? `<div class="small muted" style="margin:4px 0 12px">🔔 Sin avisos pendientes · <a href="#" data-action="alert-reset">mostrar ${nOcultos} oculto(s)</a></div>` : '';
   const cnt = n => A.filter(a => a.nivel === n).length;
-  const item = a => `<div class="alert ${a.nivel}"><div class="ic">${a.ic}</div><div style="flex:1"><b class="t">${esc(a.t)}</b>${a.txt}</div>
+  const item = a => `<div class="alert ${a.nivel}"><div class="ic">${a.ic}</div><div style="flex:1;min-width:0"><b class="t">${esc(a.t)}</b>${a.txt}</div>
     <button class="mini" style="align-self:flex-start" data-action="alert-hide" data-key="${esc(a.key)}" data-dias="${a.dias}" title="Ocultar este aviso ${a.dias} días">✕</button></div>`;
-  const vis = A.slice(0, 6), rest = A.slice(6);
   return `<div class="card"><div class="card-head"><h3>🔔 Alertas y consejos</h3><div class="btn-row">
       ${cnt('red') ? `<span class="badge red">${cnt('red')} alerta(s)</span>` : ''}${cnt('amber') ? `<span class="badge amber">${cnt('amber')} aviso(s)</span>` : ''}
       ${cnt('blue') ? `<span class="badge blue">${cnt('blue')} consejo(s)</span>` : ''}${cnt('green') ? `<span class="badge green">${cnt('green')} bien</span>` : ''}</div></div>
-    <div class="alerts">${vis.map(item).join('')}<div class="alerts" id="alert-more" hidden>${rest.map(item).join('')}</div></div>
-    ${rest.length ? `<div style="text-align:center;margin-top:10px"><button class="btn sm ghost" data-action="alert-more" data-more="Ver ${rest.length} más">Ver ${rest.length} más</button></div>` : ''}
+    ${carrusel(A.map(item), 'crs-alertas')}
     ${nOcultos ? `<div class="small muted" style="margin-top:8px"><a href="#" data-action="alert-reset">Mostrar ${nOcultos} aviso(s) oculto(s)</a></div>` : ''}</div>`;
 }
 async function guardarOcultas(valor) {

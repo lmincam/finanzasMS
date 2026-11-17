@@ -1,5 +1,10 @@
 # Historial de versiones
 
+## 5.21.0 — 17/11/2026 · Carruseles
+- **Alertas y consejos** de Inicio en un carrusel infinito, en orden de importancia (alertas, avisos, consejos). Avanza despacio, se para al tocarlo o pasar el ratón y se puede arrastrar.
+- **Patrimonio**: los recuadros (liquidez, inversiones, inmuebles, vehículos, hipoteca, préstamos, evolución) en el mismo carrusel justo debajo del reparto del patrimonio, con una etiqueta "Lo que tenéis / Lo que debéis".
+- Si las tarjetas caben en pantalla, se quedan quietas. Respeta la opción "reducir movimiento" del sistema.
+
 ## 5.20.2 — 17/11/2026 · Selector de mes que funciona en todos los navegadores
 - Movimientos: el filtro de mes es ‹ mes › con un selector propio (año y los 12 meses, "Este mes" y "Todos los meses"). Ya no se puede quedar en texto vacío.
 - Inicio: el mes del periodo usa el mismo selector.

@@ -42,6 +42,7 @@ function renderResumenPatrimonio() {
   const linea = (l, v, extra = '') => `<div class="pz-l"><span>${l}</span><b>${fmtEUR(v, 0)}</b>${extra}</div>`;
   const caja = ({ k, tab, ico, titulo, valor, pie = '', lineas = '', cls = '' }) => `
     <div class="card pz-box ${cls}" data-action="tab" data-tab="${tab}" role="button" tabindex="0" data-k="${k}">
+      <div class="pz-tag ${/pz-debt/.test(cls) ? 'deuda' : k === 'evolucion' ? 'seg' : ''}">${/pz-debt/.test(cls) ? 'Lo que debéis' : k === 'evolucion' ? 'Seguimiento' : 'Lo que tenéis'}</div>
       <div class="pz-top"><div class="pz-ico">${ico}</div><div class="pz-t">${titulo}</div><span class="pz-go">›</span></div>
       <div class="pz-v">${valor}</div>${pie ? `<div class="pz-pie">${pie}</div>` : ''}
       ${lineas ? `<div class="pz-lines">${lineas}</div>` : ''}
@@ -63,36 +64,28 @@ function renderResumenPatrimonio() {
       <div class="pz-leg">${comp.map(c => `<span><i style="background:${c[2]}"></i>${c[0]} <b>${fmtPct(pctA(c[1]), 0)}</b></span>`).join('')}</div>` : ''}
     </div>
 
-    <div class="pz-sec">Lo que tenéis</div>
-    <div class="pz-grid">
-      ${caja({ k: 'liquidez', tab: 'cuentas', ico: icono('wallet'), titulo: 'Liquidez disponible', valor: fmtEUR(P.liquidez, 0),
-        lineas: [corrientes ? linea('Cuentas corrientes', corrientes) : '', ahorro ? linea('Ahorro / fondo de emergencia', ahorro) : '', anual ? linea('Anualidades (apartado)', anual) : '', efectivo ? linea('Efectivo', efectivo) : ''].join('') })}
-      ${caja({ k: 'inversiones', tab: 'inversiones', ico: icono('trend'), titulo: 'Inversiones', valor: fmtEUR(P.inversiones, 0),
+    ${carrusel([
+      caja({ k: 'liquidez', tab: 'cuentas', ico: icono('wallet'), titulo: 'Liquidez disponible', valor: fmtEUR(P.liquidez, 0),
+        lineas: [corrientes ? linea('Cuentas corrientes', corrientes) : '', ahorro ? linea('Ahorro / fondo de emergencia', ahorro) : '', anual ? linea('Anualidades (apartado)', anual) : '', efectivo ? linea('Efectivo', efectivo) : ''].join('') }),
+      caja({ k: 'inversiones', tab: 'inversiones', ico: icono('trend'), titulo: 'Inversiones', valor: fmtEUR(P.inversiones, 0),
         pie: fechaCierre ? `Al cierre del ${fmtDate(fechaCierre)}` : inv.length ? 'Valor manual' : 'Sin cuentas de inversión',
-        lineas: inv.length ? linea('Aportado de tu bolsillo', invAp) + `<div class="pz-l"><span>Ganancia</span><b class="${invPlus >= 0 ? 'pos' : 'neg'}">${signed(invPlus)}${invAp > 0 ? ` · ${fmtPct(invPlus / invAp)}` : ''}</b></div>` : '' })}
-      ${caja({ k: 'inmuebles', tab: 'inmuebles', ico: icono('home'), titulo: 'Inmuebles', valor: fmtEUR(P.inmuebles, 0),
+        lineas: inv.length ? linea('Aportado de tu bolsillo', invAp) + `<div class="pz-l"><span>Ganancia</span><b class="${invPlus >= 0 ? 'pos' : 'neg'}">${signed(invPlus)}${invAp > 0 ? ` · ${fmtPct(invPlus / invAp)}` : ''}</b></div>` : '' }),
+      caja({ k: 'inmuebles', tab: 'inmuebles', ico: icono('home'), titulo: 'Inmuebles', valor: fmtEUR(P.inmuebles, 0),
         pie: inm.length ? `${inm.length} inmueble(s) · valor estimado de venta` : 'Sin inmuebles',
-        lineas: inm.length ? inm.map(o => linea(esc(o.i.nombre), o.x.vm)).join('') + (inmCoste ? `<div class="pz-l"><span>Plusvalía latente</span><b class="${inmPlus >= 0 ? 'pos' : 'neg'}">${signed(inmPlus)}</b></div>` : '') : '' })}
-      ${caja({ k: 'vehiculos', tab: 'vehiculos', ico: icono('car'), titulo: 'Vehículos', valor: fmtEUR(P.vehiculos, 0),
+        lineas: inm.length ? inm.map(o => linea(esc(o.i.nombre), o.x.vm)).join('') + (inmCoste ? `<div class="pz-l"><span>Plusvalía latente</span><b class="${inmPlus >= 0 ? 'pos' : 'neg'}">${signed(inmPlus)}</b></div>` : '') : '' }),
+      caja({ k: 'vehiculos', tab: 'vehiculos', ico: icono('car'), titulo: 'Vehículos', valor: fmtEUR(P.vehiculos, 0),
         pie: veh.length ? `${veh.length} vehículo(s)` : 'Sin vehículos',
-        lineas: veh.map(v => linea(esc(v.nombre), num(v.valor_actual))).join('') + (vehDep > 0 ? `<div class="pz-l"><span>Depreciación acumulada</span><b class="neg">−${fmtEUR(vehDep, 0)}</b></div>` : '') })}
-    </div>
-
-    <div class="pz-sec">Lo que debéis</div>
-    <div class="pz-grid pz-grid-2">
-      ${caja({ k: 'hipoteca', tab: 'deudas', ico: icono('bank'), titulo: 'Hipoteca', cls: hip.length ? 'pz-debt' : 'pz-debt pz-cero', valor: hip.length ? `−${fmtEUR(sum(hip, o => o.x.pendienteHoy), 0)}` : '0 €',
+        lineas: veh.map(v => linea(esc(v.nombre), num(v.valor_actual))).join('') + (vehDep > 0 ? `<div class="pz-l"><span>Depreciación acumulada</span><b class="neg">−${fmtEUR(vehDep, 0)}</b></div>` : '') }),
+      caja({ k: 'hipoteca', tab: 'deudas', ico: icono('bank'), titulo: 'Hipoteca', cls: hip.length ? 'pz-debt' : 'pz-debt pz-cero', valor: hip.length ? `−${fmtEUR(sum(hip, o => o.x.pendienteHoy), 0)}` : '0 €',
         pie: hip.length ? `Cuota ${fmtEUR(sum(hip, o => o.x.cuota))}/mes` : 'Sin hipoteca',
-        lineas: hip.length > 1 ? hip.map(o => linea(esc(o.d.nombre), o.x.pendienteHoy)).join('') : '' })}
-      ${caja({ k: 'prestamos', tab: 'deudas', ico: icono('card'), titulo: 'Préstamos personales y otros', cls: prest.length ? 'pz-debt' : 'pz-debt pz-cero', valor: prest.length ? `−${fmtEUR(sum(prest, o => o.x.pendienteHoy), 0)}` : '0 €',
+        lineas: hip.length > 1 ? hip.map(o => linea(esc(o.d.nombre), o.x.pendienteHoy)).join('') : '' }),
+      caja({ k: 'prestamos', tab: 'deudas', ico: icono('card'), titulo: 'Préstamos personales y otros', cls: prest.length ? 'pz-debt' : 'pz-debt pz-cero', valor: prest.length ? `−${fmtEUR(sum(prest, o => o.x.pendienteHoy), 0)}` : '0 €',
         pie: prest.length ? `Cuota ${fmtEUR(sum(prest, o => o.x.cuota))}/mes` : 'Sin préstamos',
-        lineas: prest.map(o => linea(`${esc(o.d.nombre)} <small class="muted">${esc(TIPO_DEUDA[o.d.tipo] || '')}</small>`, o.x.pendienteHoy)).join('') })}
-    </div>
+        lineas: prest.map(o => linea(`${esc(o.d.nombre)} <small class="muted">${esc(TIPO_DEUDA[o.d.tipo] || '')}</small>`, o.x.pendienteHoy)).join('') }),
+      caja({ k: 'evolucion', tab: 'auditoria', ico: icono('chart'), titulo: 'Evolución del patrimonio', valor: prev ? `${signed(P.neto - num(prev.patrimonio_neto))}` : '—',
+        pie: prev ? `Respecto al cierre de ${ymLabel(prev.anio_mes)}` : 'Histórico de cierres y fotos trimestrales' })
+    ], 'crs-pz')}
     ${cuotaMes ? `<div class="small muted pz-nota">Pagáis ${fmtEUR(cuotaMes)} al mes en cuotas de préstamos.</div>` : ''}
-
-    <div class="pz-sec">Seguimiento</div>
-    <div class="pz-grid pz-grid-1">
-      ${caja({ k: 'evolucion', tab: 'auditoria', ico: icono('chart'), titulo: 'Evolución del patrimonio', valor: prev ? `${signed(P.neto - num(prev.patrimonio_neto))}` : '—',
-        pie: prev ? `Respecto al cierre de ${ymLabel(prev.anio_mes)}` : 'Histórico de cierres y fotos trimestrales' })}
     </div>`;
 }
 
