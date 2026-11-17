@@ -1,5 +1,13 @@
 # Historial de versiones
 
+## 5.8.0 — 17/11/2026 · Anualidades, gastos fijos y explicaciones
+- **Presupuesto anual o mensual** por categoría (🏷️ Categorías). Un pago anual (seguro de 600 €) se reparte solo: 50 €/mes. Las anualidades se comparan con lo gastado en el año, no con el mes del cargo, y no saltan como gasto extraordinario.
+- **Tarjeta 🗓️ Anualidades** en Cuentas: cuánto pasar cada mes a la cuenta de anualidades (suma de 1/12 de cada pago anual), lo que llevas pasado este mes, el saldo apartado, el último y el próximo cargo de cada pago, y aviso si el saldo no alcanza para lo que vence en 3 meses. La cuenta se elige en la tarjeta (por defecto, la que se llama "Anualidades") y su saldo ya no cuenta como fondo de emergencia.
+- **Gasto fijo** por categoría: automático, sí o no. Los fijos van aparte y plegados en el Dashboard y no avisan por estar al 100 %.
+- **Presupuesto vs. gastado real** con orden: más cerca del límite (por defecto), mayor gasto o por categorías. Grupos: variables, anualidades y fijos. En el móvil se ve en tarjetas, sin desplazamiento lateral.
+- **ⓘ en cada indicador del Dashboard**: qué es, cómo se calcula y la cuenta hecha con tus números (p. ej., la capacidad de ahorro y a dónde ha ido ese dinero).
+- Requiere ejecutar `sql/esquema_completo.sql` (bloque 10: `categorias.presupuesto_anual` y `gasto_fijo`).
+
 ## 5.7.4 — 16/11/2026 · iPhone (app instalada): título nítido
 - En la app instalada, el contenido de la cabecera baja un poco para quedar fuera del difuminado que iOS 26 aplica bajo la barra de estado. En el navegador y en el ordenador no cambia nada.
 

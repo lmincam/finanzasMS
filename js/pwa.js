@@ -73,8 +73,8 @@ async function avisosAlAbrir() {
   const hoy = todayISO();
   for (const k of Object.keys(enviados)) if (diasEntre(enviados[k], hoy) > 30) delete enviados[k];
   const ym = ymOf(hoy), st = periodStats([ym]), P = Calc.patrimonio();
-  const rows = budgetRows(st.movs.filter(m => m.tipo === 'gasto'), 1);
-  const A = buildAlertas([ym], st, P, rows).filter(a => a.nivel === 'red' || a.nivel === 'amber').filter(a => !enviados[a.t] || diasEntre(enviados[a.t], hoy) >= 7);
+  const rows = budgetRows(st.movs.filter(m => m.tipo === 'gasto'), 1, [ym]), oc = alertasOcultas();
+  const A = buildAlertas([ym], st, P, rows).filter(a => (a.nivel === 'red' || a.nivel === 'amber') && !(oc[a.key] && oc[a.key] >= hoy)).filter(a => !enviados[a.t] || diasEntre(enviados[a.t], hoy) >= 7);
   const txt = h => String(h).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
   const yaHoy = Object.values(enviados).filter(d => d === hoy).length; // máximo 3 avisos al día
   for (const a of A.slice(0, Math.max(0, 3 - yaHoy))) { await mostrarAviso(`${a.ic} ${a.t}`, txt(a.txt).slice(0, 180)); enviados[a.t] = hoy; }

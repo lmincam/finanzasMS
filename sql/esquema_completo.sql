@@ -587,6 +587,17 @@ notify pgrst, 'reload schema';
 
 
 -- #####################################################################
+--  BLOQUE 10 · Presupuestos anuales (anualidades) y gastos fijos (v5.8.0)
+-- #####################################################################
+-- presupuesto_anual: si tiene valor, el presupuesto es anual (p. ej. seguro de 600 €/año) y
+--   presupuesto_mensual guarda su equivalente mensual (50 €). Se provisiona en la cuenta de anualidades.
+-- gasto_fijo: true = gasto fijo (hipoteca, alquiler…), false = variable, vacío = lo decide la app.
+alter table public.categorias add column if not exists presupuesto_anual numeric(12,2);
+alter table public.categorias add column if not exists gasto_fijo boolean;
+notify pgrst, 'reload schema';
+
+
+-- #####################################################################
 --  BLOQUE 5 · Seguridad: solo usuarios con sesión + espacio para copias
 -- #####################################################################
 -- Quita cualquier permiso del rol anónimo en las tablas de la app
@@ -633,7 +644,8 @@ from (values ('inmuebles','metros_construidos'), ('inmuebles','precio_m2_venta')
              ('deudas','comision_amortizacion'), ('aportaciones_periodicas','omitidos'),
              ('deudas','categoria_cuota_id'), ('categorias','naturaleza'),
              ('movimientos','reembolso_de'), ('movimientos','a_cobrar'),
-             ('cuentas','saldo_actualizado'), ('cuentas','valor_actualizado')) as y(tb, col)
+             ('cuentas','saldo_actualizado'), ('cuentas','valor_actualizado'),
+             ('categorias','presupuesto_anual'), ('categorias','gasto_fijo')) as y(tb, col)
 union all
 select 'Acceso anónimo bloqueado',
        case when exists (select 1 from pg_roles where rolname = 'anon')

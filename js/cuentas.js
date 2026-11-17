@@ -39,6 +39,7 @@ function renderCuentas() {
     <div class="section-head"><div><h2>Cuentas</h2><div class="small muted">Liquidez ${fmtEUR(P.liquidez)} · Las cuentas de inversión están en <a href="#inversiones" data-action="tab" data-tab="inversiones">📈 Inversiones</a></div></div>
       <div class="btn-row"><button class="btn" data-action="cuenta-new">+ Cuenta</button><button class="btn primary" data-action="quick-open" data-tipo="gasto">+ Movimiento</button><button class="btn" data-action="quick-open" data-tipo="transferencia">⇄ Transferencia</button></div></div>
     <div class="acc-grid">${cards || '<div class="card empty">Sin cuentas</div>'}</div>
+    ${renderAnualidadesCard()}
 
     ${renderPendientesCard()}
     <div class="card" id="import-card"></div>

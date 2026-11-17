@@ -26,6 +26,8 @@ function gastoCatPorMes(catId, ms) {
 }
 /** ¿Es un gasto fijo (hipoteca, alquiler, cuota del gimnasio…)? Cuota de un préstamo, o importe casi idéntico cada mes con 1-2 cargos. */
 function esGastoFijo(catId, refYm) {
+  const man = fijoManual(catId); if (man !== null) return man;   // lo que hayas marcado en 🏷️ Categorías manda
+  if (catAnualDe(catId)) return false;                              // las anualidades se tratan aparte
   if (S.deudas.some(d => d.activa !== false && categoriaCuota(d) === catId)) return true;
   const h = gastoCatPorMes(catId, Array.from({ length: 6 }, (_, i) => addMonths(refYm, -(i + 1)))).filter(x => x.n > 0);
   if (h.length < 3 || h.some(x => x.n > 2)) return false;
@@ -57,6 +59,11 @@ function buildAlertas(months, st, P, rows) {
   for (const r of rows) {
     if (!(r.bud > 0) || !r.own) continue;
     const exceso = r.spent - r.bud;
+    if (r.anual) {   // anualidad: se compara lo gastado en el año con el presupuesto anual
+      if (exceso > Math.max(10, r.bud * 0.03)) { conAvisoPres.add(r.catId);
+        add('amber', '🗓️', `${r.nombre}: la anualidad sale más cara`, `En ${r.anio} llevas ${fmtEUR(r.spent)} y presupuestaste ${fmtEUR(r.bud)} al año (<b>+${fmtEUR(exceso)}</b>). Actualiza el presupuesto en 🏷️ Categorías para que la aportación mensual a anualidades sea la correcta.`, `anual:${r.catId}:${r.anio}`); }
+      continue;
+    }
     if (esGastoFijo(r.catId, months[0])) {
       if (exceso > Math.max(10, r.bud * 0.03)) { conAvisoPres.add(r.catId);
         add('amber', '📌', `${r.nombre}: el cargo fijo ha subido`, `Este ${nM > 1 ? 'periodo' : 'mes'} son ${fmtEUR(r.spent)} y tenías presupuestados ${fmtEUR(r.bud)} (<b>+${fmtEUR(exceso)}</b>). Si es una subida de cuota o de tarifa, compruébala y actualiza el presupuesto en 🏷️ Categorías.`, `fijo:${r.catId}:${ymKey}`); }
@@ -76,7 +83,7 @@ function buildAlertas(months, st, P, rows) {
   // Un cargo anual que ya pasó hace 10-14 meses por un importe parecido (IBI, seguro, ITV…) no es extraordinario: es esperado
   const esAnual = m => previos.some(x => x.categoria_id === m.categoria_id && Math.abs(num(x.importe) - num(m.importe)) <= Math.abs(num(m.importe)) * 0.2
     && Math.abs(monthsDiff(x.fecha, m.fecha)) >= 10 && Math.abs(monthsDiff(x.fecha, m.fecha)) <= 14);
-  const extras = st.movs.filter(m => m.tipo === 'gasto' && -num(m.importe) >= umbral && m.categoria_id && !esCatAmortizacion(m.categoria_id) && !esAnual(m)).filter(m => {
+  const extras = st.movs.filter(m => m.tipo === 'gasto' && -num(m.importe) >= umbral && m.categoria_id && !esCatAmortizacion(m.categoria_id) && !catAnualDe(m.categoria_id) && !esAnual(m)).filter(m => {
     const h = previos.filter(x => x.categoria_id === m.categoria_id && ymOf(x.mes_imputacion) >= desde).map(x => -num(x.importe));
     return h.length >= 2 ? -num(m.importe) > 2.5 * median(h) : -num(m.importe) >= 3 * umbral;
   }).sort((a, b) => num(a.importe) - num(b.importe));
@@ -87,7 +94,7 @@ function buildAlertas(months, st, P, rows) {
   // 3) Categorías disparadas frente a tu media
   if (hist && hist.n >= 2) {
     // Solo gasto variable: un cargo fijo nuevo (p. ej. la primera cuota de un préstamo) no es "gastar más"
-    const fijoCache = {}, esFijoMov = m => m.categoria_id && (fijoCache[m.categoria_id] ??= esGastoFijo(m.categoria_id, months[0]) || S.deudas.some(d => categoriaCuota(d) === m.categoria_id));
+    const fijoCache = {}, esFijoMov = m => m.categoria_id && (fijoCache[m.categoria_id] ??= esGastoFijo(m.categoria_id, months[0]) || !!catAnualDe(m.categoria_id) || S.deudas.some(d => categoriaCuota(d) === m.categoria_id));
     const porRaiz = (movs, div) => { const o = {}; for (const m of movs) if (m.tipo === 'gasto' && !esFijoMov(m)) { const r = rootOf(catById(m.categoria_id)); const k = r ? r.id : '_none'; o[k] = (o[k] || 0) - num(m.importe) / div; } return o; };
     const actual = porRaiz(st.movs, nM), medias = porRaiz(periodStats(hist.ms).movs, hist.n);
     const subidas = Object.entries(actual).map(([k, v]) => ({ k, v, med: medias[k] || 0 }))

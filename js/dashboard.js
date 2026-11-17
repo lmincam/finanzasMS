@@ -46,8 +46,8 @@ function renderDashboard() {
   if (donut.length > 9) { const rest = donut.slice(8); donut = donut.slice(0, 8).concat([{ k: '_otros', v: sum(rest, 'v'), c: { nombre: 'Resto', color: '#cbd5e1' } }]); }
 
   const topGastos = [...gastosMov].sort((a, b) => num(a.importe) - num(b.importe)).slice(0, 8);
-  const rows = budgetRows(gastosMov, nM);
-  const totBud = sum(rows.filter(r => r.lvl === 0), 'bud'), totSpent = sum(rows.filter(r => r.lvl === 0), 'spent');
+  const rows = budgetRows(gastosMov, nM, months);
+  const totBud = sum(rows.filter(r => r.lvl === 0 && !r.anual), 'bud'), totSpent = sum(rows.filter(r => r.lvl === 0 && !r.anual), 'spent');
 
   el.innerHTML = `
     ${snapshotBanner()}
@@ -61,13 +61,13 @@ function renderDashboard() {
     </div>
 
     <div class="kpis">
-      ${kpi('Ingresos imputados', fmtEUR(st.ingresos), nM > 1 ? `Media ${fmtEUR(st.ingresos / nM)}/mes` : 'Del periodo', 'pos')}
-      ${kpi('Gastos operativos', fmtEUR(st.gastos), (nM > 1 ? `Media ${fmtEUR(st.gastos / nM)}/mes · ` : '') + (st.capital > 0 ? `sin transferencias ni <b>${fmtEUR(st.capital)}</b> de capital de deuda` : 'sin transferencias internas'), 'neg')}
-      ${kpi('Capacidad de ahorro', `<span class="${st.ahorro >= 0 ? 'pos' : 'neg'}">${fmtEUR(st.ahorro)}</span>`, `Tasa de ahorro: <b>${fmtPct(tasaAh)}</b>${st.capital > 0 ? ` · incluye ${fmtEUR(st.capital, 0)} amortizados` : ''}`, st.ahorro >= 0 ? 'pos' : 'warn')}
-      ${kpi('Tasa de inversión', fmtPct(tasaInv), `Invertido: ${fmtEUR(st.aport.inversion)} · A reserva: ${fmtEUR(st.aport.ahorro)}`, '')}
-      ${kpi('Patrimonio neto total', fmtEUR(P.neto, 0), (() => { const prev = S.patrimonio_mensual.filter(x => x.anio_mes < ymOf(todayISO())).sort((a, b) => a.anio_mes < b.anio_mes ? 1 : -1)[0];
+      ${kpi('Ingresos imputados <button class="info-btn" data-action="kpi-info" data-k="ingresos" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(st.ingresos), nM > 1 ? `Media ${fmtEUR(st.ingresos / nM)}/mes` : 'Del periodo', 'pos')}
+      ${kpi('Gastos operativos <button class="info-btn" data-action="kpi-info" data-k="gastos" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(st.gastos), (nM > 1 ? `Media ${fmtEUR(st.gastos / nM)}/mes · ` : '') + (st.capital > 0 ? `sin transferencias ni <b>${fmtEUR(st.capital)}</b> de capital de deuda` : 'sin transferencias internas'), 'neg')}
+      ${kpi('Capacidad de ahorro <button class="info-btn" data-action="kpi-info" data-k="ahorro" title="¿De dónde sale este dato?">ⓘ</button>', `<span class="${st.ahorro >= 0 ? 'pos' : 'neg'}">${fmtEUR(st.ahorro)}</span>`, `Tasa de ahorro: <b>${fmtPct(tasaAh)}</b>${st.capital > 0 ? ` · incluye ${fmtEUR(st.capital, 0)} amortizados` : ''}`, st.ahorro >= 0 ? 'pos' : 'warn')}
+      ${kpi('Tasa de inversión <button class="info-btn" data-action="kpi-info" data-k="inversion" title="¿De dónde sale este dato?">ⓘ</button>', fmtPct(tasaInv), `Invertido: ${fmtEUR(st.aport.inversion)} · A reserva: ${fmtEUR(st.aport.ahorro)}`, '')}
+      ${kpi('Patrimonio neto total <button class="info-btn" data-action="kpi-info" data-k="patrimonio" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(P.neto, 0), (() => { const prev = S.patrimonio_mensual.filter(x => x.anio_mes < ymOf(todayISO())).sort((a, b) => a.anio_mes < b.anio_mes ? 1 : -1)[0];
         return prev ? `<span class="${P.neto - num(prev.patrimonio_neto) >= 0 ? 'pos' : 'neg'}"><b>${signed(P.neto - num(prev.patrimonio_neto))}</b></span> vs ${ymLabel(prev.anio_mes, true)}` : `Activos ${fmtEUR(P.activos, 0)} · Deudas ${fmtEUR(P.deudas, 0)}`; })(), 'navy')}
-      ${kpi('Liquidez disponible', fmtEUR(P.liquidez), `Operativa ${fmtEUR(P.operativa, 0)} · Fondo emerg. ${fmtEUR(P.reserva, 0)}`, '')}
+      ${kpi('Liquidez disponible <button class="info-btn" data-action="kpi-info" data-k="liquidez" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(P.liquidez), `Operativa ${fmtEUR(P.operativa, 0)} · Fondo emerg. ${fmtEUR(P.reserva, 0)}`, '')}
     </div>
 
     ${renderAlertas(months, st, P, rows)}
@@ -78,23 +78,12 @@ function renderDashboard() {
         ${donut.length ? '<div class="chart-box"><canvas id="ch-cat"></canvas></div>' : '<div class="empty">Sin gastos en el periodo</div>'}</div>
     </div>
 
-    <div class="card">
-      <div class="card-head"><h3>Presupuesto vs. gastado real</h3><span class="sub">Presupuesto mensual × ${nM} ${nM === 1 ? 'mes' : 'meses'} · Total: ${fmtEUR(totSpent)} de ${fmtEUR(totBud)}</span></div>
-      ${rows.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Categoría</th><th class="right">Presupuesto</th><th class="right">Gastado</th><th style="width:28%">Consumo</th><th class="right">Desviación</th></tr></thead><tbody>
-        ${rows.map(r => {
-          const pc = r.bud > 0 ? r.spent / r.bud : null; const cls = pc === null ? 'navy' : pc > 1 ? 'red' : pc > 0.85 ? 'amber' : '';
-          const dev = r.bud > 0 ? r.bud - r.spent : null;
-          return `<tr class="${r.lvl ? 'sub' : 'root'}"><td><span class="cdot" style="background:${esc(r.color)}"></span>${esc(r.nombre)}</td>
-            <td class="right num">${r.bud ? fmtEUR(r.bud) : '<span class="muted">—</span>'}</td><td class="right num">${fmtEUR(r.spent)}</td>
-            <td><div style="display:flex;gap:8px;align-items:center">${pctBar(pc === null ? 0 : pc, cls)}<span class="small num ${pc > 1 ? 'neg' : ''}">${pc === null ? '' : fmtPct(pc, 0)}</span></div></td>
-            <td class="right num ${dev === null ? 'muted' : dev >= 0 ? 'pos' : 'neg'}">${dev === null ? '—' : (dev >= 0 ? '' : '') + fmtEUR(dev)}</td></tr>`;
-        }).join('')}</tbody></table></div>` : '<div class="empty">Sin datos. Asigna presupuestos en 🏷️ Categorías.</div>'}
-    </div>
+    ${renderBudgetCard(rows, nM, totBud, totSpent)}
 
     <div class="grid-2e">
       <div class="card"><div class="card-head"><h3>Mayores gastos del periodo</h3></div>
         <div class="top-list">${topGastos.length ? topGastos.map(m => `<div class="it"><div class="c"><b>${esc(m.concepto || '—')}</b><div class="small muted">${fmtDate(m.fecha)} · ${esc(catName(m.categoria_id) || 'Sin categoría')}</div></div><div class="num neg">${fmtEUR(num(m.importe))}</div></div>`).join('') : '<div class="empty">—</div>'}</div></div>
-      <div class="card"><div class="card-head"><h3>Movimientos internos</h3><span class="sub">No computan como gasto</span></div>
+      <div class="card"><div class="card-head"><h3>Movimientos internos <button class="info-btn" data-action="kpi-info" data-k="internos" title="¿De dónde sale este dato?">ⓘ</button></h3><span class="sub">No computan como gasto</span></div>
         <div class="metrics" style="margin-bottom:14px">
           ${metric('Reajustes de liquidez', fmtEUR(st.aport.liquidez))}
           ${metric('Aportación a ahorro (neta)', fmtEUR(st.aport.ahorro), st.aport.ahorro >= 0 ? 'pos' : 'neg')}
@@ -125,21 +114,80 @@ function renderDashboard() {
     options: { responsive: true, maintainAspectRatio: false, cutout: '62%', plugins: { legend: { position: window.innerWidth < 700 ? 'bottom' : 'right' } } }
   });
 }
-function budgetRows(gastosMov, nM) {
-  const spentBy = {};
+function budgetRows(gastosMov, nM, months) {
+  const spentBy = {}, hasta = months[months.length - 1], anio = hasta.slice(0, 4);
   const known = new Set(S.categorias.filter(c => c.tipo === 'gasto').map(c => c.id));
   for (const m of gastosMov) { const k = (m.categoria_id && known.has(m.categoria_id)) ? m.categoria_id : '_none'; spentBy[k] = (spentBy[k] || 0) - num(m.importe); }
   const rows = [];
+  // Anualidad: se compara lo gastado en el año natural con el presupuesto anual (un seguro de 600 € no "se pasa" el mes que se cobra)
+  const filaAnual = (c, lvl, color, ids) => ({ lvl, nombre: c.nombre, color, spent: gastadoEnAnio(ids, hasta), bud: presAnual(c), own: true, catId: c.id, anual: true, anio,
+    spentPeriodo: sum(ids, id => spentBy[id] || 0) });
   for (const r of S.categorias.filter(c => c.tipo === 'gasto' && !c.parent_id).sort(byOrden)) {
-    const ch = childrenOf(r.id);
-    const spent = (spentBy[r.id] || 0) + sum(ch, c => spentBy[c.id] || 0);
-    const bud = budgetOf(r) * nM;
-    if (!spent && !bud) continue;
-    rows.push({ lvl: 0, nombre: r.nombre, color: r.color || '#94a3b8', spent, bud, own: num(r.presupuesto_mensual) > 0, catId: r.id });
-    for (const c of ch) { const s = spentBy[c.id] || 0, b = num(c.presupuesto_mensual) * nM; if (s || b) rows.push({ lvl: 1, nombre: c.nombre, color: c.color || r.color || '#cbd5e1', spent: s, bud: b, own: true, catId: c.id }); }
+    const ch = childrenOf(r.id), color = r.color || '#94a3b8';
+    if (presAnual(r)) { const f = filaAnual(r, 0, color, [r.id, ...ch.map(c => c.id)]); if (f.spent || f.bud) rows.push(f); continue; }
+    const mens = ch.filter(c => !presAnual(c)), anuales = ch.filter(c => presAnual(c));
+    const spent = (spentBy[r.id] || 0) + sum(mens, c => spentBy[c.id] || 0);
+    const bud = (num(r.presupuesto_mensual) > 0 ? num(r.presupuesto_mensual) : sum(mens, 'presupuesto_mensual')) * nM;
+    const hijos = mens.map(c => ({ lvl: 1, nombre: c.nombre, color: c.color || color, spent: spentBy[c.id] || 0, bud: num(c.presupuesto_mensual) * nM, own: true, catId: c.id, padre: r.nombre, padreOwn: num(r.presupuesto_mensual) > 0 }))
+      .filter(x => x.spent || x.bud).concat(anuales.map(c => ({ ...filaAnual(c, 1, c.color || color, [c.id]), padre: r.nombre })).filter(x => x.spent || x.bud));
+    if (!spent && !bud && !hijos.length) continue;
+    rows.push({ lvl: 0, nombre: r.nombre, color, spent, bud, own: num(r.presupuesto_mensual) > 0, catId: r.id, directo: spentBy[r.id] || 0, conHijos: mens.length > 0 }, ...hijos);
   }
   if (spentBy._none) rows.push({ lvl: 0, nombre: 'Sin categoría', color: '#94a3b8', spent: spentBy._none, bud: 0 });
+  for (const r of rows) r.fijo = !r.anual && !!r.catId && esGastoFijo(r.catId, months[0]);
   return rows;
+}
+
+/* ---------- Tabla "Presupuesto vs. gastado real" con orden y gastos fijos aparte ---------- */
+const BUD_ORDEN = [['cerca', 'Más cerca del límite'], ['gasto', 'Mayor gasto'], ['arbol', 'Por categorías']];
+const lsGet = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch (e) { return d; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* sin almacenamiento */ } };
+
+function filaPresupuesto(r, nombre) {
+  const pc = r.bud > 0 ? r.spent / r.bud : null; const cls = pc === null ? 'navy' : pc > 1 ? 'red' : pc > 0.85 ? 'amber' : '';
+  const dev = r.bud > 0 ? r.bud - r.spent : null;
+  const tag = r.anual ? ` <span class="badge blue" title="Presupuesto anual: se compara con lo gastado en ${r.anio}">anual</span>` : r.fijo ? ' <span class="badge" title="Gasto fijo: estar al 100 % es lo normal">fijo</span>' : '';
+  return `<tr class="${r.lvl && !nombre ? 'sub' : 'root'} ${r.fijo ? 'muted-row' : ''}"><td><span class="cdot" style="background:${esc(r.color)}"></span>${nombre || esc(r.nombre)}${tag}</td>
+    <td class="right num" data-l="Presupuesto">${r.bud ? fmtEUR(r.bud) + (r.anual ? '<span class="small muted">/año</span>' : '') : '<span class="muted">—</span>'}</td>
+    <td class="right num" data-l="Gastado">${fmtEUR(r.spent)}${r.anual ? `<div class="small muted">en ${r.anio}</div>` : ''}</td>
+    <td class="bud-bar"><div style="display:flex;gap:8px;align-items:center">${pctBar(pc === null ? 0 : pc, cls)}<span class="small num ${pc > 1 ? 'neg' : ''}">${pc === null ? '' : fmtPct(pc, 0)}</span></div></td>
+    <td class="right num ${dev === null ? 'muted' : dev >= 0 ? 'pos' : 'neg'}" data-l="${dev !== null && dev < 0 ? 'Te pasas' : 'Queda'}">${dev === null ? '—' : fmtEUR(dev)}</td></tr>`;
+}
+function renderBudgetCard(rows, nM, totBud, totSpent) {
+  const orden = lsGet('pf_bud_orden', 'cerca'), verFijos = lsGet('pf_bud_fijos', '0') === '1';
+  const head = `<div class="card-head"><div><h3>Presupuesto vs. gastado real <button class="info-btn" data-action="kpi-info" data-k="presupuesto" title="¿Qué significa?">ⓘ</button></h3>
+      <span class="sub">Presupuesto mensual × ${nM} ${nM === 1 ? 'mes' : 'meses'} · Total: ${fmtEUR(totSpent)} de ${fmtEUR(totBud)}${rows.some(r => r.anual) ? ' (sin anualidades)' : ''}</span></div>
+    <div class="bud-ctl"><select id="bud-orden" title="Ordenar">${BUD_ORDEN.map(([k, l]) => `<option value="${k}" ${k === orden ? 'selected' : ''}>${l}</option>`).join('')}</select></div></div>`;
+  if (!rows.length) return `<div class="card">${head}<div class="empty">Sin datos. Asigna presupuestos en 🏷️ Categorías.</div></div>`;
+  const thead = '<thead><tr><th>Categoría</th><th class="right">Presupuesto</th><th class="right">Gastado</th><th style="width:28%">Consumo</th><th class="right">Desviación</th></tr></thead>';
+  if (orden === 'arbol') return `<div class="card">${head}<div class="tbl-wrap"><table class="tbl bud-tbl">${thead}<tbody>${rows.map(r => filaPresupuesto(r)).join('')}</tbody></table></div></div>`;
+
+  // Lista plana: cada partida con presupuesto propio (o la subcategoría si la principal no tiene), con su ruta "Principal › Sub"
+  const items = [];
+  const ruta = r => `<span class="muted">${esc(r.padre)} ›</span> ${esc(r.nombre)}`;
+  for (const r of rows) {
+    if (r.lvl === 0) {
+      if (r.own && !r.anual && r.conHijos) {
+        // Principal con presupuesto propio (p. ej. Vivienda 900 €) que incluye un fijo (Hipoteca): el fijo sale aparte y se descuenta
+        const fijosHijos = rows.filter(x => x.lvl === 1 && x.padre === r.nombre && x.fijo && !x.anual);
+        const sp = round2(r.spent - sum(fijosHijos, 'spent')), bu = round2(Math.max(0, r.bud - sum(fijosHijos, x => x.bud || x.spent)));
+        fijosHijos.forEach(x => items.push({ ...x, ruta: ruta(x) }));
+        if (sp || bu) items.push({ ...r, spent: sp, bud: bu, fijo: fijosHijos.length ? false : r.fijo, ruta: esc(r.nombre) + (fijosHijos.length ? ' <span class="muted small">(sin fijos)</span>' : '') });
+      } else if (r.anual || r.own || !r.conHijos) { if (r.spent || r.bud) items.push({ ...r, ruta: esc(r.nombre) }); }
+      else if (r.directo > 0) items.push({ ...r, spent: r.directo, bud: 0, ruta: `${esc(r.nombre)} <span class="muted">› general</span>` });
+    } else if (r.anual || !r.padreOwn) items.push({ ...r, ruta: ruta(r) });
+  }
+  const rank = orden === 'gasto' ? (a, b) => b.spent - a.spent
+    : (a, b) => (b.bud > 0) - (a.bud > 0) || (a.bud > 0 ? b.spent / b.bud - a.spent / a.bud : b.spent - a.spent);
+  const varis = items.filter(x => !x.fijo && !x.anual).sort(rank), anuales = items.filter(x => x.anual).sort(rank), fijos = items.filter(x => x.fijo && !x.anual).sort(rank);
+  const grupo = (t, xs) => xs.length ? `<tr class="grp"><td colspan="5">${t}</td></tr>${xs.map(x => filaPresupuesto(x, x.ruta)).join('')}` : '';
+  return `<div class="card">${head}<div class="tbl-wrap"><table class="tbl bud-tbl">${thead}<tbody>
+    ${grupo('Gastos variables', varis)}
+    ${grupo(`🗓️ Anualidades <span class="muted">· presupuesto anual frente a lo gastado en ${(anuales[0] || {}).anio || ''}</span>`, anuales)}
+    ${fijos.length ? `<tr class="grp"><td colspan="5">📌 Gastos fijos <span class="muted">· ${fijos.length} · ${fmtEUR(sum(fijos, 'spent'))}</span>
+      <button class="mini" data-action="bud-fijos">${verFijos ? 'Ocultar' : 'Mostrar'}</button></td></tr>${verFijos ? fijos.map(x => filaPresupuesto(x, x.ruta)).join('') : ''}` : ''}
+  </tbody></table></div>
+  <div class="small muted" style="margin-top:8px">Los gastos fijos (hipoteca, alquiler, cuotas…) van aparte: estar al 100 % es lo normal. Puedes marcar o desmarcar una categoría como fija en 🏷️ Categorías.</div></div>`;
 }
 
 Views.dashboard = renderDashboard;
@@ -147,10 +195,12 @@ Views.dashboard = renderDashboard;
 Object.assign(Actions, {
   'period-mode': el => { S.period.mode = el.dataset.mode; render(); },
   'period-shift': el => { const d = +el.dataset.d; S.period.ref = addMonths(S.period.ref, S.period.mode === 'anio' ? d * 12 : d); render(); },
+  'bud-fijos': () => { lsSet('pf_bud_fijos', lsGet('pf_bud_fijos', '0') === '1' ? '0' : '1'); render(); },
   'alert-more': el => { const box = $('#alert-more'); if (box) { box.hidden = !box.hidden; el.textContent = box.hidden ? el.dataset.more : 'Ver menos'; } }
 });
 
 Object.assign(Changes, {
+  'bud-orden': el => { lsSet('pf_bud_orden', el.value); render(); },
   'p-ref': el => { if (el.value) { S.period.ref = el.value; render(); } },
   'p-from': el => { if (el.value) { S.period.from = el.value; render(); } },
   'p-to': el => { if (el.value) { S.period.to = el.value; render(); } }

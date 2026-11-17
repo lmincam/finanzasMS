@@ -269,3 +269,31 @@ code{background:#f1f5f9;padding:1px 6px;border-radius:5px;font-size:12.5px}
 @media (display-mode: standalone){
   .topbar{padding-top:calc(12px + env(safe-area-inset-top) * 1.5)}
 }
+
+/* ---------- Ayuda ⓘ, tabla de presupuesto y anualidades ---------- */
+.info-btn{border:0;background:none;color:var(--muted);cursor:pointer;font-size:13px;padding:0 2px;line-height:1;vertical-align:middle}
+.info-btn:hover{color:var(--navy)}
+.exp p{margin:0 0 10px;line-height:1.5}.exp ul{margin:0 0 10px;padding-left:18px;line-height:1.5}
+.exp-box{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin:0 0 12px}
+.exp-l{display:flex;justify-content:space-between;gap:12px;padding:4px 0;font-size:13.5px}
+.exp-l.tot{border-top:1px solid var(--line2);margin-top:2px;padding-top:6px}
+.exp-l.neg b{color:var(--red)}
+.bud-ctl select{font-size:13px;padding:6px 8px}
+.tbl tr.grp td{background:#f1f5f9;font-weight:600;font-size:12.5px;color:var(--slate);padding-top:8px;padding-bottom:8px}
+.tbl tr.grp .mini{margin-left:8px}
+.tbl tr.muted-row td{opacity:.75}
+.anual-hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;background:#f8fafc;border-radius:12px;padding:14px}
+.anual-big{font-size:28px;font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums}
+.anual-mid{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.anual-card .card-head select{max-width:260px}
+@media (max-width:640px){
+  .bud-tbl thead{display:none}
+  .bud-tbl tbody tr:not(.grp){display:grid;grid-template-columns:repeat(3,1fr);column-gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+  .bud-tbl tbody tr:not(.grp) td{border:0;padding:2px 4px}
+  .bud-tbl tbody tr:not(.grp) td:first-child{grid-column:1/-1;font-weight:600}
+  .bud-tbl td.bud-bar{grid-column:1/-1;order:5}
+  .bud-tbl td.bud-bar .bar{flex:1;width:auto}
+  .bud-tbl td[data-l]{text-align:left}
+  .bud-tbl td[data-l]::before{content:attr(data-l);display:block;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+  .bud-tbl tr.grp{display:block}.bud-tbl tr.grp td{display:block}
+}

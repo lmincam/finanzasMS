@@ -13,7 +13,24 @@ const catById = id => S.categorias.find(c => c.id === id);
 const childrenOf = id => S.categorias.filter(c => c.parent_id === id).sort(byOrden);
 const rootOf = c => (c && c.parent_id) ? (catById(c.parent_id) || c) : c;
 const catName = id => { const c = catById(id); if (!c) return ''; const p = c.parent_id ? catById(c.parent_id) : null; return p ? `${p.nombre} › ${c.nombre}` : c.nombre; };
+/** Cuenta donde se aparta cada mes la parte de los pagos anuales: la elegida en Cuentas o, si no, la que se llama "Anualidades". */
+function cuentaAnualidades() {
+  const aj = ((S.ajustesRows || []).find(r => r.clave === 'cuenta_anualidades') || {}).valor;
+  if (aj && aj.id) { const c = cuentaById(aj.id); if (c) return c; }
+  if (aj && aj.id === '') return null;
+  return S.cuentas.find(c => c.activa !== false && normText(c.nombre).includes('anualidad')) || null;
+}
 const budgetOf = r => num(r.presupuesto_mensual) > 0 ? num(r.presupuesto_mensual) : sum(childrenOf(r.id), 'presupuesto_mensual');
+/** Presupuesto anual de una categoría (anualidad: seguro, IBI…). 0 si su presupuesto es mensual. */
+const presAnual = c => c && num(c.presupuesto_anual) > 0 ? num(c.presupuesto_anual) : 0;
+/** Categoría con presupuesto anual que cubre a esta (ella misma o su principal), o null. */
+const catAnualDe = id => { const c = catById(id); if (!c) return null; if (presAnual(c)) return c; const p = c.parent_id ? catById(c.parent_id) : null; return presAnual(p) ? p : null; };
+/** Marca manual de gasto fijo (de la categoría o, si no tiene, de su principal): true / false / null (automático). */
+const fijoManual = id => { const c = catById(id); if (!c) return null; if (c.gasto_fijo === true || c.gasto_fijo === false) return c.gasto_fijo;
+  const p = c.parent_id ? catById(c.parent_id) : null; return p && (p.gasto_fijo === true || p.gasto_fijo === false) ? p.gasto_fijo : null; };
+/** Gastado en el año natural del mes indicado (enero → ese mes, por mes de imputación) en esas categorías. */
+const gastadoEnAnio = (ids, hastaYm) => { const set = new Set(ids), y = hastaYm.slice(0, 4);
+  return round2(-sum(S.movimientos.filter(m => m.tipo === 'gasto' && set.has(m.categoria_id) && ymOf(m.mes_imputacion) >= y + '-01' && ymOf(m.mes_imputacion) <= hastaYm), 'importe')); };
 const subtipoPorCuenta = c => c ? (c.tipo === 'inversion' ? 'inversion' : c.tipo === 'ahorro' ? 'ahorro' : 'liquidez') : 'liquidez';
 
 /** Milisegundos de una marca de tiempo de Supabase (admite microsegundos, que Safari no siempre entiende). */
@@ -48,13 +65,15 @@ const Calc = {
     const det = cuentas.map(c => ({ id: c.id, nombre: c.nombre, tipo: c.tipo, valor: this.valor(c) }));
     const liquidez = sum(det.filter(d => d.tipo !== 'inversion'), 'valor');
     const operativa = sum(det.filter(d => d.tipo === 'corriente' || d.tipo === 'efectivo'), 'valor');
-    const reserva = sum(det.filter(d => d.tipo === 'ahorro'), 'valor');
+    // El dinero apartado para anualidades ya tiene destino: no cuenta como fondo de emergencia
+    const ca = cuentaAnualidades(), anualidades = ca ? sum(det.filter(d => d.id === ca.id), 'valor') : 0;
+    const reserva = sum(det.filter(d => d.tipo === 'ahorro' && (!ca || d.id !== ca.id)), 'valor');
     const inversiones = sum(det.filter(d => d.tipo === 'inversion'), 'valor');
     const inmuebles = sum(S.inmuebles, 'valor_mercado');
     const vehiculos = sum(S.vehiculos, 'valor_actual');
     const deudas = sum(S.deudas.filter(d => d.activa !== false), d => deudaInfo(d).pendienteHoy);
     const activos = liquidez + inversiones + inmuebles + vehiculos;
-    return { liquidez, operativa, reserva, inversiones, inmuebles, vehiculos, deudas, activos, neto: activos - deudas, det };
+    return { liquidez, operativa, reserva, anualidades, inversiones, inmuebles, vehiculos, deudas, activos, neto: activos - deudas, det };
   }
 };
 
