@@ -8,47 +8,42 @@
 
 function renderAjustes() {
   const el = $('#tab-ajustes'); const c = getConn(); const hard = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
+  const rc = rangoCiclo(mesActual());
   el.innerHTML = `
-    <div class="grid-2e">
+    <div class="aj-grid">
       ${renderSesionCard()}
-      <div class="card"><div class="card-head"><h3>🔌 Conexión con Supabase</h3><span class="badge ${S.connected ? 'green' : 'red'}">${S.connected ? 'Conectado' : 'No conectado'}</span></div>
-        ${hard ? '<div class="banner blue">Las claves están fijadas en el código (constantes SUPABASE_URL / SUPABASE_ANON_KEY).</div>' : ''}
-        <div class="form-grid">
-          <div class="full"><label>Project URL</label><input id="cfg-url" value="${esc(c.url)}" placeholder="https://xxxxxxxx.supabase.co" ${hard ? 'disabled' : ''}></div>
-          <div class="full"><label>Clave anon / publishable</label><input id="cfg-key" type="password" value="${esc(c.key)}" ${hard ? 'disabled' : ''}>
-            <small class="hint">Guardada solo en este navegador. Cambiarla cierra la sesión.</small></div>
-          <div class="full actions">${hard ? '' : '<button class="btn ghost" data-action="cfg-clear">Olvidar</button>'}<button class="btn primary" data-action="cfg-save-conn" ${hard ? 'disabled' : ''}>Guardar</button></div>
-        </div></div>
+      ${renderAppCard()}
     </div>
-    <div class="grid-2e">${renderTemaCard()}${renderAppCard()}</div>
-    ${renderAccesosCard()}
-    ${renderHistorialCard()}
-    ${renderCopiasCard()}
-    <div class="grid-2e">
-      <div class="card"><div class="card-head"><h3>⏭ Regla de desfase de nómina</h3></div>
-        <p class="small muted" style="margin-top:0">Los ingresos recibidos en los <b>últimos N días laborables</b> del mes y de importe ≥ umbral se imputan automáticamente al <b>mes siguiente</b> (al importar y en el registro manual). Puedes cambiarlo en cada movimiento con el botón ⏭.</p>
-        <div class="form-grid">
-          <div><label>Últimos días laborables (N)</label><input type="number" id="cfg-dias" min="1" max="15" value="${esc(S.ajustes.nomina_dias)}"></div>
-          <div><label>Importe mínimo (€)</label><input id="cfg-umbral" inputmode="decimal" value="${esc(numInput(S.ajustes.nomina_umbral))}"></div>
-          <div class="full"><label class="chk"><input type="checkbox" id="cfg-mesnom" ${mesNominaActivo() ? 'checked' : ''}> <b>Mes de nómina</b>: cada mes va del día en que cobras al día antes del siguiente cobro (los gastos de después de cobrar cuentan en el mes de esa nómina)</label>
-            <small class="hint">${mesNominaActivo() ? `Mes actual: <b>${ymLabel(mesActual())}</b>, del ${fmtDate(rangoCiclo(mesActual()).ini)} al ${fmtDate(rangoCiclo(mesActual()).fin)}${ciclosNomina().inicio[addMonths(mesActual(), 1)] ? '' : ' (fin estimado hasta que llegue la próxima nómina)'}.` : 'Desactivado: se usan meses naturales (del 1 al último día).'}</small></div>
-          <div class="full small muted">Ejemplo con N = ${S.ajustes.nomina_dias}: en ${ymLabel(ymOf(todayISO()))} se imputarían al mes siguiente los ingresos desde el ${ejemploVentana()}.</div>
-          <div class="full actions"><button class="btn primary" data-action="cfg-save-regla" ${S.connected ? '' : 'disabled'}>Guardar regla</button></div>
+
+    <div class="aj-grid">
+      <div class="card"><div class="card-head"><h3>⏭ Mes de nómina</h3></div>
+        <label class="chk-line"><input type="checkbox" id="cfg-mesnom" ${mesNominaActivo() ? 'checked' : ''}>
+          <span><b>Contar los meses de cobro a cobro</b><small>${mesNominaActivo() ? `Ahora: ${fmtDate(rc.ini)} – ${fmtDate(rc.fin)}` : 'Desactivado: meses naturales'}</small></span></label>
+        <div class="form-grid" style="margin-top:12px">
+          <div><label>La nómina llega en los últimos (días laborables)</label><input type="number" id="cfg-dias" min="1" max="15" value="${esc(S.ajustes.nomina_dias)}"></div>
+          <div><label>Importe mínimo de la nómina (€)</label><input id="cfg-umbral" inputmode="decimal" value="${esc(numInput(S.ajustes.nomina_umbral))}"></div>
+          <div class="full actions"><button class="btn primary" data-action="cfg-save-regla" ${S.connected ? '' : 'disabled'}>Guardar</button></div>
         </div></div>
-      <div class="card"><div class="card-head"><h3>🔔 Alertas y consejos del Dashboard</h3></div>
+      <div class="card"><div class="card-head"><h3>🔔 Alertas</h3></div>
         <div class="form-grid">
-          <div><label>Gasto extraordinario a partir de (€)</label><input id="cfg-extra" inputmode="decimal" value="${esc(numInput(S.ajustes.extra_umbral))}"><small class="hint">Además debe superar 2,5 veces lo habitual en su categoría</small></div>
-          <div><label>Objetivo fondo de emergencia (meses de gastos)</label><input type="number" id="cfg-fondo" min="1" max="24" value="${esc(S.ajustes.fondo_meses)}"></div>
+          <div><label>Gasto extraordinario desde (€)</label><input id="cfg-extra" inputmode="decimal" value="${esc(numInput(S.ajustes.extra_umbral))}"></div>
+          <div><label>Fondo de emergencia (meses de gastos)</label><input type="number" id="cfg-fondo" min="1" max="24" value="${esc(S.ajustes.fondo_meses)}"></div>
           <div class="full actions"><button class="btn primary" data-action="cfg-save-alertas" ${S.connected ? '' : 'disabled'}>Guardar</button></div>
         </div></div>
     </div>
-    <div class="card"><div class="card-head"><h3>ℹ️ Rutina recomendada</h3><span class="badge navy">Versión ${APP_VERSION}</span></div>
-      <ol class="small" style="line-height:1.7;padding-left:18px;margin:0">
-        <li>Cada domingo: importa el Excel de Unicaja de la semana y contesta lo que la app no sepa categorizar.</li>
-        <li>Al momento: gastos en efectivo con el botón verde <b>+</b>.</li>
-        <li>Cada mes: revisa el Dashboard y sus alertas.</li>
-        <li>Cada trimestre: actualiza el valor de inversiones, el €/m² de los inmuebles y el capital pendiente de la hipoteca, y guarda la foto en 📸 Auditoría.</li>
-      </ol></div>`;
+
+    ${renderCopiasCard()}
+    ${renderAccesosCard()}
+    ${renderHistorialCard()}
+
+    <details class="card aj-conn" ${S.connected ? '' : 'open'}>
+      <summary><h3>🔌 Conexión con Supabase</h3><span class="badge ${S.connected ? 'green' : 'red'}">${S.connected ? 'Conectado' : 'No conectado'}</span></summary>
+      <div class="form-grid" style="margin-top:12px">
+        <div class="full"><label>Project URL</label><input id="cfg-url" value="${esc(c.url)}" placeholder="https://xxxxxxxx.supabase.co" ${hard ? 'disabled' : ''}></div>
+        <div class="full"><label>Clave publishable</label><input id="cfg-key" type="password" value="${esc(c.key)}" ${hard ? 'disabled' : ''}>
+          <small class="hint">Se guarda solo en este dispositivo. Cambiarla cierra la sesión.</small></div>
+        <div class="full actions">${hard ? '' : '<button class="btn ghost" data-action="cfg-clear">Olvidar</button>'}<button class="btn primary" data-action="cfg-save-conn" ${hard ? 'disabled' : ''}>Guardar</button></div>
+      </div></details>`;
   cargarListaCopias();
 }
 function ejemploVentana() {

@@ -1,5 +1,12 @@
 # Historial de versiones
 
+## 5.20.0 — 17/11/2026 · Inicio más tranquilo, iconos de comercios y Ajustes ordenados
+- **Inicio**: la misma información en dos tarjetas en lugar de nueve recuadros. Arriba el periodo (Ingresos · Gastos · Balance con su cuenta y las tasas de ahorro e inversión); debajo la situación (Liquidez · Patrimonio neto · Ingresos del año · Patrimonio en el año). Importes sin céntimos en los indicadores.
+- **Mayores gastos** debajo del presupuesto también en el ordenador, con el icono de cada comercio.
+- **Iconos en cada movimiento**: comercios conocidos (supermercados, plataformas, telefonía, energía, gasolineras, tiendas, transporte, seguros…) con su inicial o su icono; el resto, el icono de su categoría (restaurante, gasolina, luz…). Con ⋯ → "Icono de este comercio" eliges uno (o unas letras y un color) y se aplica a todos sus movimientos.
+- **Ajustes**: tarjetas agrupadas (Tu cuenta con la apariencia · App · Mes de nómina · Alertas · Copias · Usuarios · Historial) sin textos de ayuda largos; la conexión con Supabase queda plegada cuando funciona. Fuera la "Rutina recomendada".
+- La barra de secciones del ordenador va centrada.
+
 ## 5.19.2 — 17/11/2026 · Movimientos: cuentas y lista, nada más
 - Las **anualidades** van dentro de la tarjeta de su cuenta (lo que toca pasar este mes y si falta); al tocarla se abre el reparto completo.
 - "Te deben" (gastos compartidos) pasa a ser un botón en la cabecera de Movimientos.

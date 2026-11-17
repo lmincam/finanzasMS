@@ -66,26 +66,35 @@ function renderDashboard() {
       <button class="btn primary per-cal" data-action="cal-open" data-noico title="Ver los gastos de cada día"><span class="emo">📅</span> Calendario</button>
     </div>
 
-    <div class="kpi-grid">
-        ${kpiLink('ingresos', 'Ingresos <button class="info-btn" data-action="kpi-info" data-k="ingresos" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(st.ingresos), '', 'pos')}
-        ${kpiLink('gastos', 'Gastos operativos <button class="info-btn" data-action="kpi-info" data-k="gastos" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(st.gastos), '', 'neg')}
-        ${(() => { const pos = st.ahorro >= 0, tit = nM === 1 ? 'Balance mensual' : `Balance del periodo · ${nM} meses`;
-          return `<div class="kpi kpi-wide ${pos ? 'bal-pos' : 'bal-neg'}">
-            <div class="bal-main"><div class="l">${tit} <button class="info-btn" data-action="kpi-info" data-k="ahorro" title="¿De dónde sale este dato?">ⓘ</button></div><div class="v">${pos ? '+' : ''}${fmtEUR(st.ahorro)}</div></div>
-            <div class="bal-calc">
-              <div><span>Ingresos</span><b>${fmtEUR(st.ingresos)}</b></div>
-              <div><span>− Gastos operativos</span><b>${fmtEUR(st.gastos)}</b></div>
-              ${st.capital > 0 ? `<div><span>− Capital de deuda</span><b>${fmtEUR(st.capital)}</b></div>` : ''}
-              <div class="tot"><span>= Balance</span><b>${pos ? '+' : ''}${fmtEUR(st.ahorro)}</b></div>
-            </div></div>`; })()}
-        ${kpi('Tasa de ahorro <button class="info-btn" data-action="kpi-info" data-k="tasa-ahorro" title="¿De dónde sale este dato?">ⓘ</button>', fmtPct(tasaAh), '', 'yellow')}
-        ${kpi('Tasa de inversión <button class="info-btn" data-action="kpi-info" data-k="inversion" title="¿De dónde sale este dato?">ⓘ</button>', fmtPct(tasaInv), '', 'yellow')}
-        ${kpi('Liquidez disponible <button class="info-btn" data-action="kpi-info" data-k="liquidez" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(P.liquidez, 0), '', 'sky')}
-        ${kpi('Patrimonio neto <button class="info-btn" data-action="kpi-info" data-k="patrimonio" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(P.neto, 0), (() => { const prev = S.patrimonio_mensual.filter(x => x.anio_mes < ymOf(todayISO())).sort((a, b) => a.anio_mes < b.anio_mes ? 1 : -1)[0];
-        return prev ? `<span class="${P.neto - num(prev.patrimonio_neto) >= 0 ? 'pos' : 'neg'}"><b>${signed(P.neto - num(prev.patrimonio_neto))}</b></span> vs ${ymLabel(prev.anio_mes, true)}` : ''; })(), 'sky', true)}
+    <div class="dz">
+      <section class="card dz-mes">
+        <div class="dz-row3">
+          ${kpiLink('ingresos', 'Ingresos <button class="info-btn" data-action="kpi-info" data-k="ingresos" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(st.ingresos, 0), '', 'pos dz-t')}
+          ${kpiLink('gastos', 'Gastos operativos <button class="info-btn" data-action="kpi-info" data-k="gastos" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(st.gastos, 0), '', 'neg dz-t')}
+          ${(() => { const pos = st.ahorro >= 0, tit = nM === 1 ? 'Balance mensual' : `Balance del periodo · ${nM} meses`;
+            return `<div class="kpi kpi-wide dz-t dz-bal ${pos ? 'bal-pos' : 'bal-neg'}">
+              <div class="bal-main"><div class="l">${tit} <button class="info-btn" data-action="kpi-info" data-k="ahorro" title="¿De dónde sale este dato?">ⓘ</button></div><div class="v">${pos ? '+' : ''}${fmtEUR(st.ahorro, 0)}</div>
+                <div class="dz-tasas">
+                  <span>Ahorro <b>${fmtPct(tasaAh)}</b> <button class="info-btn" data-action="kpi-info" data-k="tasa-ahorro" title="Tasa de ahorro">ⓘ</button></span>
+                  <span>Inversión <b>${fmtPct(tasaInv)}</b> <button class="info-btn" data-action="kpi-info" data-k="inversion" title="Tasa de inversión">ⓘ</button></span>
+                </div></div>
+              <div class="bal-calc">
+                <div><span>Ingresos</span><b>${fmtEUR(st.ingresos, 0)}</b></div>
+                <div><span>− Gastos operativos</span><b>${fmtEUR(st.gastos, 0)}</b></div>
+                ${st.capital > 0 ? `<div><span>− Capital de deuda</span><b>${fmtEUR(st.capital, 0)}</b></div>` : ''}
+                <div class="tot"><span>= Balance</span><b>${pos ? '+' : ''}${fmtEUR(st.ahorro, 0)}</b></div>
+              </div></div>`; })()}
+        </div>
+      </section>
+      <section class="card dz-sit">
+        <div class="dz-row4">
+          ${kpi('Liquidez <button class="info-btn" data-action="kpi-info" data-k="liquidez" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(P.liquidez, 0), '', 'dz-t')}
+          ${kpi('Patrimonio neto <button class="info-btn" data-action="kpi-info" data-k="patrimonio" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(P.neto, 0), (() => { const prev = S.patrimonio_mensual.filter(x => x.anio_mes < ymOf(todayISO())).sort((a, b) => a.anio_mes < b.anio_mes ? 1 : -1)[0];
+            return prev ? `<span class="${P.neto - num(prev.patrimonio_neto) >= 0 ? 'pos' : 'neg'}"><b>${signed(P.neto - num(prev.patrimonio_neto), 0)}</b></span> vs ${ymLabel(prev.anio_mes, true)}` : ''; })(), 'dz-t', true)}
+          ${renderAnioEnCurso(P)}
+        </div>
+      </section>
     </div>
-
-    ${renderAnioEnCurso(P)}
 
     ${renderAlertas(months, st, P, rows)}
 
@@ -99,7 +108,7 @@ function renderDashboard() {
     ${renderBudgetCard(rows, nM, totBud, totSpent)}
 
     <div class="card top-card"><div class="card-head"><h3>Mayores gastos</h3></div>
-      <div class="top-list">${topGastos.length ? topGastos.slice(0, 5).map(m => `<div class="it" data-action="mov-edit" data-id="${m.id}" style="cursor:pointer"><div class="c"><b>${esc(m.concepto || '—')}</b><div class="small muted">${fmtDate(m.fecha)} · ${esc(catName(m.categoria_id) || 'Sin categoría')}</div></div><div class="num neg">${fmtEUR(num(m.importe))}</div></div>`).join('') : '<div class="empty">—</div>'}</div></div>
+      <div class="top-list">${topGastos.length ? topGastos.slice(0, 5).map(m => `<div class="it" data-action="mov-edit" data-id="${m.id}" style="cursor:pointer">${iconoMovimiento(m)}<div class="c"><b>${esc(m.concepto || '—')}</b><div class="small muted">${fmtDate(m.fecha)} · ${esc(catName(m.categoria_id) || 'Sin categoría')}</div></div><div class="num neg">${fmtEUR(num(m.importe))}</div></div>`).join('') : '<div class="empty">—</div>'}</div></div>
     </div>
 `;
 

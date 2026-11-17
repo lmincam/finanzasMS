@@ -123,3 +123,19 @@ def test_movimientos_solo_cuentas_y_lista(app):
     assert a.page.locator('.acc-card .acc-anual').count() == 1
     a.page.click('.acc-anual'); a.page.wait_for_timeout(150)
     assert a.page.locator('.modal .anual-card').count() == 1
+
+
+def test_iconos_de_comercio(app):
+    """Comercio conocido → su icono; sin conocer → el de su categoría; y se puede elegir uno propio que se aplica a todo el comercio."""
+    a = app
+    a.ir('cuentas')
+    ids = a.ev("Object.fromEntries(S.movimientos.map(m => [m.concepto, m.id]))")
+    assert 'icon-cart' in a.page.inner_html(f'.mv[data-id="{ids["Mercadona"]}"] .mv-ico') or a.page.locator(f'.mv[data-id="{ids["Mercadona"]}"] .mv-ico svg').count() == 1
+    assert a.page.inner_text(f'.mv[data-id="{ids["NETFLIX.COM"]}"] .mv-ico').strip() == 'N'
+    assert a.ev("claveComercio('COMPRA TARJ. 4512XXXX MERCADONA GRANADA 12/11')") == 'mercadona granada'
+    assert a.ev("iconoCategoria(S.movimientos.find(m => /Tasca/.test(m.concepto)).categoria_id)") == 'fork'
+    # Elegir icono propio para "Lavadora nueva"
+    a.page.click(f'.mv[data-id="{ids["Lavadora nueva"]}"] .mv-more'); a.page.wait_for_timeout(150)
+    a.page.click('.mv-op[data-action="mov-icono"]'); a.page.wait_for_timeout(150)
+    a.page.fill('#ico-letras', 'LV'); a.page.click('.modal [data-guardar]'); a.page.wait_for_timeout(300)
+    assert a.page.inner_text(f'.mv[data-id="{ids["Lavadora nueva"]}"] .mv-ico').strip() == 'LV'

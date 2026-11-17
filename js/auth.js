@@ -148,20 +148,22 @@ async function cargarAccesos() {
 }
 function renderAccesosCard() {
   setTimeout(cargarAccesos, 0);
-  return `<div class="card"><div class="card-head"><h3>🔐 Usuarios con acceso</h3></div>
-    <p class="small muted" style="margin-top:0">Solo estas cuentas pueden ver y modificar los datos, aunque alguien consiga crearse un usuario en tu Supabase. Para añadir a alguien: créale el usuario en Supabase → Authentication → Users y añade aquí su email.</p>
+  return `<div class="card"><div class="card-head"><h3>🔐 Usuarios con acceso</h3><button class="btn sm" data-action="acceso-add">+ Añadir email</button></div>
     <div id="accesos-list" class="small muted">Cargando…</div>
-    <div class="btn-row" style="margin-top:10px"><button class="btn sm" data-action="acceso-add">+ Añadir email</button></div>
-    <div class="banner blue" style="margin-top:12px">🛡️ Recomendado: en Supabase → Authentication → <strong>Sign In / Providers</strong>, desactiva <strong>"Allow new users to sign up"</strong>. Así nadie puede crearse una cuenta en tu proyecto; tú sigues pudiendo crear usuarios desde Authentication → Users → Add user.</div></div>`;
+    <div class="small muted" style="margin-top:8px">Para dar acceso a alguien, créale antes el usuario en Supabase (Authentication → Users).</div>
+  </div>`;
 }
 
 /* ---------- Tarjeta de sesión en Ajustes ---------- */
 function renderSesionCard() {
   const u = Auth.user;
-  return `<div class="card"><div class="card-head"><h3>👤 Sesión</h3><span class="badge green">Conectado</span></div>
-    <p style="margin-top:0">Has iniciado sesión como <b>${esc(u ? u.email : '—')}</b>.</p>
-    <p class="small muted">La sesión se recuerda en este dispositivo.</p>
-    <div class="btn-row"><button class="btn" data-action="auth-cambiar">Cambiar contraseña</button><button class="btn ghost" data-action="auth-logout">Cerrar sesión</button></div></div>`;
+  const t = typeof Tema !== 'undefined' ? Tema.pref() : 'auto';
+  const op = (k, l, i) => `<button class="seg-btn ${t === k ? 'active' : ''}" data-action="tema" data-v="${k}">${icono(i)}<span>${l}</span></button>`;
+  return `<div class="card"><div class="card-head"><h3>👤 Tu cuenta</h3></div>
+    <div class="aj-user"><div class="aj-av">${esc((u && u.email ? u.email[0] : '·').toUpperCase())}</div><div><b>${esc(u ? u.email : '—')}</b><small>Sesión iniciada en este dispositivo</small></div></div>
+    <div class="btn-row" style="margin:12px 0 16px"><button class="btn sm" data-action="auth-cambiar">Cambiar contraseña</button><button class="btn sm ghost" data-action="auth-logout">Cerrar sesión</button></div>
+    <div class="sub-title" style="margin-top:0">Apariencia</div>
+    <div class="seg">${op('auto', 'Automático', 'phone')}${op('light', 'Claro', 'eye')}${op('dark', 'Oscuro', 'moon')}</div></div>`;
 }
 
 Object.assign(Actions, {

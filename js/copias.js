@@ -118,11 +118,11 @@ function renderCopiasCard() {
   return `<div class="card"><div class="card-head"><h3>💾 Copias de seguridad</h3>
       <label class="chk" style="margin:0"><input type="checkbox" id="copias-auto" ${st.auto !== false ? 'checked' : ''}> Automática cada semana</label></div>
     ${S.copiasError ? `<div class="banner amber">${esc(S.copiasError)}</div>` : ''}
-    <p class="small muted" style="margin-top:0">Última copia automática: <b>${st.ultima ? fmtDate(st.ultima.slice(0, 10)) : 'ninguna todavía'}</b>. Se guardan las ${COPIAS_GUARDADAS} últimas en un espacio privado de tu Supabase.</p>
+    <p class="small muted" style="margin-top:0">Última: <b>${st.ultima ? fmtDate(st.ultima.slice(0, 10)) : 'ninguna todavía'}</b> · se guardan las ${COPIAS_GUARDADAS} últimas</p>
     <div class="btn-row" style="margin-bottom:12px">
       <button class="btn primary" data-action="copia-nube">Hacer copia ahora</button>
-      <button class="btn" data-action="cfg-export">Descargar copia al dispositivo</button>
-      <label class="btn ghost" style="cursor:pointer">Restaurar desde archivo…<input type="file" id="restore-file" accept=".json,application/json" hidden></label>
+      <button class="btn" data-action="cfg-export">Descargar</button>
+      <label class="btn ghost" style="cursor:pointer">Restaurar archivo…<input type="file" id="restore-file" accept=".json,application/json" hidden></label>
     </div>
     <div class="sub-title">Copias en la nube</div>
     <div id="copias-list"><div class="small muted">Cargando…</div></div></div>`;

@@ -61,7 +61,7 @@ const ICONOS = {
 const icono = (n, cls = '') => ICONOS[n] ? `<svg class="i ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONOS[n]}</svg>` : '';
 
 /** Emoji → icono. Los emojis de títulos sin pareja se quitan; en avisos y botones se dejan. */
-const EMOJI_ICONO = {
+const EMOJI_ICONO = { '🔧': 'tool', '🛞': 'car', '🎨': 'edit',
   '📊': 'bars', '💳': 'card', '🎯': 'target', '🏠': 'home', '📈': 'chart', '🏦': 'bank', '🛡': 'shield', '🚀': 'trend', '📸': 'clock', '🏷': 'tag',
   '⚙': 'sliders', '💸': 'coin', '💰': 'coin', '🚗': 'car', '🚙': 'car', '🧩': 'pie', '🔁': 'repeat', '🧾': 'receipt', '📡': 'signal', '📅': 'calendar', '🗓': 'calendar',
   '📋': 'clipboard', '🔐': 'lock', '🔒': 'lock', '🕘': 'clock', '🔔': 'bell', '👤': 'user', '👥': 'users', '📥': 'download', '🔮': 'eye', '🤖': 'cpu', '☁': 'cloud',

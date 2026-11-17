@@ -88,18 +88,17 @@ function renderAppCard() {
   let instalar;
   if (inst) instalar = '<span class="badge green">✓ Instalada en este dispositivo</span>';
   else if (PWA.prompt) instalar = '<button class="btn primary" data-action="pwa-instalar">📲 Instalar la app</button>';
-  else if (esIOS()) instalar = '<div class="small">En iPhone: abre la app en <b>Safari</b> → botón <b>Compartir</b> (cuadrado con flecha) → <b>Añadir a pantalla de inicio</b>.</div>';
-  else instalar = '<div class="small">En Android/Chrome: menú <b>⋮</b> → <b>Instalar aplicación</b> (o "Añadir a pantalla de inicio"). En el ordenador: icono de instalar en la barra de direcciones.</div>';
+  else if (esIOS()) instalar = '<div class="small muted">Safari → Compartir → <b>Añadir a pantalla de inicio</b></div>';
+  else instalar = '<div class="small muted">Menú del navegador → <b>Instalar aplicación</b></div>';
   let avisos;
   if (perm === 'no') avisos = '<div class="small muted">Este navegador no admite avisos.' + (esIOS() && !inst ? ' En iPhone, primero instala la app en la pantalla de inicio.' : '') + '</div>';
-  else if (perm === 'denied') avisos = '<div class="small warn-t">Los avisos están bloqueados para esta web. Actívalos en los ajustes del navegador o del móvil.</div>';
+  else if (perm === 'denied') avisos = '<div class="small warn-t">Bloqueados en el navegador</div>';
   else if (avisosActivos()) avisos = '<span class="badge green">✓ Activados</span> <button class="btn sm" data-action="pwa-probar">Probar</button> <button class="btn sm ghost" data-action="pwa-avisos-off">Desactivar</button>';
-  else avisos = '<button class="btn" data-action="pwa-avisos-on">🔔 Activar avisos en este dispositivo</button>';
-  return `<div class="card"><div class="card-head"><h3>📱 App en el móvil</h3></div>
-    <div class="sub-title" style="margin-top:0">Instalar</div>${instalar}
-    <p class="small muted">Instalada se abre a pantalla completa con su icono, arranca al instante y <b>abre sin cobertura</b> con los últimos datos (solo lectura).</p>
-    <div class="sub-title">Avisos</div>${avisos}
-    <p class="small muted" style="margin-bottom:0">Al abrir la app te avisa de lo importante: presupuestos superados, vencimientos de seguros, saldo previsto bajo, metas retrasadas… (como máximo 3 al día y sin repetir el mismo aviso en una semana).</p></div>`;
+  else avisos = '<button class="btn sm" data-action="pwa-avisos-on">Activar</button>';
+  return `<div class="card"><div class="card-head"><h3>📱 App en este dispositivo</h3></div>
+    <div class="aj-row"><span>Instalación</span><div>${instalar}</div></div>
+    <div class="aj-row"><span>Avisos al abrir</span><div>${avisos}</div></div>
+    <div class="small muted" style="margin-top:10px">Instalada funciona sin cobertura con los últimos datos. Los avisos: máximo 3 al día.</div></div>`;
 }
 
 Object.assign(Actions, {

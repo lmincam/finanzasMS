@@ -45,7 +45,7 @@ function fmtNum(n, dec = 2) {
 }
 const fmtEUR = (n, dec = 2) => (n === null || n === undefined || isNaN(n)) ? '—' : fmtNum(n, dec) + ' €';
 const fmtPct = (x, dec = 1) => (x === null || x === undefined || !isFinite(x)) ? '—' : fmtNum(x * 100, dec) + ' %';
-const signed = n => (n > 0 ? '+' : '') + fmtEUR(n);
+const signed = (n, d) => (n > 0 ? '+' : '') + fmtEUR(n, d);
 const numInput = v => (v === null || v === undefined || v === '') ? '' : String(v).replace('.', ',');
 
 /* ---------- Fechas (siempre como texto ISO 'YYYY-MM-DD', sin husos) ---------- */

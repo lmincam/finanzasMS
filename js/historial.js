@@ -69,7 +69,7 @@ S.histFiltro = S.histFiltro || { tabla: '', usuario: '', limite: 60 };
 function renderHistorialCard() {
   setTimeout(pintarHistorial, 0);
   const f = S.histFiltro;
-  return `<div class="card"><div class="card-head"><div><h3>🕘 Historial de cambios</h3><div class="small muted">Quién cambió qué y cuándo. Lo anota la propia base de datos.</div></div>
+  return `<div class="card"><div class="card-head"><h3>🕘 Historial de cambios</h3>
       <div class="btn-row"><select id="hist-tabla"><option value="">Todo</option>${Object.entries(TABLA_HIST).map(([k, l]) => `<option value="${k}" ${f.tabla === k ? 'selected' : ''}>${l}s</option>`).join('')}</select>
       <select id="hist-usuario"><option value="">Todos</option><option value="sistema" ${f.usuario === 'sistema' ? 'selected' : ''}>Sistema</option>${Auth.user ? `<option value="${esc(Auth.user.email)}" ${f.usuario === Auth.user.email ? 'selected' : ''}>Tú</option>` : ''}</select></div></div>
     <div id="hist-list" class="small muted">Cargando…</div></div>`;
