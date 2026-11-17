@@ -44,6 +44,50 @@ async function generarAportaciones() {
 }
 AfterLoad.push(generarAportaciones);
 
+/* ---------- Tarjeta "Precios automáticos" ---------- */
+const REPO_GH = 'https://github.com/lmincam/finanzasMS';
+function renderPreciosCard() {
+  if (!S.v10) return '<div class="banner blue">📡 Para que el valor de tus fondos y ETF se actualice solo cada día, ejecuta <code>sql/esquema_completo.sql</code> en Supabase (bloque 12).</div>';
+  const est = ((S.ajustesRows || []).find(r => r.clave === 'precios_estado') || {}).valor;
+  const isins = [...new Set(S.posiciones.filter(p => p.isin).map(p => p.isin.toUpperCase()))];
+  const sinPart = S.posiciones.filter(p => p.isin && !(num(p.participaciones) > 0));
+  const filas = isins.map(i => { const u = precioEn(i, todayISO()), r = est && est.resultados && est.resultados.find(x => x.isin === i), p = S.posiciones.find(x => (x.isin || '').toUpperCase() === i);
+    return `<div class="acc-row"><span><b>${esc(p ? p.nombre : i)}</b> <span class="muted small">${i}</span></span>
+      <span class="small">${u ? `<b class="num">${fmtNum(u.precio, 4)}</b> · ${fmtDate(u.fecha)}${u.fuente ? ` <span class="muted">(${esc(u.fuente)})</span>` : ''}` : (r && !r.ok ? `<span class="neg">❌ ${esc(r.error)}</span>` : '<span class="muted">sin precio aún</span>')}</span></div>`; }).join('');
+  const activo = !!est;
+  return `<div class="card"><div class="card-head"><div><h3>📡 Precios automáticos</h3><div class="small muted">${activo ? `Última actualización: ${new Date(est.ejecutado).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}${est.eodhd ? ' · EODHD + Yahoo' : ' · Yahoo Finance (sin clave EODHD)'}` : 'Aún no se ha ejecutado la tarea diaria'}</div></div>
+      <a class="btn sm" href="${REPO_GH}/actions/workflows/precios.yml" target="_blank" rel="noopener">Ver / lanzar en GitHub</a></div>
+    ${isins.length ? filas : '<div class="small muted">Añade productos con su ISIN en cada cuenta de inversión.</div>'}
+    ${sinPart.length ? `<div class="banner amber" style="margin-top:10px">Para valorar solo ${sinPart.length === 1 ? 'este producto' : 'estos productos'} falta indicar las <b>participaciones</b>: ${sinPart.map(p => esc(p.nombre)).join(', ')}. Edita el producto (✎) en su cuenta.</div>` : ''}
+    ${activo ? '' : `<details class="small" style="margin-top:10px"><summary><b>Cómo activarlo (5 minutos, una sola vez)</b></summary><ol style="line-height:1.6;padding-left:18px">
+      <li>Crea una clave gratuita en <a href="https://eodhd.com/register" target="_blank" rel="noopener">eodhd.com</a> (plan Free: hasta 20 consultas al día). Es opcional, pero cubre mejor los fondos europeos.</li>
+      <li>En Supabase → Project Settings → API Keys, copia la clave <b>service_role</b> (secreta).</li>
+      <li>En <a href="${REPO_GH}/settings/secrets/actions" target="_blank" rel="noopener">GitHub → Settings → Secrets → Actions</a> crea <code>SUPABASE_URL</code>, <code>SUPABASE_SERVICE_ROLE_KEY</code> y <code>EODHD_API_KEY</code>.</li>
+      <li>En <a href="${REPO_GH}/actions/workflows/precios.yml" target="_blank" rel="noopener">Actions → Precios diarios</a> pulsa <b>Run workflow</b> para la primera carga.</li></ol></details>`}
+  </div>`;
+}
+
+/** Valoración automática: si hay precios nuevos de los ISIN de una cuenta, guarda su valor de mercado y una valoración (para gráficos y TIR). */
+async function sincronizarValoresAuto() {
+  if (S.offline || !S.v10) return;
+  let cambios = 0;
+  for (const c of S.cuentas.filter(x => x.tipo === 'inversion' && x.activa !== false)) {
+    const A = valorAutoCuenta(c); if (!A) continue;
+    const mismo = c.fecha_valor_mercado === A.fecha && Math.abs(num(c.valor_mercado) - A.valor) < 0.01;
+    if (mismo || (c.fecha_valor_mercado && c.fecha_valor_mercado > A.fecha)) continue;
+    try {
+      await DB.update('cuentas', c.id, { valor_mercado: A.valor, fecha_valor_mercado: A.fecha, ...(S.v7 ? { valor_actualizado: new Date().toISOString() } : {}) });
+      if (S.tablaValoraciones) {
+        const prev = S.valoraciones.find(v => v.cuenta_id === c.id && v.fecha === A.fecha), row = { cuenta_id: c.id, fecha: A.fecha, valor: A.valor, aportado_neto: Calc.aportadoA(c, A.fecha) };
+        if (prev) await DB.update('valoraciones', prev.id, row); else await DB.insert('valoraciones', [row]);
+      }
+      cambios++;
+    } catch (e) { console.warn('Valoración automática', c.nombre, e); }
+  }
+  if (cambios) { await reloadTables('cuentas', ...(S.tablaValoraciones ? ['valoraciones'] : [])); render(); }
+}
+AfterLoad.push(sincronizarValoresAuto);
+
 /* ---------- Bloques reutilizables ---------- */
 function bloqueDistribucion(id, dist, titulo, sub) {
   return `<div class="card"><div class="card-head"><h3>${titulo}</h3><span class="sub">${sub}</span></div>
@@ -106,6 +150,7 @@ function renderInversiones() {
       <button class="btn" data-action="inv-new">+ Cuenta de inversión</button></div>
     ${bannerV4()}
     ${!S.tablaValoraciones ? '<div class="banner amber">Ejecuta <code>sql/02_migracion_v2_inversiones.sql</code> para guardar el histórico de valoraciones.</div>' : ''}
+    ${renderPreciosCard()}
     <div class="kpis">
       ${kpi('Valor de la cartera', fmtEUR(totVal), `${act.length} cuenta(s)`, 'navy')}
       ${kpi('Capital aportado neto', fmtEUR(totAp), 'Aportaciones − retiradas')}
@@ -151,7 +196,7 @@ function renderInversionDetalle(c) {
 
   el.innerHTML = `
     <div class="section-head"><div style="display:flex;gap:10px;align-items:center"><button class="btn sm ghost" data-action="inv-back">← Visión global</button>
-      <div><h2>${esc(c.nombre)}</h2><div class="small muted">${esc(c.entidad || '')}${x.tieneVM ? ` · valorada a ${fmtDate(c.fecha_valor_mercado)}` : ' · sin valoración de mercado'}</div></div></div>
+      <div><h2>${esc(c.nombre)}</h2><div class="small muted">${esc(c.entidad || '')}${valorAutoCuenta(c) ? ` · 📡 valor automático (cierre del ${fmtDate(valorAutoCuenta(c).fecha)})` : x.tieneVM ? ` · valorada a ${fmtDate(c.fecha_valor_mercado)}` : ' · sin valoración de mercado'}</div></div></div>
       <div class="btn-row"><button class="btn sm primary" data-action="cuenta-valor" data-id="${c.id}">Actualizar valor</button>
         <button class="btn sm" data-action="quick-open" data-tipo="transferencia" data-destino="${c.id}">+ Aportación puntual</button>
         <button class="btn sm ghost" data-action="inv-aportado" data-id="${c.id}">Ajustar aportado</button>
@@ -174,7 +219,7 @@ function renderInversionDetalle(c) {
         <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Producto</th><th>Tipo / clase</th><th class="right">%</th><th class="right">Valor</th><th></th></tr></thead><tbody>
         ${P.ps.map((p, i) => `<tr><td><span class="cdot" style="background:${PALETTE[i % PALETTE.length]}"></span><b>${esc(p.nombre)}</b>${p.isin ? `<div class="small muted">${esc(p.isin)} ${isinValido(p.isin) ? '<span class="pos">✓</span>' : '<span class="neg" title="ISIN con formato o dígito de control incorrecto">⚠</span>'} · <a href="https://www.google.com/search?q=${encodeURIComponent(p.isin)}" target="_blank" rel="noopener">ficha</a></div>` : ''}</td>
           <td class="small">${TIPO_ACTIVO[p.tipo_activo] || ''}<br><span class="muted">${CLASE_ACTIVO[p.clase] || ''}${p.region ? ' · ' + esc(p.region) : ''}</span></td>
-          <td class="right num"><b>${P.V ? fmtPct(p.val / Math.max(P.V, P.asignado), 1) : '—'}</b></td><td class="right num">${fmtEUR(p.val)}</td>
+          <td class="right num"><b>${P.V ? fmtPct(p.val / Math.max(P.V, P.asignado), 1) : '—'}</b></td><td class="right num">${fmtEUR(p.val)}${p.auto ? `<div class="small muted" title="Precio de cierre de ${fmtDate(p.auto.fecha)}${p.auto.fuente ? ' · ' + esc(p.auto.fuente) : ''}">📡 ${fmtNum(p.auto.acciones, 3)} × ${fmtNum(p.auto.precio, 4)} · ${fmtDate(p.auto.fecha).slice(0, 5)}</div>` : ''}</td>
           <td><button class="mini" data-action="pos-edit" data-id="${p.id}">✎</button><button class="mini" data-action="pos-del" data-id="${p.id}">🗑</button></td></tr>`).join('')}
         ${P.resto > 0.5 ? `<tr><td class="muted">Sin asignar</td><td></td><td class="right num muted">${fmtPct(P.resto / P.V, 1)}</td><td class="right num muted">${fmtEUR(P.resto)}</td><td></td></tr>` : ''}
         </tbody></table></div></div>`
@@ -207,6 +252,8 @@ const FIELDS_POS = [
   { name: 'region', label: 'Región', ph: 'Global, EEUU, Europa, Emergentes…' },
   { name: 'porcentaje', label: '% de la cuenta', type: 'number', ph: 'Ej: 70', hint: 'Rellena el % …' },
   { name: 'valor', label: '… o el valor en € (prevalece sobre el %)', type: 'number' },
+  { name: 'participaciones', label: '📡 Participaciones', type: 'number', cls: 'v10', hint: 'Con el ISIN y las participaciones, el valor se actualiza solo cada día' },
+  { name: 'fecha_participaciones', label: 'A fecha de', type: 'date', cls: 'v10', hint: 'Las aportaciones posteriores se suman solas' },
   { name: 'orden', label: 'Orden', type: 'int' }, { name: 'notas', label: 'Notas', type: 'textarea', full: true, ph: 'TER, índice que replica, cartera modelo…' }
 ];
 const FIELDS_AP = [
@@ -217,9 +264,12 @@ const FIELDS_AP = [
   { name: 'hasta', label: 'Última (opcional)', type: 'date' },
   { name: 'activo', label: 'Activa', type: 'checkbox', def: true }, { name: 'notas', label: 'Notas', type: 'textarea', full: true }
 ];
+const camposPos = () => FIELDS_POS.filter(f => f.cls !== 'v10' || S.v10);
 async function guardarPosicion(cid, id, v) {
   if (v.isin) { v.isin = v.isin.toUpperCase().replace(/\s/g, ''); if (!isinValido(v.isin)) throw new Error(`El ISIN ${v.isin} no es válido (formato o dígito de control). Revísalo o déjalo vacío.`); }
-  if (v.porcentaje === null && v.valor === null) throw new Error('Indica el % de la cuenta o su valor en €');
+  if (v.porcentaje === null && v.valor === null && !(num(v.participaciones) > 0 && v.isin)) throw new Error('Indica el % de la cuenta, su valor en € o el ISIN con las participaciones');
+  if (num(v.participaciones) > 0 && !v.fecha_participaciones) v.fecha_participaciones = todayISO();
+  if (!S.v10) { delete v.participaciones; delete v.fecha_participaciones; }
   const row = { ...v, cuenta_id: cid, orden: v.orden || 0 };
   if (id) await DB.update('posiciones', id, row); else await DB.insert('posiciones', [row]);
   await reloadTable('posiciones');
@@ -262,8 +312,8 @@ Object.assign(Actions, {
     if (!(await confirmDlg(`¿Eliminar la valoración del ${fmtDate(v.fecha)} (${fmtEUR(v.valor)}) del histórico?`, 'Eliminar'))) return;
     await withSaving(null, async () => { await DB.remove('valoraciones', v.id); await reloadTable('valoraciones'); }, 'Valoración eliminada'); render();
   },
-  'pos-new': el => openForm({ title: 'Añadir producto', fields: FIELDS_POS, values: { tipo_activo: 'fondo', clase: 'renta_variable', orden: S.posiciones.filter(p => p.cuenta_id === el.dataset.id).length + 1 }, onSubmit: v => guardarPosicion(el.dataset.id, null, v) }),
-  'pos-edit': el => { const p = S.posiciones.find(x => x.id === el.dataset.id); openForm({ title: 'Editar producto', fields: FIELDS_POS, values: p, onSubmit: v => guardarPosicion(p.cuenta_id, p.id, v) }); },
+  'pos-new': el => openForm({ title: 'Añadir producto', fields: camposPos(), values: { tipo_activo: 'fondo', clase: 'renta_variable', orden: S.posiciones.filter(p => p.cuenta_id === el.dataset.id).length + 1 }, onSubmit: v => guardarPosicion(el.dataset.id, null, v) }),
+  'pos-edit': el => { const p = S.posiciones.find(x => x.id === el.dataset.id); openForm({ title: 'Editar producto', fields: camposPos(), values: p, onSubmit: v => guardarPosicion(p.cuenta_id, p.id, v) }); },
   'pos-del': async el => { const p = S.posiciones.find(x => x.id === el.dataset.id); if (!(await confirmDlg(`¿Quitar <b>${esc(p.nombre)}</b> de la cuenta?`, 'Quitar'))) return; await withSaving(null, async () => { await DB.remove('posiciones', p.id); await reloadTable('posiciones'); }, 'Producto quitado'); render(); },
   'ap-new': el => { const def = S.cuentas.find(c => c.tipo === 'corriente' && c.activa !== false);
     openForm({ title: `Programar aportación periódica · ${cuentaById(el.dataset.id).nombre}`, fields: FIELDS_AP, values: { dia_mes: 1, desde: todayISO(), activo: true, cuenta_origen_id: def && def.id }, onSubmit: v => guardarAportPeriodica(el.dataset.id, null, v) }); },

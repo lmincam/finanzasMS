@@ -6,9 +6,9 @@
    Depende de: config.js, utilidades.js, estado.js
    ===================================================================== */
 
-const OPTIONAL_TABLES = ['valoraciones', 'precios_m2', 'amortizaciones', 'amortizaciones_plan', 'aportaciones_periodicas', 'posiciones', 'seguros', 'reglas_categoria', 'patrimonio_mensual', 'partidas_previstas', 'metas'];
+const OPTIONAL_TABLES = ['valoraciones', 'precios_m2', 'amortizaciones', 'amortizaciones_plan', 'aportaciones_periodicas', 'posiciones', 'seguros', 'reglas_categoria', 'patrimonio_mensual', 'partidas_previstas', 'metas', 'precios'];
 const ORDER = { cuentas: 'orden', categorias: 'orden', movimientos: 'fecha', inmuebles: 'created_at', vehiculos: 'created_at', deudas: 'created_at', snapshots: 'fecha', ajustes: 'clave', valoraciones: 'fecha',
-  precios_m2: 'fecha', amortizaciones: 'fecha', amortizaciones_plan: 'created_at', aportaciones_periodicas: 'created_at', posiciones: 'orden', seguros: 'created_at', reglas_categoria: 'created_at', patrimonio_mensual: 'anio_mes', partidas_previstas: 'fecha_inicio', metas: 'created_at' };
+  precios_m2: 'fecha', amortizaciones: 'fecha', amortizaciones_plan: 'created_at', aportaciones_periodicas: 'created_at', posiciones: 'orden', seguros: 'created_at', reglas_categoria: 'created_at', patrimonio_mensual: 'anio_mes', partidas_previstas: 'fecha_inicio', metas: 'created_at', precios: 'fecha' };
 const getConn = () => ({
   url: (SUPABASE_URL || localStorage.getItem('pf_sb_url') || '').trim(),
   key: (SUPABASE_ANON_KEY || localStorage.getItem('pf_sb_key') || '').trim()
@@ -105,6 +105,7 @@ async function loadAll() {
     S.v7 = await DB.tieneColumna('cuentas', 'saldo_actualizado');
     S.v8 = await DB.tieneColumna('categorias', 'presupuesto_anual');
     S.v9 = await DB.tieneColumna('deudas', 'base_interes');
+    S.v10 = await DB.tieneColumna('posiciones', 'participaciones');
     tables.forEach((t, i) => { if (t !== 'ajustes') S[t] = res[i]; });
     const regla = res[7].find(r => r.clave === 'regla_nomina');
     if (regla && regla.valor) { S.ajustes.nomina_dias = num(regla.valor.dias) || 5; S.ajustes.nomina_umbral = num(regla.valor.umbral); S.ajustes.mes_nomina = regla.valor.mes_nomina !== false; }

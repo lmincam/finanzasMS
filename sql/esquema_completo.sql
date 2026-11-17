@@ -641,6 +641,35 @@ notify pgrst, 'reload schema';
 
 
 -- #####################################################################
+--  BLOQUE 12 · Precios diarios por ISIN (v5.13.0)
+-- #####################################################################
+-- La tarea automática de GitHub (.github/workflows/precios.yml) guarda aquí el precio de cierre
+-- de cada ISIN de tus productos. Con las participaciones de cada producto, la app calcula sola
+-- el valor de la cuenta de inversión cada día.
+create table if not exists public.precios (
+  id          uuid primary key default gen_random_uuid(),
+  isin        text not null,
+  fecha       date not null,
+  precio      numeric(18,6) not null,
+  moneda      text,
+  fuente      text,
+  ticker      text,
+  created_at  timestamptz default now(),
+  unique (isin, fecha)
+);
+create index if not exists precios_isin_fecha_idx on public.precios(isin, fecha);
+alter table public.precios enable row level security;
+drop policy if exists acceso_personal on public.precios;
+create policy acceso_personal on public.precios for all to authenticated
+  using (public.es_permitido()) with check (public.es_permitido());
+revoke all on public.precios from anon;
+grant select, insert, update, delete on public.precios to authenticated;
+alter table public.posiciones add column if not exists participaciones numeric(18,6);
+alter table public.posiciones add column if not exists fecha_participaciones date;
+notify pgrst, 'reload schema';
+
+
+-- #####################################################################
 --  BLOQUE 5 · Seguridad: solo usuarios con sesión + espacio para copias
 -- #####################################################################
 -- Quita cualquier permiso del rol anónimo en las tablas de la app
@@ -677,7 +706,7 @@ select 'Tabla ' || t as elemento,
        case when to_regclass('public.' || t) is not null then '✅ OK' else '❌ FALTA' end as estado
 from unnest(array['cuentas','categorias','movimientos','inmuebles','vehiculos','deudas','snapshots','ajustes',
                   'valoraciones','precios_m2','amortizaciones','amortizaciones_plan','aportaciones_periodicas',
-                  'posiciones','seguros','reglas_categoria','patrimonio_mensual','partidas_previstas','metas']) as t
+                  'posiciones','seguros','reglas_categoria','patrimonio_mensual','partidas_previstas','metas','precios']) as t
 union all
 select 'Columna ' || tb || '.' || col,
        case when exists (select 1 from information_schema.columns
@@ -688,7 +717,8 @@ from (values ('inmuebles','metros_construidos'), ('inmuebles','precio_m2_venta')
              ('deudas','categoria_cuota_id'), ('categorias','naturaleza'),
              ('movimientos','reembolso_de'), ('movimientos','a_cobrar'),
              ('cuentas','saldo_actualizado'), ('cuentas','valor_actualizado'),
-             ('categorias','presupuesto_anual'), ('categorias','gasto_fijo'), ('deudas','base_interes')) as y(tb, col)
+             ('categorias','presupuesto_anual'), ('categorias','gasto_fijo'), ('deudas','base_interes'),
+             ('posiciones','participaciones'), ('posiciones','fecha_participaciones')) as y(tb, col)
 union all
 select 'Usuarios con acceso: ' || coalesce((select string_agg(email, ', ' order by email) from public.usuarios_permitidos), 'ninguno'),
        case when exists (select 1 from public.usuarios_permitidos) then '✅ revisa que sean solo los vuestros' else '❌ VACÍA: añade vuestros emails' end

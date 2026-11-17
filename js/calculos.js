@@ -462,11 +462,64 @@ function seguroInfo(s) {
 
 /* ---------- Inversiones: posiciones y distribución ---------- */
 /** Valor en € de cada posición de una cuenta (por importe o por % del valor de la cuenta) + "Sin asignar". */
+/* ---------- Valoración automática por ISIN ----------
+   La tarea diaria de GitHub guarda el precio de cierre de cada ISIN en la tabla "precios".
+   Valor de un producto = participaciones × último precio. Las aportaciones (y retiradas) a la cuenta
+   posteriores a la fecha de las participaciones se convierten en participaciones nuevas al precio del día
+   en que se hicieron (o el siguiente con precio), repartidas entre los productos según su %. */
+let _precIdx = null;
+function preciosDe(isin) {
+  if (!_precIdx || _precIdx.ref !== S.precios || _precIdx.n !== S.precios.length) {
+    const m = new Map();
+    for (const r of S.precios || []) { const k = String(r.isin || '').toUpperCase(); if (!m.has(k)) m.set(k, []); m.get(k).push({ fecha: r.fecha, precio: num(r.precio), fuente: r.fuente, moneda: r.moneda }); }
+    for (const a of m.values()) a.sort((x, y) => x.fecha < y.fecha ? -1 : 1);
+    _precIdx = { ref: S.precios, n: (S.precios || []).length, m };
+  }
+  return _precIdx.m.get(String(isin || '').toUpperCase()) || [];
+}
+/** Precio en una fecha: el último anterior o igual ('antes') o el primero igual o posterior ('despues'). */
+function precioEn(isin, fecha, modo = 'antes') {
+  const a = preciosDe(isin); if (!a.length) return null;
+  if (modo === 'antes') { for (let i = a.length - 1; i >= 0; i--) if (a[i].fecha <= fecha && a[i].precio > 0) return a[i]; return null; }
+  for (const x of a) if (x.fecha >= fecha && x.precio > 0) return x;
+  return a[a.length - 1];
+}
+const tieneAuto = p => !!(p && p.isin && num(p.participaciones) > 0 && preciosDe(p.isin).length);
+/** Valoración automática de los productos de una cuenta: { valor, fecha, pos: Map(id → { acciones, precio, fecha, valor, fuente }) } o null. */
+function valorAutoCuenta(c) {
+  const ps = S.posiciones.filter(p => p.cuenta_id === c.id);
+  const autos = ps.filter(tieneAuto);
+  if (!autos.length) return null;
+  const fijo = p => p.valor !== null && p.valor !== undefined && p.valor !== '';
+  if (ps.some(p => !tieneAuto(p) && !fijo(p))) return null; // hay productos sin forma de valorarse solos
+  const hoy = todayISO(), ult = new Map(autos.map(p => [p.id, precioEn(p.isin, hoy)]));
+  if ([...ult.values()].some(x => !x)) return null;
+  // Reparto de las aportaciones nuevas: por % si todos lo tienen; si no, en proporción a su valor
+  const sumPct = sum(autos, p => num(p.porcentaje));
+  const valBase = new Map(autos.map(p => [p.id, num(p.participaciones) * ult.get(p.id).precio])), totBase = sum([...valBase.values()], v => v) || 1;
+  const peso = p => autos.length === 1 ? 1 : (autos.every(x => num(x.porcentaje) > 0) ? num(p.porcentaje) / sumPct : valBase.get(p.id) / totBase);
+  const pos = new Map(); let valor = 0, fecha = hoy;
+  for (const p of autos) {
+    const u = ult.get(p.id), desde = p.fecha_participaciones || '0000-00-00';
+    let acc = num(p.participaciones);
+    for (const m of S.movimientos) {
+      if (m.cuenta_id !== c.id || m.fecha <= desde || m.fecha > u.fecha || !num(m.importe)) continue;
+      const px = precioEn(p.isin, m.fecha, 'despues'); if (px && px.precio > 0) acc += num(m.importe) * peso(p) / px.precio;
+    }
+    const v = round2(acc * u.precio); valor += v; if (u.fecha < fecha) fecha = u.fecha;
+    pos.set(p.id, { acciones: acc, precio: u.precio, fecha: u.fecha, valor: v, fuente: u.fuente });
+  }
+  valor += sum(ps.filter(p => !tieneAuto(p)), p => num(p.valor));
+  return { valor: round2(valor), fecha, pos };
+}
+
 function posicionesCuenta(c) {
   const V = Calc.valor(c);
-  const ps = S.posiciones.filter(p => p.cuenta_id === c.id).sort(byOrden).map(p => ({
-    ...p, val: (p.valor !== null && p.valor !== undefined && p.valor !== '') ? num(p.valor) : num(p.porcentaje) / 100 * V
-  }));
+  const A = valorAutoCuenta(c);
+  const ps = S.posiciones.filter(p => p.cuenta_id === c.id).sort(byOrden).map(p => {
+    const a = A && A.pos.get(p.id);
+    return { ...p, auto: a || null, val: a ? a.valor : (p.valor !== null && p.valor !== undefined && p.valor !== '') ? num(p.valor) : num(p.porcentaje) / 100 * V };
+  });
   const asignado = sum(ps, 'val'), resto = V - asignado;
   return { V, ps, asignado, resto, exceso: resto < -0.5 };
 }

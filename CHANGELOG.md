@@ -1,5 +1,12 @@
 # Historial de versiones
 
+## 5.13.0 — 17/11/2026 · Valor de las inversiones automático por ISIN
+- Tarea diaria en GitHub Actions (`.github/workflows/precios.yml` + `scripts/precios.mjs`): descarga el precio de cierre de cada ISIN de tus productos desde EODHD (clave gratuita) o Yahoo Finance, y lo guarda en la tabla `precios`. Se ejecuta de lunes a viernes por la noche (ETF y acciones) y a primera hora del día siguiente (valor liquidativo de los fondos). También se puede lanzar a mano.
+- Cada producto admite **participaciones** y su fecha. Valor = participaciones × último precio. Las aportaciones y retiradas posteriores se convierten solas en participaciones al precio de su día, repartidas según el % de cada producto.
+- Al abrir la app, las cuentas con todos sus productos valorables actualizan solas su valor de mercado y guardan una valoración diaria (gráficos y TIR al día).
+- Tarjeta "📡 Precios automáticos" en Inversiones: último precio de cada ISIN, fuente, errores y guía de activación.
+- Requiere ejecutar `sql/esquema_completo.sql` (bloque 12) y configurar 3 secretos en GitHub.
+
 ## 5.12.0 — 17/11/2026 · Cierre de mes guiado
 - Al empezar un mes de nómina, el Dashboard propone **cerrar el anterior** (📋 Empezar cierre). Pasos:
   1. Movimientos al día hasta el último día del mes.
