@@ -132,6 +132,7 @@ function listaAportPeriodicas(planes, conCuenta) {
    VISTA GLOBAL
    ===================================================================== */
 function renderInversiones() {
+  if (S.invSim) return renderSimInteres($('#tab-inversiones'));
   const c0 = S.invSel && S.cuentas.find(c => c.id === S.invSel && c.tipo === 'inversion');
   if (c0) return renderInversionDetalle(c0);
   S.invSel = null;
@@ -147,7 +148,7 @@ function renderInversiones() {
 
   el.innerHTML = `
     <div class="section-head"><div><h2>Inversiones</h2><div class="small muted">${act.length} cuenta(s)${cambios.length ? ` · 📡 precios de cierre del ${fmtDate(cambios[0].A.fecha)}` : ''}</div></div>
-      <button class="btn" data-action="inv-new">+ Cuenta de inversión</button></div>
+      <div class="btn-row"><button class="btn" data-action="inv-new">+ Cuenta de inversión</button><button class="btn" data-action="sic-open">${icono('chart')} Simulador</button></div></div>
     ${bannerV4()}
     ${avisos}
     ${heroInversion({ valor: totVal, aportado: totAp, plus: totPlus, cambio: cambioDia, t, mensual, titulo: 'Valor total de la cartera' })}

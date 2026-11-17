@@ -1,5 +1,13 @@
 # Historial de versiones
 
+## 5.19.0 — 17/11/2026 · Patrimonio, inmuebles automáticos, mantenimiento y simulador
+- **Patrimonio** abre un **resumen**: patrimonio neto de la familia, en qué está (barra de composición) y recuadros de Liquidez (cuentas, fondo de emergencia, anualidades, efectivo), Inversiones (al cierre del día anterior), Inmuebles, Vehículos, Hipoteca y Préstamos. Cada recuadro abre su apartado y desde ahí "‹ Volver a Patrimonio". Sin pestañas arriba.
+- **Seguros** pasa a **Planificar** (junto a Presupuestos y Proyección). **Inmuebles** y **Vehículos** son pestañas separadas.
+- **Inmuebles**: el precio de venta se **actualiza solo cada trimestre** con el Índice de Precios de Vivienda del **INE** (segunda mano, por comunidad autónoma). Metes una vez el €/m² de tu zona y la comunidad; la app aplica la evolución oficial de cada trimestre nuevo, guarda el histórico y muestra el cálculo paso a paso. Nuevas **características del piso** (estado, planta, ascensor, exterior, terraza, garaje, año) que ajustan el precio de la zona.
+- **Vehículos**: **libro de mantenimiento** por vehículo (fecha, km, qué se hizo, taller, coste, notas) con la **próxima revisión** por fecha o km; avisa en Inicio cuando se acerca o ha vencido y actualiza los km del vehículo.
+- **Inversiones**: **simulador de interés compuesto** (botón junto a "+ Cuenta de inversión"): capital inicial, aportación y frecuencia, momento de la aportación, subida anual, duración, rentabilidad, capitalización, comisiones, inflación, IRPF del ahorro 2026 al rescatar, escenarios pesimista/optimista, objetivo (aportación necesaria y años) y tabla año a año. Botón "Usar mi cartera".
+- SQL: bloque 14 (tabla `mantenimientos`; columnas de inmuebles `ccaa`, `caracteristicas`, `precio_m2_base`, `fecha_m2_base`, `trimestre_ipv`). Tarea de GitHub: nuevo paso `scripts/vivienda.mjs` (consulta el INE una vez por semana).
+
 ## 5.18.0 — 17/11/2026 · Inicio más limpio, calendario y movimientos
 - **Inicio (ordenador)** rediseñado con la misma información: el periodo en una sola línea; indicadores en una rejilla alineada de 4 columnas (Ingresos · Gastos · Balance mensual / Tasas · Liquidez · Patrimonio); avisos en dos columnas; gráfico de ingresos vs. gastos más ancho; presupuesto y mayores gastos uno al lado del otro.
 - Botón **📅 Calendario** con el emoji de nuevo.

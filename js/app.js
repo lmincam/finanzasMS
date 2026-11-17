@@ -20,7 +20,11 @@ function renderTabs() {
     + SECCIONES.slice(2).filter(x => x.k !== 'ajustes').map(x => btnSec(x, 'bn-item')).join('');
   const uc = $('#user-chip'); if (uc) uc.classList.toggle('active', S.tab === 'ajustes');
   const sub = $('#subtabs');
-  if (sub) { sub.hidden = sec.tabs.length < 2;
+  if (sub && sec.resumen) {
+    // Secciones con resumen: sin pestañas; en cada apartado, una barra para volver al resumen
+    sub.hidden = S.tab === sec.resumen;
+    sub.innerHTML = S.tab === sec.resumen ? '' : `<div class="subtabs-in sub-back"><button data-action="tab" data-tab="${sec.resumen}">‹ Volver a ${esc(sec.l)}</button></div>`;
+  } else if (sub) { sub.hidden = sec.tabs.length < 2;
     sub.innerHTML = sec.tabs.length < 2 ? '' : `<div class="subtabs-in">${sec.tabs.map(k => `<button class="${k === S.tab ? 'active' : ''}" data-action="tab" data-tab="${k}">${esc(nombre(k))}</button>`).join('')}</div>`;
     const act = sub.querySelector('.active'); if (act && act.scrollIntoView) act.scrollIntoView({ block: 'nearest', inline: 'center' }); }
   $$('.tab').forEach(s => s.classList.toggle('active', s.id === 'tab-' + S.tab));
@@ -43,9 +47,9 @@ function render() {
 }
 
 Object.assign(Actions, {
-  tab: el => { closeMenu(); S.tab = el.dataset.tab; history.replaceState(null, '', '#' + S.tab); render(); window.scrollTo({ top: 0 }); },
+  tab: el => { closeMenu(); if (el.dataset.tab !== S.tab) { S.invSim = false; S.invSel = null; } S.tab = el.dataset.tab; history.replaceState(null, '', '#' + S.tab); render(); window.scrollTo({ top: 0 }); },
   sec: el => { const x = SECCIONES.find(s => s.k === el.dataset.sec); if (!x) return;
-    const destino = x.k === seccionDe(S.tab).k ? x.tabs[0] : (S.ultimaSub[x.k] || x.tabs[0]);
+    const destino = x.resumen || (x.k === seccionDe(S.tab).k ? x.tabs[0] : (S.ultimaSub[x.k] || x.tabs[0]));
     if (x.k === 'inicio') { S.dashCal = false; S.dashDet = null; S.dashCierre = null; }
     S.tab = destino; history.replaceState(null, '', '#' + S.tab); render(); window.scrollTo({ top: 0 }); },
   'menu-open': () => openMenu(),

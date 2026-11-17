@@ -52,3 +52,30 @@ def test_gasto_fijo_no_avisa_al_100(app):
     a.ev("catById('g2').gasto_fijo = true; catById('g2').presupuesto_mensual = 650; render()")
     titulos = a.ev("[...document.querySelectorAll('.alert b.t')].map(e=>e.textContent)")
     assert not any('Hipoteca' in t for t in titulos)
+
+
+def test_simulador_interes_compuesto(app):
+    a = app
+    # 1.000 € al 10 % anual con capitalización anual durante 10 años, sin aportaciones ni costes
+    r = a.ev("simular({ ...SIM_DEF, inicial: 1000, aport: 0, rent: 10, cap: 1, anios: 10, meses: 0, ter: 0, infl: 0, impuestos: false }).saldo")
+    assert abs(r - 1000 * 1.1 ** 10) < 0.01
+    # 100 €/mes al final de cada mes, 12 % nominal capitalizado mensualmente, 1 año → valor futuro de una renta
+    r = a.ev("simular({ ...SIM_DEF, inicial: 0, aport: 100, freq: 12, momento: 'final', rent: 12, cap: 12, anios: 1, meses: 0, ter: 0, subida: 0 }).saldo")
+    assert abs(r - 100 * ((1.01 ** 12 - 1) / 0.01)) < 0.01
+    # Escala del ahorro: 6.000 al 19 % + 4.000 al 21 %
+    assert abs(a.ev("irpfAhorro(10000)") - 1980) < 0.001
+    # La aportación necesaria lleva exactamente al objetivo
+    need = a.ev("aportacionPara({ ...SIM_DEF, inicial: 0, rent: 5, anios: 10, meses: 0 }, 50000)")
+    assert abs(a.ev(f"simular({{ ...SIM_DEF, inicial: 0, rent: 5, anios: 10, meses: 0, aport: {need} }}).saldo") - 50000) < 1
+
+
+def test_inmueble_se_actualiza_con_el_ine(app):
+    """El €/m² metido en mayo de 2025 (2025T2) se actualiza con los trimestres publicados después (T3 2025 … T2 2026)."""
+    a = app
+    i = a.ev("S.inmuebles[0]")
+    assert i['trimestre_ipv'] == '2026T2'
+    esperado = 2500 * 1.02 * 1.03 * 1.04 * 1.01
+    assert abs(i['precio_m2_venta'] - round(esperado, 2)) < 0.01
+    assert i['precio_m2_base'] == 2500                    # la referencia no cambia
+    # Reformado (+8 %) y planta alta con ascensor (+3 %)
+    assert abs(i['valor_mercado'] - round(90 * round(esperado, 2) * 1.11, 2)) < 0.02

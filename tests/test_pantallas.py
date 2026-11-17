@@ -54,18 +54,19 @@ def test_estructura_dashboard(app):
 
 
 def test_navegacion_movil(movil):
-    """En el móvil: barra inferior con 5 secciones + botón de añadir, y sub-pestañas dentro de cada sección."""
+    """En el móvil: barra inferior con 4 secciones + botón de añadir. Patrimonio abre su resumen y desde sus recuadros cada apartado."""
     a = movil
     assert a.page.locator('#bottomnav .bn-item').count() == 4
     assert a.page.locator('#bottomnav .bn-plus').count() == 1
     a.page.click('#bottomnav [data-action="sec"][data-sec="patrimonio"]'); a.page.wait_for_timeout(200)
-    assert a.ev('S.tab') == 'inversiones'
-    assert a.page.locator('#subtabs button').count() == 5
-    a.page.click('#subtabs button:has-text("Deudas")'); a.page.wait_for_timeout(200)
-    assert a.ev('S.tab') == 'deudas'
-    a.page.click('#bottomnav [data-action="sec"][data-sec="inicio"]'); a.page.wait_for_timeout(150)
-    a.page.click('#bottomnav [data-action="sec"][data-sec="patrimonio"]'); a.page.wait_for_timeout(150)
-    assert a.ev('S.tab') == 'deudas', 'Debe recordar la última sub-pestaña de la sección'
+    assert a.ev('S.tab') == 'patrimonio'
+    assert a.ev("document.querySelector('#subtabs').hidden") is True
+    a.page.click('.pz-box[data-k="vehiculos"]'); a.page.wait_for_timeout(200)
+    assert a.ev('S.tab') == 'vehiculos'
+    a.page.click('#subtabs button:has-text("Volver a Patrimonio")'); a.page.wait_for_timeout(200)
+    assert a.ev('S.tab') == 'patrimonio'
+    a.page.click('#bottomnav [data-action="sec"][data-sec="planificar"]'); a.page.wait_for_timeout(200)
+    assert [x.strip() for x in a.page.locator('#subtabs button').all_inner_texts()] == ['Previsión y metas', 'Presupuestos', 'Proyección', 'Seguros']
 
 
 def test_modo_oscuro(abrir):

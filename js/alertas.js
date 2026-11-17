@@ -208,6 +208,14 @@ function buildAlertas(months, st, P, rows) {
   }
 
   const ord = { red: 0, amber: 1, blue: 2, green: 3 };
+  // Mantenimiento de vehículos: lo que vence en las próximas semanas o ya ha vencido
+  if (typeof proximosMant === 'function' && S.mantenimientos && S.mantenimientos.length) {
+    for (const v of S.vehiculos) for (const p of proximosMant(v).filter(x => x.nivel !== 'ok')) {
+      const qué = (TIPOS_MANT[p.m.tipo] || 'Mantenimiento').replace(/^\S+\s/, '');
+      const cuando = p.m.proxima_fecha ? (p.dias < 0 ? `venció el ${fmtDate(p.m.proxima_fecha)}` : `toca el ${fmtDate(p.m.proxima_fecha)}`) : `a los ${fmtNum(p.m.proximo_km, 0)} km`;
+      add(p.nivel === 'red' ? 'red' : 'amber', '🔧', `${v.nombre}: ${qué}`, `${cuando}. Apúntalo en Patrimonio → Vehículos cuando lo hagas.`, `mant-${p.m.id}`, 7);
+    }
+  }
   return A.sort((a, b) => ord[a.nivel] - ord[b.nivel]);
 }
 function renderAlertas(months, st, P, rows) {

@@ -1,24 +1,26 @@
 'use strict';
 /* =====================================================================
-   PESTAÑA · INMUEBLES Y VEHÍCULOS
+   PESTAÑA · INMUEBLES
    ---------------------------------------------------------------------
-   Valoración, plusvalía, rentabilidad de alquiler y fichas de vehículos.
+   Valoración, plusvalía y rentabilidad de alquiler. El €/m² de venta se
+   actualiza solo cada trimestre con el Índice de Precios de Vivienda del
+   INE (segunda mano, por comunidad autónoma) que descarga la tarea
+   automática de GitHub (scripts/vivienda.mjs → ajustes.indice_vivienda).
    Depende de: datos.js, calculos.js, ui.js
    ===================================================================== */
 
-function renderPatrimonio() {
-  const el = $('#tab-patrimonio');
+function renderInmuebles() {
+  const el = $('#tab-inmuebles');
   const infos = S.inmuebles.map(i => ({ i, x: inmuebleInfo(i) }));
   const totVM = sum(infos, o => o.x.vm), totPlus = sum(infos, o => o.x.plusvalia), totNeto = sum(infos, o => o.x.neto);
-  const totVeh = sum(S.vehiculos, 'valor_actual'), totVehC = sum(S.vehiculos, 'valor_compra');
   el.innerHTML = `
-    <div class="kpis">
-      ${kpi('Valor inmuebles', fmtEUR(totVM, 0), `${S.inmuebles.length} inmueble(s)`, 'navy')}
-      ${kpi('Plusvalía latente', `<span class="${totPlus >= 0 ? 'pos' : 'neg'}">${signed(totPlus)}</span>`, 'Valor mercado − coste adquisición', totPlus >= 0 ? 'pos' : 'neg')}
-      ${kpi('Valor neto inmobiliario', fmtEUR(totNeto, 0), 'Descontada la hipoteca pendiente')}
-      ${kpi('Valor vehículos', fmtEUR(totVeh, 0), `Depreciación acumulada ${fmtEUR(totVehC - totVeh, 0)}`, 'warn')}
-    </div>
-    <div class="section-head"><h2>Inmuebles</h2><button class="btn" data-action="inm-new">+ Inmueble</button></div>
+    <div class="section-head"><div><h2>Inmuebles</h2><div class="small muted">${S.inmuebles.length} inmueble(s)${ipvInfo() ? ` · precios de la zona actualizados con el INE (${ipvInfo().ultimo})` : ''}</div></div>
+      <button class="btn" data-action="inm-new">+ Inmueble</button></div>
+    ${S.inmuebles.length ? `<div class="kpis">
+      ${kpi('Valor de los inmuebles', fmtEUR(totVM, 0), '', 'navy', true)}
+      ${kpi('Plusvalía latente', `<span class="${totPlus >= 0 ? 'pos' : 'neg'}">${signed(totPlus)}</span>`, '', totPlus >= 0 ? 'pos' : 'neg')}
+      ${kpi('Valor neto (sin hipoteca)', fmtEUR(totNeto, 0), '')}
+    </div>` : ''}
     ${infos.map(({ i, x }) => `<div class="card">
       <div class="asset-head"><div class="asset-ico">🏠</div><div style="flex:1"><h3>${esc(i.nombre)}</h3><div class="small muted">${esc(i.descripcion || '')}${i.direccion ? ' · ' + esc(i.direccion) : ''}${i.fecha_valoracion ? ` · Valorado a ${fmtDate(i.fecha_valoracion)}` : ''}</div></div>
         <button class="mini" data-action="inm-edit" data-id="${i.id}">✎</button><button class="mini" data-action="inm-del" data-id="${i.id}">🗑</button></div>
@@ -38,49 +40,77 @@ function renderPatrimonio() {
       : '<div class="small muted">Introduce una renta mensual estimada (✎) para calcular la rentabilidad bruta y neta.</div>'}
       ${segurosDe('inmueble_id', i.id)}
       ${i.notas ? `<div class="notes">${esc(i.notas)}</div>` : ''}
-    </div>`).join('') || '<div class="card empty">Sin inmuebles</div>'}
-
-    <div class="section-head"><h2>Vehículos</h2><button class="btn" data-action="veh-new">+ Vehículo</button></div>
-    <div class="grid-2e">${S.vehiculos.map(v => {
-      const dep = num(v.valor_compra) - num(v.valor_actual);
-      const desde = v.fecha_compra || (v.anio ? `${v.anio}-07-01` : null);
-      const anios = desde ? Math.max(0.5, monthsDiff(desde, todayISO()) / 12) : null;
-      const gastos = num(v.gasto_seguro) + num(v.gasto_impuesto) + num(v.gasto_mantenimiento);
-      return `<div class="card" style="margin-bottom:0">
-        <div class="asset-head"><div class="asset-ico">${VEH_ICON[v.tipo] || '🚙'}</div><div style="flex:1"><h3>${esc(v.nombre)}</h3>
-          <div class="small muted">${[v.marca_modelo, v.matricula, v.anio, v.km ? fmtNum(v.km, 0) + ' km' : ''].filter(Boolean).map(esc).join(' · ') || 'Completa la ficha'}</div></div>
-          <button class="mini" data-action="veh-edit" data-id="${v.id}">✎</button><button class="mini" data-action="veh-del" data-id="${v.id}">🗑</button></div>
-        <div class="metrics">
-          ${metric('Valor de compra', fmtEUR(v.valor_compra, 0))}${metric('Valor actual', fmtEUR(v.valor_actual, 0))}
-          ${metric('Depreciación', `${fmtEUR(dep, 0)} <span class="small">${num(v.valor_compra) ? fmtPct(dep / num(v.valor_compra), 0) : ''}</span>`, 'neg')}
-          ${metric('Depreciación anual media', anios ? fmtEUR(dep / anios, 0) : '—')}
-          ${metric('Gastos fijos anuales', fmtEUR(gastos, 0))}${metric('Coste mensual fijo', fmtEUR(gastos / 12, 0))}
-        </div>
-        ${segurosDe('vehiculo_id', v.id)}
-        ${v.notas ? `<div class="notes">🔧 ${esc(v.notas)}</div>` : ''}</div>`;
-    }).join('') || '<div class="card empty">Sin vehículos</div>'}</div>`;
+    </div>`).join('') || `<div class="card"><div class="empty">Aún no has añadido ningún inmueble.<br><br><button class="btn primary" data-action="inm-new">+ Añadir el primero</button></div></div>`}`;
   infos.forEach(({ i }, k) => chartM2(`ch-m2-${k}`, i));
 }
 
 /* ---------- Valoración automática por €/m² ---------- */
+const CCAA = [
+  ['andalucia', 'Andalucía'], ['aragon', 'Aragón'], ['asturias', 'Asturias'], ['balears', 'Illes Balears'], ['canarias', 'Canarias'], ['cantabria', 'Cantabria'],
+  ['leon', 'Castilla y León'], ['mancha', 'Castilla-La Mancha'], ['cataluna', 'Cataluña'], ['valenciana', 'Comunitat Valenciana'], ['extremadura', 'Extremadura'],
+  ['galicia', 'Galicia'], ['madrid', 'Comunidad de Madrid'], ['murcia', 'Región de Murcia'], ['navarra', 'Navarra'], ['vasco', 'País Vasco'], ['rioja', 'La Rioja'],
+  ['ceuta', 'Ceuta'], ['melilla', 'Melilla']
+];
+/* ---------- Índice de Precios de Vivienda (INE) ---------- */
+/** Datos que guarda la tarea automática: { actualizado, ultimo:'2026T2', series: { madrid: { '2025T4': 2.1, … }, nacional: {…} } } (variación trimestral %). */
+function ipvInfo() { const r = (S.ajustesRows || []).find(x => x.clave === 'indice_vivienda'); return r && r.valor && r.valor.series ? r.valor : null; }
+const trimestreDe = iso => `${iso.slice(0, 4)}T${Math.floor((+iso.slice(5, 7) - 1) / 3) + 1}`;
+const cmpTrim = (a, b) => a < b ? -1 : a > b ? 1 : 0;   // 'AAAAT1' se ordena bien como texto
+/** Factor acumulado de precios desde el trimestre de la fecha base (sin incluirlo) hasta el último publicado. */
+function factorIPV(ccaa, fechaBase) {
+  const I = ipvInfo(); if (!I || !ccaa || !fechaBase) return null;
+  const serie = I.series[ccaa] || I.series.nacional; if (!serie) return null;
+  const tb = trimestreDe(fechaBase), qs = Object.keys(serie).filter(q => cmpTrim(q, tb) > 0).sort(cmpTrim);
+  return { factor: qs.reduce((f, q) => f * (1 + num(serie[q]) / 100), 1), desde: tb, hasta: qs.length ? qs[qs.length - 1] : tb, n: qs.length, nacional: !I.series[ccaa] };
+}
+/** €/m² de venta de la zona actualizado con el INE a partir del último valor que metiste tú. */
+function m2Actualizado(i) {
+  if (!num(i.precio_m2_base) || !i.fecha_m2_base) return null;
+  const f = factorIPV(i.ccaa, i.fecha_m2_base); if (!f) return null;
+  return { ...f, m2: round2(num(i.precio_m2_base) * f.factor) };
+}
+/** Tras cada carga: si el INE ha publicado un trimestre nuevo, actualiza €/m², valor y el histórico (una vez por trimestre). */
+async function actualizarInmueblesIPV() {
+  if (!S.v11 || S.offline || !ipvInfo()) return;
+  let cambios = 0;
+  for (const i of S.inmuebles) {
+    if (i.valor_automatico === false) continue;
+    const u = m2Actualizado(i); if (!u || u.n === 0 || i.trimestre_ipv === u.hasta) continue;
+    const v = { ...stripInm(i), precio_m2_venta: u.m2, fecha_precio_m2: todayISO(), trimestre_ipv: u.hasta };
+    await guardarInmueble(i.id, v, { auto: true }); cambios++;
+  }
+  if (cambios) toast(`🏠 Precio de venta actualizado con el INE (${ipvInfo().ultimo})`, 'ok', 4000);
+}
+AfterLoad.push(actualizarInmueblesIPV);
+
 function bloqueM2(i, x) {
   if (!S.v4) return '';
   const idx = S.inmuebles.indexOf(i), hist = S.precios_m2.filter(p => p.inmueble_id === i.id);
-  if (!x.m2) return `<div class="banner blue">Añade los m² construidos y el precio medio €/m² de tu zona (✎) para calcular automáticamente el valor de venta y el alquiler.</div>`;
-  const desact = x.diasM2 === null || x.diasM2 > 100;
-  return `<div class="sub-title">Valoración por m² ${i.valor_automatico !== false ? '<span class="badge green">automática</span>' : '<span class="badge">manual</span>'}</div>
-    ${desact ? `<div class="banner amber" style="margin-bottom:10px">${x.diasM2 === null ? 'Aún no has metido el €/m² de tu zona.' : `El €/m² tiene ${x.diasM2} días.`} Actualízalo este trimestre. <button class="btn sm" data-action="inm-m2" data-id="${i.id}">Actualizar €/m²</button></div>` : ''}
-    <div class="metrics">
-      ${metric('Superficie', `${fmtNum(x.m2, 0)} m²${num(i.metros_utiles) ? ` <span class="small">(${fmtNum(num(i.metros_utiles), 0)} útiles)</span>` : ''}`)}
-      ${metric('€/m² venta zona', i.precio_m2_venta ? fmtEUR(i.precio_m2_venta, 0) : '—')}
+  if (!x.m2) return `<div class="banner blue">Añade los m² construidos, tu comunidad autónoma y el precio medio €/m² de tu zona (✎). A partir de ahí el precio de venta se actualiza solo cada trimestre.</div>`;
+  const car = ajusteCaracteristicas(i), u = S.v11 ? m2Actualizado(i) : null, I = ipvInfo();
+  const auto = i.valor_automatico !== false;
+  const estado = !S.v11 ? '' : !i.ccaa ? '<div class="banner amber" style="margin-bottom:10px">Indica la comunidad autónoma (✎) para que el precio se actualice solo cada trimestre.</div>'
+    : !I ? '<div class="banner blue" style="margin-bottom:10px">Esperando los datos del INE: la tarea automática los descarga en su próxima ejecución.</div>' : '';
+  return `<div class="sub-title">Valor de venta estimado ${auto ? '<span class="badge green">se actualiza solo</span>' : '<span class="badge">manual</span>'}</div>
+    ${estado}
+    <div class="inm-calc">
+      <div class="ic-big"><span>Precio de venta estimado</span><b>${x.ventaCalc !== null ? fmtEUR(x.ventaCalc, 0) : '—'}</b>
+        <small>${fmtNum(x.m2, 0)} m² × ${i.precio_m2_venta ? fmtEUR(i.precio_m2_venta, 0) : '—'}/m²${(num(i.ajuste_pct) + car.pct) ? ` × ${fmtPct((num(i.ajuste_pct) + car.pct) / 100 + 1, 0)}` : ''}${num(i.valor_anejos) ? ` + anejos ${fmtEUR(i.valor_anejos, 0)}` : ''}</small></div>
+      <div class="ic-steps">
+        <div><span>€/m² de la zona que metiste</span><b>${i.precio_m2_base ? `${fmtEUR(i.precio_m2_base, 0)} <small>(${fmtDate(i.fecha_m2_base)})</small>` : i.precio_m2_venta ? fmtEUR(i.precio_m2_venta, 0) : '—'}</b></div>
+        ${u && u.n ? `<div><span>Evolución INE ${u.nacional ? '(nacional)' : esc((CCAA.find(c => c[0] === i.ccaa) || [, ''])[1])} ${u.desde} → ${u.hasta}</span><b class="${u.factor >= 1 ? 'pos' : 'neg'}">${u.factor >= 1 ? '+' : ''}${fmtNum((u.factor - 1) * 100, 1)} %</b></div>` : ''}
+        <div><span>€/m² de la zona hoy</span><b>${i.precio_m2_venta ? fmtEUR(i.precio_m2_venta, 0) : '—'}</b></div>
+        ${car.partes.map(p => `<div class="ic-aj"><span>${esc(p[0])}</span><b>${p[1] > 0 ? '+' : ''}${p[1]} %</b></div>`).join('')}
+        ${num(i.ajuste_pct) ? `<div class="ic-aj"><span>Ajuste adicional</span><b>${num(i.ajuste_pct) > 0 ? '+' : ''}${fmtNum(num(i.ajuste_pct), 1)} %</b></div>` : ''}
+      </div>
+    </div>
+    <div class="metrics" style="margin-top:10px">
       ${metric('€/m² alquiler zona', i.precio_m2_alquiler ? fmtEUR(i.precio_m2_alquiler) + '/mes' : '—')}
-      ${metric('Ajuste propio', `${num(i.ajuste_pct) >= 0 ? '+' : ''}${fmtNum(num(i.ajuste_pct), 1)} %`)}
-      ${metric('Precio de venta estimado', x.ventaCalc !== null ? fmtEUR(x.ventaCalc, 0) : '—', 'pos')}
       ${metric('Alquiler estimado', x.rentaCalc !== null ? fmtEUR(x.rentaCalc, 0) + '/mes' : '—', 'pos')}
       ${metric('Tu coste por m²', x.costeM2 ? fmtEUR(x.costeM2, 0) : '—')}
-      ${metric('Actualizado', i.fecha_precio_m2 ? fmtDate(i.fecha_precio_m2) : '—')}
+      ${metric(`Actualizado${i.trimestre_ipv ? ` · INE ${i.trimestre_ipv}` : ''}`, i.fecha_precio_m2 ? fmtDate(i.fecha_precio_m2) : '—')}
     </div>
-    <div class="btn-row" style="margin-top:8px"><button class="btn sm primary" data-action="inm-m2" data-id="${i.id}">Actualizar €/m² del trimestre</button></div>
+    <div class="btn-row" style="margin-top:8px"><button class="btn sm" data-action="inm-m2" data-id="${i.id}">Corregir €/m² de la zona</button>${S.v11 ? `<button class="btn sm" data-action="inm-car" data-id="${i.id}">Características del piso</button>` : ''}</div>
     ${hist.length >= 2 ? `<div class="chart-box sm" style="margin-top:10px"><canvas id="ch-m2-${idx}"></canvas></div>` : ''}`;
 }
 function chartM2(id, i) {
@@ -94,8 +124,12 @@ function chartM2(id, i) {
     scales: { y: { ...euroAxis, title: { display: true, text: 'Venta €/m²' } }, y1: { position: 'right', grid: { display: false }, ticks: { callback: v => fmtNum(v, 1) + ' €' }, title: { display: true, text: 'Alquiler €/m²' } }, x: { grid: { display: false } } } } });
 }
 /** Guarda un inmueble aplicando la valoración automática y registrando el histórico de €/m² si ha cambiado. */
-async function guardarInmueble(id, v) {
+async function guardarInmueble(id, v, { auto = false } = {}) {
   const prev = id ? S.inmuebles.find(x => x.id === id) : null;
+  if (S.v11 && !auto && num(v.precio_m2_venta) && (!prev || num(prev.precio_m2_venta) !== num(v.precio_m2_venta) || !prev.precio_m2_base)) {
+    // Un €/m² metido a mano es la nueva referencia: desde aquí lo actualiza el INE
+    v.precio_m2_base = v.precio_m2_venta; v.fecha_m2_base = v.fecha_precio_m2 || todayISO(); v.trimestre_ipv = trimestreDe(v.fecha_m2_base);
+  }
   if (S.v4 && v.valor_automatico !== false) {
     const c = calcM2(v);
     if (c.ventaCalc !== null) { v.valor_mercado = c.ventaCalc; v.fecha_valoracion = v.fecha_precio_m2 || todayISO(); }
@@ -116,10 +150,11 @@ const FIELDS_INM_M2 = [
   { name: 'url_precios', label: 'Enlace al informe de precios de tu zona', cls: 'v4', ph: 'https://www.idealista.com/sala-de-prensa/informes-precio-vivienda/…' },
   { name: 'metros_construidos', label: 'm² construidos', type: 'number', cls: 'v4', hint: 'Los que figuran en el Catastro' },
   { name: 'metros_utiles', label: 'm² útiles', type: 'number', cls: 'v4' },
-  { name: 'precio_m2_venta', label: 'Precio medio venta zona (€/m²)', type: 'number', cls: 'v4' },
+  { name: 'ccaa', label: 'Comunidad autónoma', type: 'select', cls: 'v11', options: [{ v: '', l: '— Elige —' }, ...CCAA.map(([v, l]) => ({ v, l }))], hint: 'Para actualizar el precio cada trimestre con el INE' },
+  { name: 'precio_m2_venta', label: 'Precio medio venta zona (€/m²)', type: 'number', cls: 'v4', hint: 'De un informe de precios de tu barrio (idealista, fotocasa…). Solo hace falta una vez' },
   { name: 'precio_m2_alquiler', label: 'Precio medio alquiler zona (€/m²/mes)', type: 'number', cls: 'v4' },
   { name: 'fecha_precio_m2', label: 'Fecha de esos precios', type: 'date', cls: 'v4' },
-  { name: 'ajuste_pct', label: 'Ajuste propio (%)', type: 'number', cls: 'v4', hint: '+ reformado, exterior, ático… / − a reformar, bajo…' },
+  { name: 'ajuste_pct', label: 'Ajuste adicional (%)', type: 'number', cls: 'v4', hint: 'Además de las características del piso (estado, planta…)' },
   { name: 'valor_anejos', label: 'Valor parking + trastero (€)', type: 'number', cls: 'v4', hint: 'Si no están incluidos en los m²' },
   { name: 'renta_anejos', label: 'Alquiler parking + trastero (€/mes)', type: 'number', cls: 'v4' },
   { name: 'valor_automatico', label: 'Usar el cálculo por m² como valor de mercado y renta estimada', type: 'checkbox', def: true, full: true, cls: 'v4' }
@@ -136,18 +171,7 @@ const FIELDS_INM = [
   { name: 'gastos_seguro', label: 'Seguro anual (€)', type: 'number' }, { name: 'gastos_mantenimiento', label: 'Mantenimiento anual (€)', type: 'number' },
   { name: 'notas', label: 'Notas', type: 'textarea', full: true }
 ];
-const FIELDS_VEH = [
-  { name: 'tipo', label: 'Tipo', type: 'select', options: [{ v: 'coche', l: '🚗 Coche' }, { v: 'moto', l: '🏍️ Moto' }, { v: 'autocaravana', l: '🚐 Autocaravana' }, { v: 'otro', l: 'Otro' }] },
-  { name: 'nombre', label: 'Nombre', required: true }, { name: 'marca_modelo', label: 'Marca y modelo' }, { name: 'matricula', label: 'Matrícula' },
-  { name: 'anio', label: 'Año', type: 'int' }, { name: 'fecha_compra', label: 'Fecha de compra', type: 'date' }, { name: 'km', label: 'Kilómetros', type: 'int' },
-  { name: 'valor_compra', label: 'Valor de compra (€)', type: 'number' }, { name: 'valor_actual', label: 'Valor actual de mercado (€)', type: 'number' },
-  { name: 'fecha_valoracion', label: 'Fecha de la valoración', type: 'date' },
-  { name: 'gasto_seguro', label: 'Seguro anual (€)', type: 'number' }, { name: 'gasto_impuesto', label: 'Impuesto circulación (€)', type: 'number' },
-  { name: 'gasto_mantenimiento', label: 'Mantenimiento anual estimado (€)', type: 'number' },
-  { name: 'notas', label: 'Notas de mantenimiento / gastos', type: 'textarea', full: true, ph: 'ITV, revisiones, neumáticos, averías…' }
-];
-
-Views.patrimonio = renderPatrimonio;
+Views.inmuebles = renderInmuebles;
 
 /** Campos del formulario: los de m² solo si la migración v4 está aplicada. */
 const camposInm = () => camposV4([...FIELDS_INM.slice(0, 3), ...FIELDS_INM_M2, ...FIELDS_INM.slice(3)]);
@@ -157,15 +181,27 @@ const stripInm = i => { const o = { ...i }; delete o.id; delete o.created_at; re
 Object.assign(Actions, {
   'inm-new': () => openForm({ title: 'Nuevo inmueble', fields: camposInm(), values: { valor_automatico: true }, onSubmit: v => guardarInmueble(null, v) }),
   'inm-edit': el => { const i = S.inmuebles.find(x => x.id === el.dataset.id); openForm({ title: 'Editar inmueble', fields: camposInm(), values: i, onSubmit: v => guardarInmueble(i.id, v) }); },
+  'inm-car': el => {
+    const i = S.inmuebles.find(x => x.id === el.dataset.id), c = i.caracteristicas || {};
+    const yn = [{ v: '', l: '—' }, { v: 'si', l: 'Sí' }, { v: 'no', l: 'No' }], b = x => x === true ? 'si' : x === false ? 'no' : '';
+    openForm({ title: `Características · ${i.nombre}`, intro: '<p class="small muted">Ajustan el precio medio de la zona a tu piso (valores orientativos de tasación).</p>',
+      fields: [
+        { name: 'estado', label: 'Estado', type: 'select', options: [{ v: '', l: '—' }, ...Object.entries(CAR_ESTADO).map(([v, x]) => ({ v, l: `${x[0]} (${x[1] > 0 ? '+' : ''}${x[1]} %)` }))] },
+        { name: 'planta', label: 'Planta', type: 'select', options: [{ v: '', l: '—' }, ...Object.entries(CAR_PLANTA).map(([v, x]) => ({ v, l: x[0] }))] },
+        { name: 'ascensor', label: 'Ascensor', type: 'select', options: yn }, { name: 'exterior', label: 'Exterior', type: 'select', options: yn },
+        { name: 'terraza', label: 'Terraza', type: 'select', options: yn }, { name: 'garaje', label: 'Garaje incluido en el precio', type: 'select', options: yn },
+        { name: 'anio', label: 'Año de construcción', type: 'int' }],
+      values: { ...c, ascensor: b(c.ascensor), exterior: b(c.exterior), terraza: b(c.terraza), garaje: b(c.garaje) },
+      onSubmit: v => { const bb = x => x === 'si' ? true : x === 'no' ? false : null;
+        const car = { estado: v.estado || null, planta: v.planta || null, ascensor: bb(v.ascensor), exterior: bb(v.exterior), terraza: bb(v.terraza), garaje: bb(v.garaje), anio: v.anio || null };
+        return guardarInmueble(i.id, { ...stripInm(i), caracteristicas: car }, { auto: true }); } });
+  },
   'inm-m2': el => {
     const i = S.inmuebles.find(x => x.id === el.dataset.id);
-    openForm({ title: `€/m² del trimestre · ${i.nombre}`, intro: `<p class="small muted">Copia el precio medio de venta y de alquiler de tu barrio o municipio del último informe de precios${i.url_precios ? ` (<a href="${esc(i.url_precios)}" target="_blank" rel="noopener">abrir informe ↗</a>)` : ''}. La app recalcula el valor y la renta y guarda el histórico.</p>`,
+    openForm({ title: `€/m² de la zona · ${i.nombre}`, intro: `<p class="small muted">Solo si quieres corregirlo: el de venta se actualiza solo cada trimestre con el INE. Copia el precio medio de tu barrio de un informe de precios${i.url_precios ? ` (<a href="${esc(i.url_precios)}" target="_blank" rel="noopener">abrir informe ↗</a>)` : ''}; será la nueva referencia.</p>`,
       fields: [{ name: 'precio_m2_venta', label: 'Venta (€/m²)', type: 'number' }, { name: 'precio_m2_alquiler', label: 'Alquiler (€/m²/mes)', type: 'number' }, { name: 'fecha_precio_m2', label: 'Fecha', type: 'date' }],
       values: { precio_m2_venta: i.precio_m2_venta, precio_m2_alquiler: i.precio_m2_alquiler, fecha_precio_m2: todayISO() },
       onSubmit: v => guardarInmueble(i.id, { ...stripInm(i), ...v, fecha_precio_m2: v.fecha_precio_m2 || todayISO() }) });
   },
-  'inm-del': async el => { const i = S.inmuebles.find(x => x.id === el.dataset.id); if (!(await confirmDlg(`¿Eliminar <b>${esc(i.nombre)}</b>?`, 'Eliminar'))) return; await withSaving(null, async () => { await DB.remove('inmuebles', i.id); await Promise.all([reloadTable('inmuebles'), reloadTable('deudas')]); }, 'Eliminado'); render(); },
-  'veh-new': () => openForm({ title: 'Nuevo vehículo', fields: FIELDS_VEH, values: { tipo: 'coche' }, onSubmit: v => saveEntity('vehiculos', null, v) }),
-  'veh-edit': el => { const v0 = S.vehiculos.find(x => x.id === el.dataset.id); openForm({ title: 'Editar vehículo', fields: FIELDS_VEH, values: v0, onSubmit: v => saveEntity('vehiculos', v0.id, v) }); },
-  'veh-del': async el => { const v = S.vehiculos.find(x => x.id === el.dataset.id); if (!(await confirmDlg(`¿Eliminar <b>${esc(v.nombre)}</b>?`, 'Eliminar'))) return; await withSaving(null, async () => { await DB.remove('vehiculos', v.id); await reloadTable('vehiculos'); }, 'Eliminado'); render(); }
+  'inm-del': async el => { const i = S.inmuebles.find(x => x.id === el.dataset.id); if (!(await confirmDlg(`¿Eliminar <b>${esc(i.nombre)}</b>?`, 'Eliminar'))) return; await withSaving(null, async () => { await DB.remove('inmuebles', i.id); await Promise.all([reloadTable('inmuebles'), reloadTable('deudas')]); }, 'Eliminado'); render(); }
 });

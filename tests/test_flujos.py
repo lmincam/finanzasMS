@@ -82,3 +82,17 @@ def test_devolucion_indica_el_gasto(app):
     fila = a.texto('.mv[data-id="dv1"]')
     assert 'Devolución de' in fila and 'Restaurante La Tasca' in fila
     assert 'Te devolvieron' in a.texto(f".mv[data-id=\"{a.ev('S.movimientos.find(m => /Tasca/.test(m.concepto)).id')}\"]")
+
+
+def test_mantenimiento_de_vehiculo(app):
+    a = app
+    a.ir('vehiculos')
+    assert a.page.locator('.mant-row').count() == 2
+    a.page.click('[data-action="mant-new"][data-id="v1"]'); a.page.wait_for_timeout(150)
+    a.page.select_option('.modal [name="tipo"]', 'neumaticos')
+    a.page.fill('.modal [name="km"]', '64000'); a.page.fill('.modal [name="coste"]', '320'); a.page.fill('.modal [name="descripcion"]', '4 neumáticos')
+    a.page.click('.modal [type=submit]'); a.page.wait_for_timeout(300)
+    assert a.page.locator('.veh-card').first.locator('.mant-row').count() == 3
+    assert a.ev("S.vehiculos.find(v => v.id === 'v1').km") == 64000       # actualiza los km del coche
+    a.ir('dashboard')
+    assert 'Coche: ITV' in a.texto('#tab-dashboard')                       # la ITV vence en menos de 45 días

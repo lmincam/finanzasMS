@@ -625,3 +625,120 @@ body.locked .bottomnav{display:none}
 /* Botón principal visible sobre fondo oscuro */
 :root[data-theme="dark"] .btn.primary{background:#2b4a85;border-color:#2b4a85;color:#fff}
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .btn.primary{background:#2b4a85;border-color:#2b4a85;color:#fff} }
+
+/* ===== v5.19 · Patrimonio: resumen, inmuebles, vehículos y simulador ===== */
+.sub-back{align-items:center;gap:12px}
+.sub-back button{background:var(--card);font-weight:700;color:var(--ink)}
+.sub-back b{font-size:15px;color:var(--txt)}
+.pz-hero{display:grid;grid-template-columns:1fr auto;gap:14px 24px;align-items:center;padding:22px 24px}
+.pz-hl{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.pz-hv{font-size:40px;font-weight:800;letter-spacing:-.02em;margin-top:6px;font-variant-numeric:tabular-nums;color:var(--txt)}
+.pz-hs{font-size:13.5px;color:var(--slate);margin-top:4px}
+.pz-hero-side{display:flex;flex-direction:column;gap:6px;min-width:250px;border-left:1px solid var(--line);padding-left:22px}
+.pz-hero-side div{display:flex;justify-content:space-between;gap:16px;font-size:14px;color:var(--slate)}
+.pz-hero-side b{font-variant-numeric:tabular-nums;color:var(--txt)}
+.pz-hero-side b.neg{color:var(--red)}
+.pz-bar{grid-column:1/-1;display:flex;height:12px;border-radius:999px;overflow:hidden;gap:2px;background:var(--card2)}
+.pz-leg{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--slate);margin-top:-4px}
+.pz-leg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.pz-sec{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:22px 2px 10px}
+.pz-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.pz-grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.pz-box{margin:0;cursor:pointer;display:flex;flex-direction:column;gap:4px;transition:box-shadow .15s,transform .15s;border:1px solid var(--line)}
+.pz-box:hover{box-shadow:0 6px 20px rgba(15,31,58,.14);transform:translateY(-1px)}
+.pz-top{display:flex;align-items:center;gap:10px}
+.pz-ico{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--blue-soft);color:var(--ink);flex:none}
+.pz-ico .i{width:19px;height:19px}
+.pz-box[data-k="inversiones"] .pz-ico{background:var(--violet-soft);color:var(--violet-ink)}
+.pz-box[data-k="vehiculos"] .pz-ico{background:var(--amber-soft);color:var(--amber-ink)}
+.pz-box[data-k="liquidez"] .pz-ico{background:var(--blue-soft);color:var(--blue-ink)}
+.pz-debt .pz-ico{background:var(--red-soft);color:var(--red-ink)}
+.pz-t{flex:1;font-weight:700;font-size:14px;color:var(--slate)}
+.pz-go{font-size:22px;color:var(--muted);line-height:1}
+.pz-box:hover .pz-go{color:var(--ink)}
+.pz-v{font-size:26px;font-weight:800;margin-top:8px;font-variant-numeric:tabular-nums;color:var(--txt)}
+.pz-debt .pz-v{color:var(--red)}
+.pz-pie{font-size:12.5px;color:var(--muted)}
+.pz-lines{margin-top:10px;padding-top:8px;border-top:1px dashed var(--line2);display:flex;flex-direction:column;gap:4px}
+.pz-l{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--slate)}
+.pz-l b{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--txt)}
+.pz-l b.pos{color:var(--green)}.pz-l b.neg{color:var(--red)}
+.pz-nota{margin:8px 2px 0}
+@media (max-width:1100px){ .pz-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (max-width:640px){
+  .pz-hero{grid-template-columns:1fr;padding:18px}
+  .pz-hv{font-size:32px}
+  .pz-hero-side{border-left:0;padding-left:0;border-top:1px solid var(--line);padding-top:10px;min-width:0}
+  .pz-grid,.pz-grid-2{grid-template-columns:1fr;gap:10px}
+  .pz-v{font-size:23px}
+}
+/* Inmuebles: cálculo del precio de venta */
+.inm-calc{display:grid;grid-template-columns:minmax(220px,1fr) 2fr;gap:14px;align-items:stretch}
+.ic-big{background:var(--green-soft);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.ic-big span{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.ic-big b{font-size:28px;color:var(--green);font-variant-numeric:tabular-nums}
+.ic-big small{color:var(--slate);font-size:12.5px}
+.ic-steps{display:flex;flex-direction:column;gap:5px;font-size:13.5px;justify-content:center}
+.ic-steps div{display:flex;justify-content:space-between;gap:10px;color:var(--slate);border-bottom:1px dashed var(--line);padding-bottom:4px}
+.ic-steps b{font-variant-numeric:tabular-nums;color:var(--txt);white-space:nowrap}
+.ic-steps b.pos{color:var(--green)}.ic-steps b.neg{color:var(--red)}
+.ic-steps .ic-aj{font-size:12.5px;padding-left:12px}
+@media (max-width:700px){ .inm-calc{grid-template-columns:1fr} }
+/* Vehículos: mantenimiento */
+.mant-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:16px 0 8px}
+.mant-prox{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.mp{display:flex;flex-direction:column;gap:2px;padding:8px 12px;border-radius:10px;font-size:13px;border:1px solid var(--line);background:var(--card2);flex:1 1 220px}
+.mp span{color:var(--slate);font-size:12.5px}
+.mp.red{background:var(--red-soft);border-color:var(--red)}.mp.red span{color:var(--red-ink)}
+.mp.amber{background:var(--amber-soft);border-color:var(--amber-line)}.mp.amber span{color:var(--amber-ink)}
+.mant-list{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.mant-row{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer;background:var(--card)}
+.mant-row:last-child{border-bottom:0}
+.mant-row:hover{background:var(--card2)}
+.mant-f{display:flex;flex-direction:column;font-size:13px}
+.mant-f span{font-size:12px;color:var(--muted)}
+.mant-t{font-weight:600}
+.mant-e{font-weight:700;white-space:nowrap}
+@media (max-width:640px){ .mant-row{grid-template-columns:78px minmax(0,1fr) auto;gap:8px} }
+/* Simulador de interés compuesto */
+.sim-wrap{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);gap:16px;align-items:start}
+.sim-form{position:sticky;top:calc(var(--hdr,100px) + 10px);display:flex;flex-direction:column;gap:14px;margin:0}
+.sim-g{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sim-g>div{min-width:0}
+.sim-g input,.sim-g select{width:100%}
+.sim-gt{grid-column:1/-1;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px}
+.sim-chk{grid-column:1/-1}
+.sim-hero{text-align:center;padding:22px}
+.sh-l{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.sh-v{font-size:44px;font-weight:800;color:var(--green);margin:6px 0 14px;font-variant-numeric:tabular-nums}
+.sh-bar{display:flex;height:14px;border-radius:999px;overflow:hidden;gap:2px;background:var(--card2)}
+.sh-bar .a,.sh-leg i.a{background:#64748b}.sh-bar .g,.sh-leg i.g{background:#16a34a}
+.sh-leg{display:flex;justify-content:center;flex-wrap:wrap;gap:6px 22px;margin-top:10px;font-size:13.5px;color:var(--slate)}
+.sh-leg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+.sim-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.sk{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:3px}
+.sk span{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.sk b{font-size:21px;font-variant-numeric:tabular-nums}
+.sk small{font-size:12px;color:var(--muted)}
+.sim-obj{display:flex;flex-direction:column;gap:4px;border-left:4px solid var(--blue)}
+.sim-esc{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px;text-align:center}
+.sim-esc div{background:var(--card2);border-radius:10px;padding:8px}
+.sim-esc span{display:block;font-size:12px;color:var(--muted)}
+.sim-esc b{font-variant-numeric:tabular-nums}
+.sim-tbl{max-height:460px;overflow:auto}
+.sim-tbl th{position:sticky;top:0;background:var(--card);z-index:1}
+@media (max-width:980px){ .sim-wrap{grid-template-columns:1fr} .sim-form{position:static} }
+@media (max-width:640px){ .sim-kpis{grid-template-columns:1fr 1fr} .sh-v{font-size:34px} .sk b{font-size:18px} }
+.pz-cero .pz-v{color:var(--muted)}
+.pz-grid-1{grid-template-columns:1fr}
+.pz-grid-1 .pz-box{display:grid;grid-template-columns:auto auto 1fr;align-items:center;gap:4px 18px}
+.pz-grid-1 .pz-v{margin:0;font-size:22px}
+.pz-grid-1 .pz-pie{text-align:right}
+@media (max-width:640px){ .pz-grid-1 .pz-box{display:flex} .pz-grid-1 .pz-pie{text-align:left} }
+.sim-form,.sim-wrap>#sic-res{min-width:0}
+.sim-chk .chk{display:flex;gap:8px;align-items:flex-start;text-align:left;font-size:13.5px;line-height:1.35;width:auto}
+.sim-chk .chk input{width:auto;margin-top:2px;flex:none}
+@media (max-width:980px){ .sim-wrap{grid-template-columns:minmax(0,1fr)} }
+@media (max-width:420px){ .sim-g{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px} .sim-g label{font-size:12.5px} }
+@media (max-width:700px){ .inm-calc{grid-template-columns:minmax(0,1fr)} .ic-steps div{flex-wrap:wrap} .ic-steps span{min-width:0} }
+.metric{min-width:0}.metric .v .small{white-space:normal;display:inline-block}

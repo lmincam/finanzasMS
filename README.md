@@ -16,6 +16,9 @@ js/
   utilidades.js       Formato €, números, fechas, texto
   iconos.js           Iconos SVG propios (icono('home')) y cambio automático de emojis por iconos
   tema.js             Modo claro/oscuro (automático o elegido en Ajustes)
+  patrimonio.js       Resumen de Patrimonio (lo que tenéis y lo que debéis; cada recuadro abre su apartado)
+  vehiculos.js        Vehículos y su libro de mantenimiento
+  simulador.js        Simulador de interés compuesto (pestaña Inversiones)
   estado.js           Estado global (S), constantes y registros de módulos
   datos.js            Única capa que habla con Supabase
   calculos.js         Saldos, patrimonio, préstamos, inmuebles, inversiones, periodos
@@ -30,7 +33,7 @@ js/
   prevision.js        Previsión de tesorería (recurrentes, partidas previstas)
   metas.js            Metas de ahorro y pestaña Previsión y metas
   inversiones.js      Pestaña Inversiones (global + detalle, posiciones, aportaciones periódicas)
-  inmuebles.js        Pestaña Inmuebles y vehículos
+  inmuebles.js        Pestaña Inmuebles (precio de venta actualizado con el INE cada trimestre)
   futuro.js           Proyección, independencia financiera e inflación
   deudas.js           Pestaña Deudas (vista general + detalle, simulador, amortizaciones)
   seguros.js          Pestaña Seguros
@@ -69,7 +72,7 @@ Cada pestaña es un módulo independiente que se da de alta en unos registros co
 Para añadir una pestaña nueva:
 1. Crear `js/nueva.js` con su función de pintado y sus acciones.
 2. Añadir su `<section id="tab-nueva">` y su `<script>` en `index.html` (antes de `app.js`).
-3. Añadirla a `TABS` en `estado.js` y a una de las 5 secciones de `SECCIONES` (Inicio, Movimientos, Patrimonio, Planificar, Ajustes).
+3. Añadirla a `TABS` en `estado.js` y a una de las 5 secciones de `SECCIONES` (Inicio, Movimientos, Patrimonio, Planificar, Ajustes). En Patrimonio, añade también su recuadro en `patrimonio.js`.
    Colores: usa siempre las variables de `:root` (`var(--card)`, `var(--txt)`…), así funciona sola en modo oscuro.
 4. Si necesita guardar datos nuevos, añadir un bloque al final de `sql/esquema_completo.sql` solo con `create table if not exists` o `add column if not exists`.
 

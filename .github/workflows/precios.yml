@@ -29,3 +29,11 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           EODHD_API_KEY: ${{ secrets.EODHD_API_KEY }}
+      # Precio de la vivienda (INE, trimestral): solo consulta al INE una vez por semana
+      - name: Índice de precios de vivienda (INE)
+        if: always()
+        continue-on-error: true
+        run: node scripts/vivienda.mjs
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

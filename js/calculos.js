@@ -348,8 +348,28 @@ const apVal = v => (v.aportado_neto === null || v.aportado_neto === undefined) ?
 
 /* ---------- Inmuebles: valoración por €/m² ---------- */
 /** Venta = m² × €/m² zona × (1 + ajuste%) + anejos. Alquiler = m² × €/m²/mes × (1 + ajuste%) + renta anejos. */
+/* ---------- Características del piso → ajuste sobre el precio medio de la zona (orientativo) ---------- */
+const CAR_ESTADO = { a_reformar: ['A reformar', -15], actualizar: ['Para actualizar', -6], bueno: ['Buen estado', 0], reformado: ['Reformado', 8], nuevo: ['Obra nueva / a estrenar', 12] };
+const CAR_PLANTA = { bajo: ['Bajo', -8], entreplanta: ['Primera / entreplanta', -3], intermedia: ['Intermedia', 0], alta: ['Alta', 3], atico: ['Ático', 6] };
+/** Devuelve el % de ajuste y su desglose a partir de las características guardadas en el inmueble. */
+function ajusteCaracteristicas(i) {
+  const c = i && i.caracteristicas; if (!c || typeof c !== 'object') return { pct: 0, partes: [] };
+  const partes = [], add = (t, p) => { if (p) partes.push([t, p]); };
+  if (CAR_ESTADO[c.estado]) add(CAR_ESTADO[c.estado][0], CAR_ESTADO[c.estado][1]);
+  if (CAR_PLANTA[c.planta]) {
+    const alta = c.planta === 'alta' || c.planta === 'atico' || c.planta === 'intermedia';
+    if (c.ascensor === false && alta) add(`${CAR_PLANTA[c.planta][0]} sin ascensor`, c.planta === 'intermedia' ? -5 : -10);
+    else add(`Planta ${CAR_PLANTA[c.planta][0].toLowerCase()}`, CAR_PLANTA[c.planta][1]);
+  }
+  if (c.exterior === false) add('Interior', -6);
+  if (c.terraza) add('Terraza', 4);
+  if (c.garaje) add('Garaje incluido', 5);
+  if (num(c.anio) > 1800) { const a = new Date().getFullYear() - num(c.anio); if (a > 60) add('Más de 60 años', -6); else if (a > 40) add('Más de 40 años', -3); else if (a < 15) add('Menos de 15 años', 3); }
+  return { pct: sum(partes, p => p[1]), partes };
+}
 function calcM2(i) {
-  const m2 = num(i.metros_construidos), aj = 1 + num(i.ajuste_pct) / 100;
+  const ajCar = ajusteCaracteristicas(i).pct;
+  const m2 = num(i.metros_construidos), aj = 1 + (num(i.ajuste_pct) + ajCar) / 100;
   const ventaCalc = m2 > 0 && num(i.precio_m2_venta) > 0 ? round2(m2 * num(i.precio_m2_venta) * aj + num(i.valor_anejos)) : null;
   const rentaCalc = m2 > 0 && num(i.precio_m2_alquiler) > 0 ? round2(m2 * num(i.precio_m2_alquiler) * aj + num(i.renta_anejos)) : null;
   const diasM2 = i.fecha_precio_m2 ? diasEntre(i.fecha_precio_m2, todayISO()) : null;

@@ -33,16 +33,18 @@ const TIPO_ACTIVO = { fondo: 'Fondo de inversión', etf: 'ETF', accion: 'Acción
 const CLASE_ACTIVO = { renta_variable: 'Renta variable', renta_fija: 'Renta fija', monetario: 'Monetario', liquidez: 'Liquidez', inmobiliario: 'Inmobiliario', materias_primas: 'Materias primas / oro', cripto: 'Cripto', otro: 'Otro' };
 const PALETTE = ['#1e3a8a', '#0891b2', '#16a34a', '#ca8a04', '#dc2626', '#7c3aed', '#db2777', '#ea580c', '#0d9488', '#64748b'];
 const TABS = [
-  ['dashboard', 'Resumen'], ['cuentas', 'Cuentas y movimientos'], ['planificacion', 'Previsión y metas'], ['patrimonio', 'Inmuebles y vehículos'],
-  ['inversiones', 'Inversiones'], ['deudas', 'Deudas'], ['seguros', 'Seguros'], ['futuro', 'Proyección'], ['auditoria', 'Evolución'],
+  ['dashboard', 'Resumen'], ['cuentas', 'Cuentas y movimientos'], ['planificacion', 'Previsión y metas'], ['patrimonio', 'Patrimonio'],
+  ['inversiones', 'Inversiones'], ['inmuebles', 'Inmuebles'], ['vehiculos', 'Vehículos'], ['deudas', 'Deudas'], ['seguros', 'Seguros'],
+  ['futuro', 'Proyección'], ['auditoria', 'Evolución'],
   ['categorias', 'Presupuestos'], ['ajustes', 'Ajustes']
 ];
 /** Navegación en 5 secciones (barra inferior en el móvil, superior en el ordenador). Cada sección agrupa pestañas. */
 const SECCIONES = [
   { k: 'inicio', l: 'Inicio', i: 'home', tabs: ['dashboard'] },
   { k: 'movimientos', l: 'Movimientos', i: 'arrows', tabs: ['cuentas'] },
-  { k: 'patrimonio', l: 'Patrimonio', i: 'wallet', tabs: ['inversiones', 'patrimonio', 'deudas', 'seguros', 'auditoria'] },
-  { k: 'planificar', l: 'Planificar', i: 'target', tabs: ['planificacion', 'categorias', 'futuro'] },
+  // Patrimonio: se entra por el resumen y desde sus recuadros a cada apartado (sin sub-pestañas)
+  { k: 'patrimonio', l: 'Patrimonio', i: 'wallet', tabs: ['patrimonio', 'inversiones', 'inmuebles', 'vehiculos', 'deudas', 'auditoria'], resumen: 'patrimonio' },
+  { k: 'planificar', l: 'Planificar', i: 'target', tabs: ['planificacion', 'categorias', 'futuro', 'seguros'] },
   { k: 'ajustes', l: 'Ajustes', i: 'sliders', tabs: ['ajustes'] }
 ];
 const seccionDe = tab => SECCIONES.find(s => s.tabs.includes(tab)) || SECCIONES[0];

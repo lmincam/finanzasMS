@@ -698,7 +698,7 @@ begin
   o := case when tg_op <> 'INSERT' then to_jsonb(old) end;
   n := case when tg_op <> 'DELETE' then to_jsonb(new) end;
   -- Ajustes internos que cambian solos (estado de la descarga de precios, mapa de tickers): no se anotan
-  if tg_table_name = 'ajustes' and coalesce(n ->> 'clave', o ->> 'clave') in ('precios_estado', 'tickers_isin') then return coalesce(new, old); end if;
+  if tg_table_name = 'ajustes' and coalesce(n ->> 'clave', o ->> 'clave') in ('precios_estado', 'tickers_isin', 'indice_vivienda') then return coalesce(new, old); end if;
   if tg_op = 'UPDATE' then
     select jsonb_object_agg(key, value) into a from jsonb_each(o) where not (key = any(ignorar)) and (n -> key) is distinct from value;
     select jsonb_object_agg(key, value) into d from jsonb_each(n) where not (key = any(ignorar)) and (o -> key) is distinct from value;
@@ -721,7 +721,7 @@ declare t text;
 begin
   foreach t in array array['cuentas','categorias','movimientos','inmuebles','vehiculos','deudas','snapshots','ajustes',
                            'amortizaciones','amortizaciones_plan','aportaciones_periodicas','posiciones','seguros',
-                           'reglas_categoria','partidas_previstas','metas','usuarios_permitidos','precios_m2'] loop
+                           'reglas_categoria','partidas_previstas','metas','usuarios_permitidos','precios_m2','mantenimientos'] loop
     if to_regclass('public.' || t) is not null then
       execute format('drop trigger if exists trg_historial on public.%I', t);
       execute format('create trigger trg_historial after insert or update or delete on public.%I for each row execute function public.registrar_historial()', t);
@@ -734,6 +734,44 @@ drop policy if exists solo_lectura on public.historial;
 create policy solo_lectura on public.historial for select to authenticated using (public.es_permitido());
 revoke all on public.historial from anon, authenticated;
 grant select on public.historial to authenticated;
+notify pgrst, 'reload schema';
+
+
+-- #####################################################################
+--  BLOQUE 14 · Vehículos: libro de mantenimiento · Inmuebles: valor automático con el INE (v5.19.0)
+-- #####################################################################
+-- Cada visita al taller de cada vehículo (y cuándo toca la siguiente).
+create table if not exists public.mantenimientos (
+  id             uuid primary key default gen_random_uuid(),
+  vehiculo_id    uuid not null references public.vehiculos(id) on delete cascade,
+  fecha          date not null,
+  tipo           text default 'revision',
+  descripcion    text,
+  km             int,
+  coste          numeric(12,2),
+  taller         text,
+  proxima_fecha  date,
+  proximo_km     int,
+  notas          text,
+  created_at     timestamptz default now()
+);
+create index if not exists mantenimientos_vehiculo_idx on public.mantenimientos(vehiculo_id, fecha desc);
+alter table public.mantenimientos enable row level security;
+drop policy if exists acceso_personal on public.mantenimientos;
+create policy acceso_personal on public.mantenimientos for all to authenticated
+  using (public.es_permitido()) with check (public.es_permitido());
+revoke all on public.mantenimientos from anon;
+grant select, insert, update, delete on public.mantenimientos to authenticated;
+drop trigger if exists trg_historial on public.mantenimientos;
+create trigger trg_historial after insert or update or delete on public.mantenimientos for each row execute function public.registrar_historial();
+
+-- Inmuebles: comunidad autónoma, características y el €/m² de referencia que metes tú.
+-- Cada trimestre la app aplica la variación del Índice de Precios de Vivienda del INE (lo descarga la tarea de GitHub).
+alter table public.inmuebles add column if not exists ccaa            text;
+alter table public.inmuebles add column if not exists caracteristicas jsonb;
+alter table public.inmuebles add column if not exists precio_m2_base  numeric(10,2);
+alter table public.inmuebles add column if not exists fecha_m2_base   date;
+alter table public.inmuebles add column if not exists trimestre_ipv   text;
 notify pgrst, 'reload schema';
 
 
@@ -774,7 +812,7 @@ select 'Tabla ' || t as elemento,
        case when to_regclass('public.' || t) is not null then '✅ OK' else '❌ FALTA' end as estado
 from unnest(array['cuentas','categorias','movimientos','inmuebles','vehiculos','deudas','snapshots','ajustes',
                   'valoraciones','precios_m2','amortizaciones','amortizaciones_plan','aportaciones_periodicas',
-                  'posiciones','seguros','reglas_categoria','patrimonio_mensual','partidas_previstas','metas','precios','historial']) as t
+                  'posiciones','seguros','reglas_categoria','patrimonio_mensual','partidas_previstas','metas','precios','historial','mantenimientos']) as t
 union all
 select 'Columna ' || tb || '.' || col,
        case when exists (select 1 from information_schema.columns
@@ -786,7 +824,8 @@ from (values ('inmuebles','metros_construidos'), ('inmuebles','precio_m2_venta')
              ('movimientos','reembolso_de'), ('movimientos','a_cobrar'),
              ('cuentas','saldo_actualizado'), ('cuentas','valor_actualizado'),
              ('categorias','presupuesto_anual'), ('categorias','gasto_fijo'), ('deudas','base_interes'),
-             ('posiciones','participaciones'), ('posiciones','fecha_participaciones')) as y(tb, col)
+             ('posiciones','participaciones'), ('posiciones','fecha_participaciones'),
+             ('inmuebles','ccaa'), ('inmuebles','precio_m2_base')) as y(tb, col)
 union all
 select 'Usuarios con acceso: ' || coalesce((select string_agg(email, ', ' order by email) from public.usuarios_permitidos), 'ninguno'),
        case when exists (select 1 from public.usuarios_permitidos) then '✅ revisa que sean solo los vuestros' else '❌ VACÍA: añade vuestros emails' end
