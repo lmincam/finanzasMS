@@ -598,6 +598,15 @@ notify pgrst, 'reload schema';
 
 
 -- #####################################################################
+--  BLOQUE 11 · Base de cálculo de intereses de los préstamos (v5.10.2)
+-- #####################################################################
+-- '30/360' = TIN/12 cada mes · 'act/360' y 'act/365' = días reales entre cuotas. La app la ajusta sola
+-- al comparar su estimación con el capital pendiente que copias del banco.
+alter table public.deudas add column if not exists base_interes text;
+notify pgrst, 'reload schema';
+
+
+-- #####################################################################
 --  BLOQUE 5 · Seguridad: solo usuarios con sesión + espacio para copias
 -- #####################################################################
 -- Quita cualquier permiso del rol anónimo en las tablas de la app
@@ -645,7 +654,7 @@ from (values ('inmuebles','metros_construidos'), ('inmuebles','precio_m2_venta')
              ('deudas','categoria_cuota_id'), ('categorias','naturaleza'),
              ('movimientos','reembolso_de'), ('movimientos','a_cobrar'),
              ('cuentas','saldo_actualizado'), ('cuentas','valor_actualizado'),
-             ('categorias','presupuesto_anual'), ('categorias','gasto_fijo')) as y(tb, col)
+             ('categorias','presupuesto_anual'), ('categorias','gasto_fijo'), ('deudas','base_interes')) as y(tb, col)
 union all
 select 'Acceso anónimo bloqueado',
        case when exists (select 1 from pg_roles where rolname = 'anon')

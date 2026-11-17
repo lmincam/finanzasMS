@@ -18,10 +18,30 @@ const FIELDS_DEUDA = [
   { name: 'capital_pendiente', label: 'Capital pendiente (€)', type: 'number', hint: 'Del último recibo / app del banco' }, { name: 'fecha_capital_pendiente', label: 'A fecha de', type: 'date' },
   { name: 'comision_amortizacion', label: 'Comisión amortización anticipada (%)', type: 'number', ph: '0,00', hint: 'Mira tu escritura: suele ser 0 – 2 %', cls: 'v4' },
   { name: 'categoria_cuota_id', label: 'Categoría donde se registra la cuota', type: 'rawselect', html: v => catOpts('gasto', v, '— Automática (Hipoteca para hipotecas) —'), cls: 'v5', hint: 'Sirve para separar cada cuota en intereses (gasto) y capital (ahorro)' },
+  { name: 'base_interes', label: 'Cálculo de intereses del banco', type: 'select', options: [{ v: '', l: 'Automático (lo ajusta la app)' }].concat(Object.entries(BASES_INTERES).map(([v, l]) => ({ v, l }))), cls: 'v9', hint: 'La app lo deduce al actualizar el capital pendiente con el dato del banco' },
   { name: 'activa', label: 'Préstamo activo', type: 'checkbox', def: true }, { name: 'notas', label: 'Notas', type: 'textarea', full: true, ph: 'Revisiones del variable, bonificaciones, seguros vinculados…' }
 ];
 /** Quita los campos que dependen de la migración v4 si aún no se ha ejecutado. */
-const camposV4 = fields => fields.filter(f => !((f.cls || '').includes('v4') && !S.v4) && !((f.cls || '').includes('v5') && !S.v5));
+/** Al copiar el capital pendiente del banco: compara con lo que la app habría calculado con cada base de intereses
+ *  y se queda con la que más se acerca. Devuelve { base, prevista, dif, difAntes } o null si no hay con qué comparar. */
+function calibrarBase(d, nuevo, fecha) {
+  const tiene = d.capital_pendiente !== null && d.capital_pendiente !== undefined && d.capital_pendiente !== '';
+  if (!tiene || !d.fecha_capital_pendiente || fecha <= d.fecha_capital_pendiente) return null;
+  const res = Object.keys(BASES_INTERES).map(b => { const L = ledgerDeuda(d, b, fecha); return { base: b, prevista: L.pendiente, dif: round2(L.pendiente - nuevo), n: L.pagos.length }; });
+  if (!res[0].n) return null;
+  const actual = res.find(r => r.base === (d.base_interes || '30/360')), mejor = [...res].sort((a, b) => Math.abs(a.dif) - Math.abs(b.dif))[0];
+  return { ...mejor, difAntes: actual.dif, cambia: mejor.base !== (d.base_interes || '30/360') && Math.abs(mejor.dif) + 0.5 < Math.abs(actual.dif) };
+}
+async function guardarPendiente(d, v) {
+  const fecha = v.fecha_capital_pendiente || todayISO(), cal = num(v.capital_pendiente) > 0 ? calibrarBase(d, num(v.capital_pendiente), fecha) : null;
+  const row = { ...v, fecha_capital_pendiente: fecha };
+  if (S.v9 && cal && cal.cambia && !v.base_interes) row.base_interes = cal.base;
+  await saveEntity('deudas', d.id, row);
+  if (cal) toast(cal.cambia && row.base_interes
+    ? `La app calculaba ${fmtEUR(num(v.capital_pendiente) + cal.difAntes)} (desfase ${signed(cal.difAntes)}). Tu banco calcula los intereses por ${BASES_INTERES[cal.base].toLowerCase()}: ajustado, con eso el desfase habría sido ${signed(cal.dif)}.`
+    : `La app calculaba un desfase de ${signed(cal.difAntes)} respecto al banco. Corregido.`, 'ok', 8000);
+}
+const camposV4 = fields => fields.filter(f => !((f.cls || '').includes('v4') && !S.v4) && !((f.cls || '').includes('v5') && !S.v5) && !((f.cls || '').includes('v9') && !S.v9));
 const bannerV4 = () => S.v4 ? '' : '<div class="banner amber">Para usar esta función ejecuta <code>sql/03_migracion_v4.sql</code> en Supabase (solo añade tablas y campos, no toca tus datos).</div>';
 const FRECUENCIAS = [{ v: 0, l: 'Una sola vez' }, { v: 1, l: 'Cada mes' }, { v: 3, l: 'Cada trimestre' }, { v: 6, l: 'Cada semestre' }, { v: 12, l: 'Cada año' }];
 const frecLabel = n => (FRECUENCIAS.find(f => f.v === num(n)) || { l: `Cada ${n} meses` }).l;
@@ -86,6 +106,20 @@ function simDefault(d) {
 }
 function extrasSim(sim, modo) { return extrasPauta({ importe: sim.importe, cada: num(sim.cada), desdeYm: sim.desde, hastaYm: sim.hasta || null, modo }); }
 
+/** Cuotas desde el último dato del banco: con qué se calcula el capital pendiente de hoy (para comparar con los recibos). */
+function renderCuotasReales(d) {
+  if (!num(d.interes) && !num(d.cuota_mensual)) return '';
+  const L = ledgerDeuda(d), xs = L.pagos.slice(-12).reverse();
+  const tiene = d.capital_pendiente !== null && d.capital_pendiente !== undefined && d.capital_pendiente !== '';
+  return `<div class="card"><div class="card-head"><div><h3>🧾 Cuotas desde el último dato del banco</h3>
+      <div class="small muted">${tiene ? `Partida: <b>${fmtEUR(d.capital_pendiente)}</b> pendientes a ${fmtDate(d.fecha_capital_pendiente)}` : 'Partida: capital inicial'} · intereses: <b>${BASES_INTERES[L.base] || L.base}</b>${d.base_interes ? '' : ' (por defecto)'}</div></div>
+      <button class="btn sm" data-action="deu-pend" data-id="${d.id}">Comparar con el banco</button></div>
+    ${xs.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Fecha</th><th class="right">Cuota</th><th class="right">Intereses</th><th class="right">Capital</th><th class="right">Pendiente</th><th></th></tr></thead><tbody>
+      ${xs.map(p => `<tr><td>${fmtDate(p.fecha)}</td><td class="right num">${fmtEUR(p.importe)}</td><td class="right num neg">${fmtEUR(p.interes)}</td><td class="right num pos">${fmtEUR(p.capital)}</td><td class="right num"><b>${fmtEUR(p.pendiente)}</b></td>
+        <td>${p.real ? '<span class="badge green" title="Cargo registrado en tus movimientos">real</span>' : '<span class="badge" title="No hay cargo registrado ese mes: se supone la cuota habitual">estimada</span>'}</td></tr>`).join('')}
+    </tbody></table></div>` : '<div class="small muted">Aún no hay cuotas desde el último dato del banco.</div>'}
+    <div class="small muted" style="margin-top:8px">Se usa el importe y la fecha reales de cada cuota que registras (categoría ${esc(catName(categoriaCuota(d)) || 'de la cuota')}). Cuando copies el capital pendiente de un recibo con <b>Comparar con el banco</b>, la app ve cuánto se desviaba y, si el banco calcula los intereses por días, se ajusta sola para que no vuelva a pasar.</div></div>`;
+}
 function renderDeudaDetalle(d) {
   const el = $('#tab-deudas');
   const I = deudaInfo(d), sim = simDefault(d), V = S.deudaVista;
@@ -125,6 +159,8 @@ function renderDeudaDetalle(d) {
       ${kpi('Ahorro por amortizaciones', fmtEUR(ahorroPrev), `Ya conseguido hasta hoy: <b>${fmtEUR(ahorroYa)}</b>`, 'pos')}
     </div>
     ${I.pctAmort !== null ? `<div class="card" style="padding:14px 18px"><div class="small muted" style="margin-bottom:6px">Amortizado <b>${fmtPct(I.pctAmort)}</b> del capital inicial</div>${pctBar(I.pctAmort, 'navy')}</div>` : ''}
+
+    ${renderCuotasReales(d)}
 
     ${I.sched.length ? renderSimulador(d, I, sim) : ''}
 
@@ -282,14 +318,15 @@ Object.assign(Actions, {
   'deu-open': el => { S.deudaSel = el.dataset.id; render(); window.scrollTo({ top: 0 }); },
   'deu-back': () => { S.deudaSel = null; render(); },
   'deu-new': () => openForm({ title: 'Nuevo préstamo', fields: camposV4(FIELDS_DEUDA), values: { tipo: 'prestamo_personal', tipo_interes: 'fijo', activa: true, fecha_capital_pendiente: todayISO() }, onSubmit: v => saveEntity('deudas', null, { ...v, inmueble_id: v.inmueble_id || null }) }),
-  'deu-edit': el => { const d = S.deudas.find(x => x.id === el.dataset.id); openForm({ title: 'Editar préstamo', fields: camposV4(FIELDS_DEUDA), values: d, onSubmit: v => saveEntity('deudas', d.id, { ...v, inmueble_id: v.inmueble_id || null }) }); },
+  'deu-edit': el => { const d = S.deudas.find(x => x.id === el.dataset.id); openForm({ title: 'Editar préstamo', fields: camposV4(FIELDS_DEUDA), values: d, onSubmit: v => { const row = { ...v, inmueble_id: v.inmueble_id || null, ...(S.v9 ? { base_interes: v.base_interes || null } : {}) };
+    return num(v.capital_pendiente) !== num(d.capital_pendiente) || v.fecha_capital_pendiente !== d.fecha_capital_pendiente ? guardarPendiente(d, row) : saveEntity('deudas', d.id, row); } }); },
   'deu-del': async el => { const d = S.deudas.find(x => x.id === el.dataset.id); if (!(await confirmDlg(`¿Eliminar <b>${esc(d.nombre)}</b> con sus amortizaciones y plan?`, 'Eliminar'))) return; await withSaving(null, async () => { await DB.remove('deudas', d.id); await reloadTables('deudas', ...(S.v4 ? ['amortizaciones', 'amortizaciones_plan'] : [])); }, 'Eliminado'); S.deudaSel = null; render(); },
   'deu-pend': el => {
     const d = S.deudas.find(x => x.id === el.dataset.id);
-    openForm({ title: `Capital pendiente · ${d.nombre}`, intro: '<p class="small muted">Copia el capital pendiente del último recibo o de la app del banco. Entre actualizaciones, la app lo estima descontando la parte de capital de cada cuota.</p>',
+    openForm({ title: `Capital pendiente · ${d.nombre}`, intro: '<p class="small muted">Copia el capital pendiente del último recibo o de la app del banco, con la <b>fecha de ese recibo</b>. La app compara con lo que había calculado y ajusta su forma de calcular los intereses para que no se vuelva a desviar.</p>',
       fields: [{ name: 'capital_pendiente', label: 'Capital pendiente (€)', type: 'number', required: true }, { name: 'fecha_capital_pendiente', label: 'A fecha de', type: 'date' }, { name: 'interes', label: 'TIN vigente (%)', type: 'number' }, { name: 'cuota_mensual', label: 'Cuota mensual (€)', type: 'number' }],
       values: { capital_pendiente: deudaInfo(d).pendienteHoy, fecha_capital_pendiente: todayISO(), interes: d.interes, cuota_mensual: d.cuota_mensual },
-      onSubmit: v => saveEntity('deudas', d.id, { ...v, fecha_capital_pendiente: v.fecha_capital_pendiente || todayISO() }) });
+      onSubmit: v => guardarPendiente(d, v) });
   },
   'deu-sim': el => {
     const d = S.deudas.find(x => x.id === el.dataset.id);

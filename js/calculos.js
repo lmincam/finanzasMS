@@ -90,6 +90,54 @@ function amortizar(P, r, cuota, startYm) {
   }
   return out;
 }
+/* ---------- Cuotas reales y capital pendiente ----------
+   El capital pendiente se calcula cuota a cuota a partir del último dato del banco, usando los cargos reales
+   (importe y fecha de cada cuota registrada) y la base de cálculo de intereses del banco:
+   - 30/360: interés mensual = pendiente × TIN / 12 (igual todos los meses)
+   - act/360 y act/365: interés = pendiente × TIN × días entre cuotas / 360 (o 365): varía según los días del mes */
+const BASES_INTERES = { '30/360': 'Mensual fijo (TIN/12)', 'act/360': 'Días reales / 360', 'act/365': 'Días reales / 365' };
+const interesPeriodo = (P, tin, base, desde, hasta) => (base === 'act/360' || base === 'act/365')
+  ? P * tin * Math.max(0, (Date.parse(hasta) - Date.parse(desde)) / 864e5) / (base === 'act/360' ? 360 : 365) : P * tin / 12;
+function cuotaDeuda(d) {
+  const r = num(d.interes) / 100 / 12; let cuota = num(d.cuota_mensual);
+  if (!cuota) {
+    const pagadas = d.fecha_inicio ? Math.max(0, monthsDiff(d.fecha_inicio, todayISO())) : 0, rest = d.plazo_meses ? Math.max(0, num(d.plazo_meses) - pagadas) : 0;
+    const tienePend = d.capital_pendiente !== null && d.capital_pendiente !== undefined && d.capital_pendiente !== '';
+    if (tienePend && rest) cuota = cuotaFrancesa(num(d.capital_pendiente), r, rest);
+    else if (num(d.capital_inicial) > 0 && d.plazo_meses) cuota = cuotaFrancesa(num(d.capital_inicial), r, num(d.plazo_meses));
+  }
+  return cuota;
+}
+/** Cuotas desde el último dato del banco hasta `hasta` (hoy): [{ fecha, importe, interes, capital, pendiente, ids, real }] y el pendiente final. */
+function ledgerDeuda(d, base = d.base_interes || '30/360', hasta = todayISO()) {
+  const key = `L|${d.id}|${base}|${hasta}`;
+  if (_deudaCache.has(key)) return _deudaCache.get(key);
+  const tin = num(d.interes) / 100, cuota = cuotaDeuda(d);
+  const tienePend = d.capital_pendiente !== null && d.capital_pendiente !== undefined && d.capital_pendiente !== '';
+  let P = tienePend ? num(d.capital_pendiente) : num(d.capital_inicial);
+  const f0 = tienePend ? (d.fecha_capital_pendiente || hasta) : (d.fecha_inicio ? addDias(addMonths(ymOf(d.fecha_inicio), -1) + d.fecha_inicio.slice(7), 0) : hasta);
+  const cat = categoriaCuota(d);
+  const todos = cat ? S.movimientos.filter(m => m.tipo === 'gasto' && m.categoria_id === cat && num(m.importe) < 0).sort((a, b) => a.fecha < b.fecha ? -1 : 1) : [];
+  const diaHab = todos.length ? Math.round(median(todos.slice(-12).map(m => +m.fecha.slice(8, 10)))) : +((d.fecha_inicio || f0).slice(8, 10));
+  const diaEn = ym => { const [y, mo] = ym.split('-').map(Number); return `${ym}-${pad(Math.min(diaHab, daysInMonth(y, mo)))}`; };
+  // Desde cuándo corren los intereses de la primera cuota: la última cuota pagada antes del dato del banco
+  const antes = todos.filter(m => m.fecha <= f0).pop();
+  let prev = antes && diasEntre(antes.fecha, f0) <= 40 ? antes.fecha : (diaEn(ymOf(f0)) <= f0 ? diaEn(ymOf(f0)) : diaEn(addMonths(ymOf(f0), -1)));
+  const pagos = [];
+  for (let ym = ymOf(f0); ym <= ymOf(hasta) && P > 0.005; ym = addMonths(ym, 1)) {
+    const reales = todos.filter(m => ymOf(m.fecha) === ym && m.fecha > f0 && m.fecha <= hasta);
+    let fecha, importe, ids = [], real = true;
+    if (reales.length) { fecha = reales[0].fecha; importe = -sum(reales, 'importe'); ids = reales.map(m => m.id); }
+    else { fecha = diaEn(ym); real = false; importe = cuota; if (!(fecha > f0 && fecha <= hasta) || !cuota) continue; }
+    const interes = interesPeriodo(P, tin, base, prev, fecha), capital = Math.max(0, Math.min(P, importe - interes));
+    P -= capital; prev = fecha;
+    pagos.push({ fecha, importe, interes: round2(interes), capital: round2(capital), pendiente: round2(P), ids, real });
+  }
+  const out = { pagos, pendiente: round2(Math.max(0, P)), base };
+  _deudaCache.set(key, out);
+  return out;
+}
+
 function deudaInfo(d) {
   if (_deudaCache.has(d.id)) return _deudaCache.get(d.id);
   const today = todayISO();
@@ -101,15 +149,10 @@ function deudaInfo(d) {
   if (tienePend) { P0 = num(d.capital_pendiente); refDate = d.fecha_capital_pendiente || today; }
   else if (num(d.capital_inicial) > 0 && d.fecha_inicio) { P0 = num(d.capital_inicial); refDate = d.fecha_inicio; }
   else { P0 = num(d.capital_inicial); refDate = today; }
-  let cuota = num(d.cuota_mensual);
-  if (!cuota) {
-    if (tienePend && restContrato) cuota = cuotaFrancesa(P0, r, restContrato);
-    else if (num(d.capital_inicial) > 0 && d.plazo_meses) cuota = cuotaFrancesa(num(d.capital_inicial), r, num(d.plazo_meses));
-  }
+  const cuota = cuotaDeuda(d);
   const meses = Math.max(0, monthsDiff(refDate, today));
-  let P = P0;
-  for (let i = 0; i < meses && P > 0; i++) P = Math.max(0, P - Math.max(0, cuota - P * r));
-  P = round2(P);
+  // Pendiente de hoy: cuota a cuota desde el último dato del banco, con los cargos reales registrados
+  const P = (num(d.interes) > 0 || cuota) ? ledgerDeuda(d).pendiente : round2(P0);
   const sched = amortizar(P, r, cuota, addMonths(ymOf(today), 1));
   const s = sched || [];
   const info = {
@@ -228,12 +271,15 @@ function periodStats(months) {
   for (const m of movs) if (m.tipo === 'gasto' && num(m.importe) < 0) capital += capitalDeMovimiento(m);
   const gastos = gastosCaja - capital;
   // Transferencias: se toma la pata positiva de cada pareja. Si entra en cuenta de inversión/ahorro suma; si vuelve a operativa, resta (retirada).
-  const aport = { liquidez: 0, ahorro: 0, inversion: 0 };
+  // Lo que va a la cuenta de anualidades se separa: es dinero apartado para pagos anuales, no ahorro.
+  const aport = { liquidez: 0, ahorro: 0, inversion: 0, anualidades: 0 }, ca = cuentaAnualidades();
   for (const m of movs) {
     if (m.tipo !== 'transferencia' || num(m.importe) <= 0) continue;
     const st = m.subtipo_transferencia || 'liquidez';
     const c = cuentaById(m.cuenta_id);
-    if (st === 'liquidez') aport.liquidez += num(m.importe);
+    if (ca && m.cuenta_id === ca.id) aport.anualidades += num(m.importe);
+    else if (ca && m.cuenta_contraria_id === ca.id) aport.anualidades -= num(m.importe);
+    else if (st === 'liquidez') aport.liquidez += num(m.importe);
     else aport[st] += (c && (c.tipo === 'inversion' || c.tipo === 'ahorro')) ? num(m.importe) : -num(m.importe);
   }
   // ahorro = capacidad de ahorro LÍQUIDA: lo que entra menos todo lo que sale de las cuentas (la parte de capital de la cuota
@@ -269,8 +315,19 @@ function capitalDeMovimiento(m) {
   const d = S.deudas.find(x => x.activa !== false && categoriaCuota(x) === m.categoria_id);
   if (!d) return 0;
   const I = deudaInfo(d); if (!I.r && !I.cuota) return 0;
+  // Si la cuota está en el cuadro calculado desde el último dato del banco, se usa ese reparto (el mismo que da el pendiente)
+  const e = ledgerDeuda(d).pagos.find(p => p.ids.includes(m.id));
+  if (e) return e.importe ? round2(e.capital * abs / e.importe) : 0;
+  // La cuota que deja el capital en el dato del banco (copiado justo después de pagarla): se deduce hacia atrás
+  const tiene = d.capital_pendiente !== null && d.capital_pendiente !== undefined && d.capital_pendiente !== '';
+  if (tiene && d.fecha_capital_pendiente && m.fecha <= d.fecha_capital_pendiente && diasEntre(m.fecha, d.fecha_capital_pendiente) <= 25) {
+    const base = d.base_interes || '30/360', tin = num(d.interes) / 100;
+    const ant = S.movimientos.filter(x => x.tipo === 'gasto' && x.categoria_id === m.categoria_id && num(x.importe) < 0 && x.fecha < m.fecha).sort((a, b) => a.fecha < b.fecha ? 1 : -1)[0];
+    const rate = interesPeriodo(1, tin, base, ant && diasEntre(ant.fecha, m.fecha) <= 40 ? ant.fecha : addDias(m.fecha, -30), m.fecha);
+    return round2(Math.max(0, Math.min(abs, (abs - num(d.capital_pendiente) * rate) / (1 + rate))));
+  }
   const interes = Math.min(abs, pendienteEnMes(d, ymOf(m.fecha)) * I.r);
-  return Math.max(0, Math.min(abs, I.cuota) - interes);
+  return Math.max(0, abs - interes);
 }
 /** Saldo de una cuenta al final de un día (null si es anterior al saldo de partida). */
 Calc.saldoA = (c, fecha) => fecha < c.fecha_saldo_inicial ? null : round2(num(c.saldo_inicial) + sum(S.movimientos.filter(m => m.cuenta_id === c.id && Calc.posterior(m, c.fecha_saldo_inicial, c.saldo_actualizado) && m.fecha <= fecha), 'importe'));

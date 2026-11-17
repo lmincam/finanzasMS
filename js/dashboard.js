@@ -28,7 +28,8 @@ function renderDashboard() {
   if (S.dashCal) return renderCalendario(el, months);
   const st = periodStats(months);
   const P = Calc.patrimonio();
-  const tasaAh = st.ingresos > 0 ? st.ahorro / st.ingresos : null;
+  // Tasa de ahorro: lo que de verdad has pasado a cuentas de ahorro (neto), no lo que sobra en la cuenta
+  const tasaAh = st.ingresos > 0 ? st.aport.ahorro / st.ingresos : null;
   const tasaInv = st.ingresos > 0 ? st.aport.inversion / st.ingresos : null;
   const nM = months.length;
   const p = S.period;
@@ -79,7 +80,7 @@ function renderDashboard() {
               ${st.capital > 0 ? `<div><span>− Capital de deuda <small>(pasa a patrimonio, no líquido)</small></span><b>${fmtEUR(st.capital)}</b></div>` : ''}
               <div class="tot"><span>= Balance</span><b>${pos ? '+' : ''}${fmtEUR(st.ahorro)}</b></div>
             </div></div>`; })()}
-        ${kpi('Tasa de ahorro <button class="info-btn" data-action="kpi-info" data-k="tasa-ahorro" title="¿De dónde sale este dato?">ⓘ</button>', fmtPct(tasaAh), `Ahorrado: ${fmtEUR(st.ahorro)} de ${fmtEUR(st.ingresos)} ingresados`, 'yellow')}
+        ${kpi('Tasa de ahorro <button class="info-btn" data-action="kpi-info" data-k="tasa-ahorro" title="¿De dónde sale este dato?">ⓘ</button>', fmtPct(tasaAh), `Pasado a ahorro: ${fmtEUR(st.aport.ahorro)}${st.aport.anualidades ? ` · a anualidades: ${fmtEUR(st.aport.anualidades)}` : ''}`, 'yellow')}
         ${kpi('Tasa de inversión <button class="info-btn" data-action="kpi-info" data-k="inversion" title="¿De dónde sale este dato?">ⓘ</button>', fmtPct(tasaInv), `Invertido: ${fmtEUR(st.aport.inversion)} · A reserva: ${fmtEUR(st.aport.ahorro)}`, 'yellow')}
       </div>
       <div class="kpi-hoy">
@@ -109,6 +110,7 @@ function renderDashboard() {
           ${metric('Reajustes de liquidez', fmtEUR(st.aport.liquidez))}
           ${metric('Aportación a ahorro (neta)', fmtEUR(st.aport.ahorro), st.aport.ahorro >= 0 ? 'pos' : 'neg')}
           ${metric('Aportación a inversión (neta)', fmtEUR(st.aport.inversion), st.aport.inversion >= 0 ? 'pos' : 'neg')}
+          ${st.aport.anualidades ? metric('Apartado para anualidades', fmtEUR(st.aport.anualidades)) : ''}
         </div>
         <div class="sub-title">Composición del patrimonio (hoy)</div>
         <div class="brk">${[['Liquidez', P.liquidez, '#0891b2'], ['Inversiones', P.inversiones, '#7c3aed'], ['Inmuebles', P.inmuebles, '#1e3a8a'], ['Vehículos', P.vehiculos, '#ca8a04'], ['Deudas', -P.deudas, '#dc2626']]

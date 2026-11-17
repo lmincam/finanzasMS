@@ -104,6 +104,7 @@ async function loadAll() {
     S.v6 = await DB.tieneColumna('movimientos', 'reembolso_de');
     S.v7 = await DB.tieneColumna('cuentas', 'saldo_actualizado');
     S.v8 = await DB.tieneColumna('categorias', 'presupuesto_anual');
+    S.v9 = await DB.tieneColumna('deudas', 'base_interes');
     tables.forEach((t, i) => { if (t !== 'ajustes') S[t] = res[i]; });
     const regla = res[7].find(r => r.clave === 'regla_nomina');
     if (regla && regla.valor) { S.ajustes.nomina_dias = num(regla.valor.dias) || 5; S.ajustes.nomina_umbral = num(regla.valor.umbral); S.ajustes.mes_nomina = regla.valor.mes_nomina !== false; }

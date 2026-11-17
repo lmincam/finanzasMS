@@ -1,5 +1,12 @@
 # Historial de versiones
 
+## 5.10.2 — 17/11/2026 · Tasa de ahorro real y capital de la hipoteca exacto
+- **Tasa de ahorro**: ahora es lo que pasas de verdad a cuentas de ahorro (neto) ÷ ingresos, no lo que sobra en la cuenta. Lo que va a la cuenta de anualidades se muestra aparte y no cuenta como ahorro.
+- **Capital pendiente de los préstamos**: se calcula cuota a cuota desde el último dato del banco, con el importe y la fecha reales de cada cuota registrada. El capital amortizado del Dashboard y el pendiente salen de la misma cuenta.
+- **Base de cálculo de intereses** (mensual fija, días/360 o días/365). Al copiar el capital pendiente de un recibo con "Comparar con el banco", la app mide su desfase y elige la base que lo hace cuadrar, para no tener que reajustar cada poco.
+- Nueva tabla "🧾 Cuotas desde el último dato del banco" en el detalle del préstamo: intereses, capital y pendiente de cada cuota, real o estimada.
+- Requiere ejecutar `sql/esquema_completo.sql` (bloque 11: `deudas.base_interes`).
+
 ## 5.10.1 — 17/11/2026 · Balance mensual
 - "Capacidad de ahorro" pasa a llamarse **Balance mensual** y ocupa una tarjeta doble bajo Ingresos y Gastos, con la cuenta desglosada (ingresos − gastos operativos − capital de deuda). Verde si es positivo, rojo si es negativo.
 - Debajo, **Tasa de ahorro** (nueva tarjeta, con el mismo diseño que la de inversión) y **Tasa de inversión**. Liquidez y patrimonio van a la derecha en el ordenador, y debajo en el móvil.
