@@ -77,6 +77,6 @@ function renderCalendario(el, months) {
 }
 
 Object.assign(Actions, {
-  'cal-open': () => { S.dashCal = true; render(); window.scrollTo(0, 0); },
+  'cal-open': () => { S.dashCal = true; S.dashDet = null; render(); window.scrollTo(0, 0); },
   'cal-close': () => { S.dashCal = false; render(); }
 });

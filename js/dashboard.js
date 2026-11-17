@@ -24,6 +24,7 @@ function snapshotBanner() {
 function renderDashboard() {
   const el = $('#tab-dashboard');
   const months = periodMonths();
+  if (S.dashDet) return renderDetalle(el, months);
   if (S.dashCal) return renderCalendario(el, months);
   const st = periodStats(months);
   const P = Calc.patrimonio();
@@ -61,14 +62,16 @@ function renderDashboard() {
     </div>
 
     <div class="kpis">
-      ${kpi('Ingresos imputados <button class="info-btn" data-action="kpi-info" data-k="ingresos" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(st.ingresos), nM > 1 ? `Media ${fmtEUR(st.ingresos / nM)}/mes` : 'Del periodo', 'pos')}
-      ${kpi('Gastos operativos <button class="info-btn" data-action="kpi-info" data-k="gastos" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(st.gastos), (nM > 1 ? `Media ${fmtEUR(st.gastos / nM)}/mes · ` : '') + (st.capital > 0 ? `sin transferencias ni <b>${fmtEUR(st.capital)}</b> de capital de deuda` : 'sin transferencias internas'), 'neg')}
-      ${kpi('Capacidad de ahorro <button class="info-btn" data-action="kpi-info" data-k="ahorro" title="¿De dónde sale este dato?">ⓘ</button>', `<span class="${st.ahorro >= 0 ? 'pos' : 'neg'}">${fmtEUR(st.ahorro)}</span>`, `Tasa de ahorro: <b>${fmtPct(tasaAh)}</b>${st.capital > 0 ? ` · incluye ${fmtEUR(st.capital, 0)} amortizados` : ''}`, st.ahorro >= 0 ? 'pos' : 'warn')}
-      ${kpi('Tasa de inversión <button class="info-btn" data-action="kpi-info" data-k="inversion" title="¿De dónde sale este dato?">ⓘ</button>', fmtPct(tasaInv), `Invertido: ${fmtEUR(st.aport.inversion)} · A reserva: ${fmtEUR(st.aport.ahorro)}`, '')}
+      ${kpiLink('ingresos', 'Ingresos <button class="info-btn" data-action="kpi-info" data-k="ingresos" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(st.ingresos), (nM > 1 ? `Media ${fmtEUR(st.ingresos / nM)}/mes · ` : '') + 'sin devoluciones de gastos compartidos', 'pos')}
+      ${kpiLink('gastos', 'Gastos operativos <button class="info-btn" data-action="kpi-info" data-k="gastos" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(st.gastos), (nM > 1 ? `Media ${fmtEUR(st.gastos / nM)}/mes · ` : '') + (st.capital > 0 ? `sin <b>${fmtEUR(st.capital)}</b> de capital amortizado` : 'sin transferencias internas'), 'neg')}
+      ${kpi('Capacidad de ahorro <button class="info-btn" data-action="kpi-info" data-k="ahorro" title="¿De dónde sale este dato?">ⓘ</button>', `<span class="${st.ahorro >= 0 ? '' : 'neg'}">${fmtEUR(st.ahorro)}</span>`, `Líquido, en tus cuentas · tasa <b>${fmtPct(tasaAh)}</b>${st.capital > 0 ? `<br>+ ${fmtEUR(st.capital, 0)} a capital de deuda (no líquido)` : ''}`, 'yellow')}
+      ${kpi('Tasa de inversión <button class="info-btn" data-action="kpi-info" data-k="inversion" title="¿De dónde sale este dato?">ⓘ</button>', fmtPct(tasaInv), `Invertido: ${fmtEUR(st.aport.inversion)} · A reserva: ${fmtEUR(st.aport.ahorro)}`, 'yellow')}
       ${kpi('Patrimonio neto total <button class="info-btn" data-action="kpi-info" data-k="patrimonio" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(P.neto, 0), (() => { const prev = S.patrimonio_mensual.filter(x => x.anio_mes < ymOf(todayISO())).sort((a, b) => a.anio_mes < b.anio_mes ? 1 : -1)[0];
         return prev ? `<span class="${P.neto - num(prev.patrimonio_neto) >= 0 ? 'pos' : 'neg'}"><b>${signed(P.neto - num(prev.patrimonio_neto))}</b></span> vs ${ymLabel(prev.anio_mes, true)}` : `Activos ${fmtEUR(P.activos, 0)} · Deudas ${fmtEUR(P.deudas, 0)}`; })(), 'navy')}
       ${kpi('Liquidez disponible <button class="info-btn" data-action="kpi-info" data-k="liquidez" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(P.liquidez), `Operativa ${fmtEUR(P.operativa, 0)} · Fondo emerg. ${fmtEUR(P.reserva, 0)}`, '')}
     </div>
+
+    ${renderAnioEnCurso(P)}
 
     ${renderAlertas(months, st, P, rows)}
 
@@ -103,7 +106,7 @@ function renderDashboard() {
         { label: 'Ingresos', data: perMonth.map(x => round2(x.ing)), backgroundColor: '#16a34a', borderRadius: 5, order: 2, stack: 'i' },
         { label: 'Gastos operativos', data: perMonth.map(x => round2(x.gas)), backgroundColor: '#dc2626', borderRadius: 5, order: 2, stack: 'g' },
         ...(perMonth.some(x => x.cap > 0) ? [{ label: 'Capital de deuda amortizado', data: perMonth.map(x => round2(x.cap)), backgroundColor: '#fca5a5', borderRadius: 5, order: 2, stack: 'g' }] : []),
-        { type: 'line', label: 'Ahorro', data: perMonth.map(x => round2(x.ah)), borderColor: '#0f1f3a', backgroundColor: '#0f1f3a', tension: .3, pointRadius: 3, order: 1 }
+        { type: 'line', label: 'Ahorro líquido', data: perMonth.map(x => round2(x.ah)), borderColor: '#0f1f3a', backgroundColor: '#0f1f3a', tension: .3, pointRadius: 3, order: 1 }
       ]
     },
     options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { y: { ...euroAxis, stacked: true }, x: { grid: { display: false }, stacked: true } } }

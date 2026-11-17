@@ -110,7 +110,7 @@ function buildAlertas(months, st, P, rows) {
     if (st.ahorro < 0) add('red', '🔻', 'Gastas más de lo que ingresas', `Déficit de <b>${fmtEUR(-st.ahorro)}</b> en el periodo. Revisa primero las categorías con presupuesto superado y los gastos extraordinarios.`, `deficit:${ymKey}`);
     else if (t < 0.1) add('amber', '🐷', `Tasa de ahorro baja: ${fmtPct(t)}`, `Una referencia sana es ahorrar al menos el 15-20 % de los ingresos. Recortar ${fmtEUR(st.ingresos * 0.15 - st.ahorro)} en el periodo te llevaría al 15 %.`, `tasa:${ymKey}`);
   } else if (st.ingresos > 0 && soloMesActual && st.ahorro < 0)
-    add('red', '🔻', 'Este mes ya gastas más de lo que ingresas', `Llevas ${fmtEUR(st.gastos)} de gasto frente a ${fmtEUR(st.ingresos)} de ingresos imputados a este mes (<b>${fmtEUR(st.ahorro)}</b>).`, `deficit:${ymKey}`);
+    add('red', '🔻', 'Este mes ya gastas más de lo que ingresas', `Llevas ${fmtEUR(st.gastosCaja)} de gasto (cuotas de préstamo incluidas) frente a ${fmtEUR(st.ingresos)} de ingresos imputados a este mes (<b>${fmtEUR(st.ahorro)}</b>).`, `deficit:${ymKey}`);
   else if (st.gastos > 0 && !enCurso) add('blue', 'ℹ️', 'Sin ingresos imputados en el periodo', 'Comprueba que las nóminas están imputadas al mes correcto (regla de nómina, botón ⏭ en movimientos).');
 
   // 5) Fondo de emergencia

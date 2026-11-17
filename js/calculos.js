@@ -170,7 +170,9 @@ function periodStats(months) {
     if (st === 'liquidez') aport.liquidez += num(m.importe);
     else aport[st] += (c && (c.tipo === 'inversion' || c.tipo === 'ahorro')) ? num(m.importe) : -num(m.importe);
   }
-  return { movs, ingresos, gastos, gastosCaja, capital, ahorro: ingresos - gastos, ahorroCaja: ingresos - gastosCaja, aport };
+  // ahorro = capacidad de ahorro LÍQUIDA: lo que entra menos todo lo que sale de las cuentas (la parte de capital de la cuota
+  // ya no está en la cuenta: se ha convertido en vivienda). ahorroPatrimonial = ingresos − gastos operativos (incluye ese capital).
+  return { movs, ingresos, gastos, gastosCaja, capital, ahorro: ingresos - gastosCaja, ahorroCaja: ingresos - gastosCaja, ahorroPatrimonial: ingresos - gastos, aport };
 }
 
 /* ---------- Préstamos: separar intereses y capital de las cuotas pagadas ---------- */

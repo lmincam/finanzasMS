@@ -15,23 +15,25 @@ function explicacion(k) {
   const D = {
     ingresos: () => {
       const xs = st.movs.filter(m => m.tipo === 'ingreso').sort((a, b) => num(b.importe) - num(a.importe));
-      return { t: 'Ingresos imputados', h: `<p>Todo lo que ha entrado como <b>ingreso</b> (nómina, Bizum que no son devolución de un gasto, intereses…) cuyo <b>mes de imputación</b> está en ${per}.</p>
+      return { t: 'Ingresos', h: `<p>Todo lo que ha entrado como <b>ingreso</b> (nómina, Bizum que no son devolución de un gasto, intereses…) cuyo <b>mes de imputación</b> está en ${per}. Pulsa la tarjeta para ver la lista completa.</p>
         <p>${nomina}</p><p>No cuentan las transferencias entre tus cuentas ni las devoluciones de gastos compartidos (esas restan del gasto).</p>
         <div class="exp-box">${xs.slice(0, 8).map(m => linea(`${esc(m.concepto || '—')} <span class="muted small">${fmtDate(m.fecha)}${ymOf(m.fecha) !== ymOf(m.mes_imputacion) ? ` → ${ymLabel(ymOf(m.mes_imputacion), true)}` : ''}</span>`, fmtEUR(num(m.importe)))).join('')}
         ${xs.length > 8 ? linea(`<span class="muted">… y ${xs.length - 8} más</span>`, fmtEUR(sum(xs.slice(8), 'importe'))) : ''}${linea('Total ingresos', fmtEUR(st.ingresos), 'tot')}</div>` };
     },
-    gastos: () => ({ t: 'Gastos operativos', h: `<p>Lo que has <b>gastado de verdad</b> en ${per}: todos los movimientos de tipo gasto, quitando la parte de las cuotas de préstamos que es <b>capital</b> (eso no es gasto: reduce tu deuda, es ahorro). La parte de intereses sí es gasto.</p>
+    gastos: () => ({ t: 'Gastos operativos', h: `<p>Lo que has <b>gastado de verdad</b> en ${per} (pulsa la tarjeta para ver la lista): todos los movimientos de tipo gasto, quitando la parte de las cuotas de préstamos que es <b>capital</b> (eso no es gasto: reduce tu deuda, es ahorro). La parte de intereses sí es gasto.</p>
         <p>No incluye transferencias entre tus cuentas (pasar dinero a MyInvestor, a ahorro, a anualidades…). Las devoluciones de gastos compartidos (Bizum de amigos) restan.</p>
         <div class="exp-box">${linea('Todos los cargos de tipo gasto', fmtEUR(st.gastosCaja))}${linea('− Capital de deuda amortizado (cuotas y amortizaciones)', '− ' + fmtEUR(st.capital))}${linea('= Gastos operativos', fmtEUR(st.gastos), 'tot')}
         ${nM > 1 ? linea(`Media por mes (${nM} meses)`, fmtEUR(st.gastos / nM)) : ''}</div>` }),
     ahorro: () => {
-      const inv = st.aport.inversion, res = st.aport.ahorro, resto = round2(st.ahorro - inv - res - st.capital);
-      return { t: 'Capacidad de ahorro', h: `<p>Es lo que te <b>sobra</b> en ${per}: <b>ingresos imputados − gastos operativos</b>. Mide cuánto podrías ahorrar, no cuánto has movido a ahorro.</p>
-        <div class="exp-box">${linea('Ingresos imputados', fmtEUR(st.ingresos))}${linea('− Gastos operativos', '− ' + fmtEUR(st.gastos))}${linea('= Capacidad de ahorro', fmtEUR(st.ahorro), 'tot')}
-        ${st.ingresos > 0 ? linea('Tasa de ahorro (ahorro ÷ ingresos)', fmtPct(st.ahorro / st.ingresos)) : ''}</div>
-        <p><b>¿Dónde ha ido ese dinero?</b></p>
-        <div class="exp-box">${linea('A inversión (neto)', fmtEUR(inv))}${linea('A cuentas de ahorro / fondo de emergencia (neto)', fmtEUR(res))}${linea('A reducir deuda (capital de las cuotas)', fmtEUR(st.capital))}
-        ${linea(resto >= 0 ? 'Se queda en tus cuentas corrientes y efectivo' : 'Has tirado de dinero que ya tenías en las cuentas', fmtEUR(resto), resto >= 0 ? '' : 'neg')}</div>
+      const inv = st.aport.inversion, res = st.aport.ahorro, resto = round2(st.ahorro - inv - res);
+      return { t: 'Capacidad de ahorro', h: `<p>El dinero que te <b>queda en las cuentas</b> en ${per}: <b>ingresos − todo lo que ha salido en gastos</b>, con la cuota del préstamo completa.</p>
+        <p>La parte de capital de la cuota no se resta de los gastos operativos (no es gasto), pero <b>tampoco es dinero que tengas disponible</b>: se ha convertido en vivienda. Por eso aquí no se suma: esto es solo lo líquido.</p>
+        <div class="exp-box">${linea('Ingresos', fmtEUR(st.ingresos))}${linea('− Gastos operativos', '− ' + fmtEUR(st.gastos))}${st.capital > 0 ? linea('− Capital de deuda amortizado (sale de la cuenta)', '− ' + fmtEUR(st.capital)) : ''}${linea('= Capacidad de ahorro líquida', fmtEUR(st.ahorro), 'tot')}
+        ${st.ingresos > 0 ? linea('Tasa de ahorro (ahorro ÷ ingresos)', fmtPct(st.ahorro / st.ingresos)) : ''}
+        ${st.capital > 0 ? linea('Aumento de patrimonio por el trabajo (ahorro + capital amortizado)', fmtEUR(st.ahorro + st.capital)) : ''}</div>
+        <p><b>¿Dónde está ese dinero?</b></p>
+        <div class="exp-box">${linea('Movido a inversión (neto)', fmtEUR(inv))}${linea('Movido a ahorro / anualidades (neto)', fmtEUR(res))}
+        ${linea(resto >= 0 ? 'Sigue en tus cuentas corrientes y efectivo' : 'Has tirado de dinero que ya tenías', fmtEUR(resto), resto >= 0 ? '' : 'neg')}</div>
         <p class="small muted">Con el mes a medias la cifra engaña: la nómina ya está contada y faltan gastos por llegar. Una referencia sana es una tasa de ahorro del 15-20 % o más.</p>` };
     },
     inversion: () => ({ t: 'Tasa de inversión', h: `<p>Qué parte de tus ingresos de ${per} ha ido a <b>cuentas de inversión</b>: <b>aportaciones netas a inversión ÷ ingresos imputados</b>.</p>

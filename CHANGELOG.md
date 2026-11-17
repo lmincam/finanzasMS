@@ -1,5 +1,11 @@
 # Historial de versiones
 
+## 5.9.0 — 17/11/2026 · Dashboard: ahorro líquido, detalle y año en curso
+- **Capacidad de ahorro líquida**: ingresos − todo lo que sale en gastos, con la cuota del préstamo completa. El capital amortizado ya no se suma (no es dinero disponible: es vivienda); se muestra aparte. Gastos operativos sigue sin incluir ese capital. Las alertas de tasa de ahorro y la línea "Ahorro líquido" del gráfico usan el mismo criterio.
+- **Ingresos y Gastos operativos se pueden pulsar**: abren el detalle del periodo con el resumen por categoría (cargos, devoluciones de Bizum y capital desglosados) y la lista de movimientos, que se pueden abrir para corregir.
+- **Año en curso** (debajo de los indicadores, sea cual sea el periodo): ingresos de enero a hoy y aumento de patrimonio del año, con su desglose en ahorro líquido, capital amortizado y revalorización. El patrimonio a 1 de enero sale de la foto de diciembre o del Q4, o lo indicas tú con ✎.
+- Capacidad de ahorro y tasa de inversión en amarillo.
+
 ## 5.8.0 — 17/11/2026 · Anualidades, gastos fijos y explicaciones
 - **Presupuesto anual o mensual** por categoría (🏷️ Categorías). Un pago anual (seguro de 600 €) se reparte solo: 50 €/mes. Las anualidades se comparan con lo gastado en el año, no con el mes del cargo, y no saltan como gasto extraordinario.
 - **Tarjeta 🗓️ Anualidades** en Cuentas: cuánto pasar cada mes a la cuenta de anualidades (suma de 1/12 de cada pago anual), lo que llevas pasado este mes, el saldo apartado, el último y el próximo cargo de cada pago, y aviso si el saldo no alcanza para lo que vence en 3 meses. La cuenta se elige en la tarjeta (por defecto, la que se llama "Anualidades") y su saldo ya no cuenta como fondo de emergencia.

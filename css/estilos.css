@@ -297,3 +297,26 @@ code{background:#f1f5f9;padding:1px 6px;border-radius:5px;font-size:12.5px}
   .bud-tbl td[data-l]::before{content:attr(data-l);display:block;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
   .bud-tbl tr.grp{display:block}.bud-tbl tr.grp td{display:block}
 }
+
+/* ---------- KPI amarillos, KPI pulsables, año en curso y detalle ---------- */
+.kpi.yellow{border-left-color:#eab308;background:linear-gradient(180deg,#fff,#fefce8)}
+.kpi.clickable{cursor:pointer;transition:box-shadow .15s,transform .15s}
+.kpi.clickable:hover{box-shadow:0 4px 16px rgba(15,31,58,.14);transform:translateY(-1px)}
+.kpi-go{font-size:11.5px;color:var(--blue);font-weight:600;margin-top:6px}
+.ytd-sep{display:flex;align-items:center;gap:12px;margin:6px 0 12px;color:var(--slate);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.ytd-sep::before,.ytd-sep::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--line2),transparent)}
+.ytd{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-bottom:18px}
+.ytd .kpi .v{font-size:26px}
+.ytd .kpi .l .mini{margin-left:6px;text-transform:none}
+.det-cats{display:flex;flex-direction:column;gap:8px}
+.det-cat{display:grid;grid-template-columns:auto minmax(110px,1.2fr) 2fr minmax(120px,auto);gap:10px;align-items:center}
+.det-cat .bar{height:8px}
+.det-v{text-align:right}
+.det-mov{display:grid;grid-template-columns:80px 1fr auto;gap:12px;align-items:center;padding:9px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+.det-mov:hover{background:#f8fafc}
+.det-f{font-size:12.5px;color:var(--muted)}
+.det-i{text-align:right;font-weight:600;white-space:nowrap}
+@media (max-width:640px){
+  .det-cat{grid-template-columns:auto 1fr auto}.det-cat .bar{grid-column:2/-1;order:5}
+  .det-mov{grid-template-columns:1fr auto}.det-f{grid-column:1/-1}
+}
