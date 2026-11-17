@@ -36,7 +36,7 @@ function renderDashboard() {
   const p = S.period;
   const modes = [['mes', 'Mes'], ['2m', '2 meses'], ['3m', '3 meses'], ['6m', '6 meses'], ['anio', 'Año'], ['custom', 'Personalizado']];
   // Selector de mes: ‹ [noviembre 2026] ›. El texto es un botón; encima va un <input type=month> invisible que abre el selector nativo.
-  const mesPick = (id, val, txt) => `<label class="mpick"><span>${txt}</span><input type="month" class="mp-input" id="${id}" value="${val}" aria-label="Elegir mes"></label>`;
+  const mesPick = (id, val, txt) => `<button type="button" class="mpick" data-action="mes-pick" data-id="${id}" data-v="${val}" aria-label="Elegir mes"><span>${txt}</span></button>`;
   const inputs = p.mode === 'custom'
     ? `<div class="pin"><span class="small muted">De</span>${mesPick('p-from', p.from, ymLabel(p.from, true))}<span class="small muted">a</span>${mesPick('p-to', p.to, ymLabel(p.to, true))}</div>`
     : `<div class="pin"><button class="btn sm ghost" data-action="period-shift" data-d="-1" aria-label="Anterior">‹</button>${mesPick('p-ref', p.ref, p.mode === 'anio' ? p.ref.slice(0, 4) : ymLabel(p.ref))}<button class="btn sm ghost" data-action="period-shift" data-d="1" aria-label="Siguiente">›</button></div>`;
@@ -214,4 +214,4 @@ Object.assign(Changes, {
 });
 
 // El mes se elige pulsando el texto: en ordenador se abre el calendario nativo (en el móvil lo abre el propio input invisible)
-document.addEventListener('click', e => { const i = e.target.closest('.mp-input'); if (i && i.showPicker) { try { i.showPicker(); } catch (err) { /* sin soporte */ } } });
+Object.assign(Actions, { 'mes-pick': el => selectorMes({ valor: el.dataset.v, titulo: el.dataset.id === 'p-from' ? 'Desde' : el.dataset.id === 'p-to' ? 'Hasta' : 'Elige el mes', onPick: ym => Changes[el.dataset.id]({ value: ym }) }) });

@@ -139,3 +139,24 @@ def test_iconos_de_comercio(app):
     a.page.click('.mv-op[data-action="mov-icono"]'); a.page.wait_for_timeout(150)
     a.page.fill('#ico-letras', 'LV'); a.page.click('.modal [data-guardar]'); a.page.wait_for_timeout(300)
     assert a.page.inner_text(f'.mv[data-id="{ids["Lavadora nueva"]}"] .mv-ico').strip() == 'LV'
+
+
+def test_selector_de_mes(movil):
+    """Movimientos: ‹ mes › con selector propio (sin <input type=month>), incluido "Todos los meses"."""
+    a = movil
+    a.ir('cuentas')
+    assert a.page.locator('#tab-cuentas input[type=month]').count() == 0
+    a.page.click('[data-action="mf-mes-pick"]'); a.page.wait_for_timeout(150)
+    a.page.click('.modal [data-ym="2026-09"]'); a.page.wait_for_timeout(200)
+    assert a.ev('S.movFilter.mes') == '2026-09'
+    a.page.click('[data-action="mf-mes-shift"][data-d="1"]'); a.page.wait_for_timeout(150)
+    assert a.ev('S.movFilter.mes') == '2026-10'
+    a.page.click('[data-action="mf-mes-pick"]'); a.page.wait_for_timeout(150)
+    a.page.click('.modal [data-todos]'); a.page.wait_for_timeout(200)
+    assert a.ev('S.movFilter.mes') == ''
+    assert 'Todos los meses' in a.texto('[data-action="mf-mes-pick"]')
+    # Inicio: el mismo selector
+    a.ir('dashboard')
+    a.page.click('[data-action="mes-pick"]'); a.page.wait_for_timeout(150)
+    a.page.click('.modal [data-ym="2026-08"]'); a.page.wait_for_timeout(200)
+    assert a.ev('S.period.ref') == '2026-08'

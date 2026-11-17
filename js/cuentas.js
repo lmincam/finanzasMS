@@ -51,11 +51,10 @@ function renderCuentas() {
       <div class="card-head mv-head"><h3>Movimientos</h3><div class="btn-row">${chipPendientes()}
         <button class="btn sm" data-action="mov-regla" title="Imputa al mes siguiente los ingresos de los últimos días laborables del mes">⏭ Regla de nómina</button></div></div>
       <div class="mov-filters">
-        <input type="month" id="mf-mes" value="${S.movFilter.mes || ''}" title="Mes (fecha de operación)">
+        <div class="mf-mes"><button class="btn ghost" data-action="mf-mes-shift" data-d="-1" aria-label="Mes anterior" ${S.movFilter.mes ? '' : 'disabled'}>‹</button><button type="button" class="mpick" data-action="mf-mes-pick">${S.movFilter.mes ? ymLabel(S.movFilter.mes) : 'Todos los meses'}</button><button class="btn ghost" data-action="mf-mes-shift" data-d="1" aria-label="Mes siguiente" ${S.movFilter.mes ? '' : 'disabled'}>›</button></div>
         <select id="mf-cuenta">${accOpts(S.movFilter.cuenta, { empty: 'Todas las cuentas', soloActivas: false })}</select>
         <select id="mf-tipo"><option value="">Todos los tipos</option>${Object.entries(TIPO_MOV).map(([k, l]) => `<option value="${k}" ${S.movFilter.tipo === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
         <input class="q" id="mf-q" type="search" placeholder="Buscar concepto…" value="${esc(S.movFilter.q)}">
-        <button class="btn ghost mf-all" data-action="mov-allmonths">Todos los meses</button>
       </div>
       <div id="mov-list"></div>
     </div>`;
@@ -286,6 +285,8 @@ Object.assign(Actions, {
     render();
   },
   'mov-allmonths': () => { S.movFilter.mes = ''; S.movLimit = 150; renderCuentas(); },
+  'mf-mes-pick': () => selectorMes({ valor: S.movFilter.mes, titulo: 'Movimientos de…', todos: true, onPick: ym => { S.movFilter.mes = ym; S.movLimit = 150; renderCuentas(); } }),
+  'mf-mes-shift': el => { if (!S.movFilter.mes) return; S.movFilter.mes = addMonths(S.movFilter.mes, +el.dataset.d); S.movLimit = 150; renderCuentas(); },
   'mov-more': () => { S.movLimit += 300; renderMovList(); }
 });
 

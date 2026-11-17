@@ -811,3 +811,19 @@ body.locked .bottomnav{display:none}
 .mv-ico.con-logo{background:#fff;box-shadow:inset 0 0 0 1px rgba(15,23,42,.08)}
 .mv-ico.con-logo>:not(img){visibility:hidden}
 .mv-ico img{position:absolute;inset:6px;width:calc(100% - 12px);height:calc(100% - 12px);object-fit:contain;border-radius:4px}
+/* Selector de mes propio */
+button.mpick{font:inherit;font-weight:600}
+.mf-mes{display:flex;align-items:center;gap:4px;min-width:0}
+.mf-mes .mpick{flex:1;min-width:0;height:40px;text-transform:none}
+.mf-mes .btn{width:36px;height:40px;padding:0;justify-content:center;flex:none}
+.mov-filters{grid-template-columns:250px 1fr 1fr 2fr}
+.modal.modal-mes{max-width:360px}
+.sm-anio{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sm-anio b{font-size:18px}
+.sm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sm-m{height:44px;border:1px solid var(--line2);border-radius:10px;background:var(--card);color:var(--txt);font:inherit;font-weight:600;text-transform:capitalize;cursor:pointer}
+.sm-m:hover{border-color:var(--ink)}
+.sm-m.hoy{border-color:var(--blue)}
+.sm-m.on{background:var(--navy);border-color:var(--navy);color:#fff}
+@media (max-width:760px){ .mov-filters .mf-mes{grid-column:1/-1} }
+@media (max-width:760px){ .mov-filters{grid-template-columns:repeat(2,minmax(0,1fr))} }

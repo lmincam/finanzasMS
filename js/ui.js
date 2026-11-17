@@ -117,3 +117,28 @@ Object.assign(Actions, {
     const m = modal(`<h3>${esc(x.t)}</h3><div class="exp" style="margin-top:10px"><p>${x.s}</p></div><div class="actions" style="margin-top:12px"><button class="btn primary" data-close>Entendido</button></div>`);
     m.el.querySelector('[data-close]').addEventListener('click', m.close); }
 });
+
+/* ---------- Selector de mes propio (funciona igual en todos los navegadores) ----------
+   selectorMes({ valor: 'AAAA-MM' | '', titulo, todos: true/false, onPick: ym => … })  · ym = '' si se elige "Todos los meses" */
+function selectorMes({ valor = '', titulo = 'Elige el mes', todos = false, onPick }) {
+  const hoy = ymOf(todayISO());
+  let anio = +(valor || hoy).slice(0, 4);
+  const md = modal(`<h3 style="margin-bottom:10px">${esc(titulo)}</h3>
+    <div class="sm-anio"><button class="btn sm ghost" data-y="-1" aria-label="Año anterior">‹</button><b id="sm-anio"></b><button class="btn sm ghost" data-y="1" aria-label="Año siguiente">›</button></div>
+    <div class="sm-grid" id="sm-grid"></div>
+    <div class="actions" style="margin-top:12px">${todos ? '<button class="btn ghost" data-todos>Todos los meses</button>' : ''}<button class="btn ghost" data-hoy>Este mes</button></div>`);
+  md.el.classList.add('modal-mes');
+  const pinta = () => {
+    md.el.querySelector('#sm-anio').textContent = anio;
+    md.el.querySelector('#sm-grid').innerHTML = MESES.map((n, i) => { const ym = `${anio}-${pad(i + 1)}`;
+      return `<button class="sm-m ${ym === valor ? 'on' : ''} ${ym === hoy ? 'hoy' : ''}" data-ym="${ym}">${n.slice(0, 3)}</button>`; }).join('');
+  };
+  md.el.addEventListener('click', e => {
+    const y = e.target.closest('[data-y]'), m = e.target.closest('[data-ym]');
+    if (y) { anio += +y.dataset.y; pinta(); return; }
+    let elegido = null;
+    if (m) elegido = m.dataset.ym; else if (e.target.closest('[data-hoy]')) elegido = hoy; else if (e.target.closest('[data-todos]')) elegido = '';
+    if (elegido !== null) { md.close(); onPick(elegido); }
+  });
+  pinta();
+}

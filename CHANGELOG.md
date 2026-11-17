@@ -1,5 +1,9 @@
 # Historial de versiones
 
+## 5.20.2 — 17/11/2026 · Selector de mes que funciona en todos los navegadores
+- Movimientos: el filtro de mes es ‹ mes › con un selector propio (año y los 12 meses, "Este mes" y "Todos los meses"). Ya no se puede quedar en texto vacío.
+- Inicio: el mes del periodo usa el mismo selector.
+
 ## 5.20.1 — 17/11/2026 · Vuelve el Inicio anterior, con más aire, y logos reales
 - **Inicio**: vuelve el diseño anterior (rejilla de indicadores y "año en curso"), con más espacio entre recuadros y un separador del año más grande y despejado. "Mayores gastos" sigue debajo del presupuesto.
 - **Logos de los comercios**: los comercios conocidos (unos 90 con web: Mercadona, Netflix, Iberdrola, Amazon, Repsol, Renfe…) muestran el icono de su propia web; si no carga, la inicial o el icono genérico. Si el concepto trae una web (p. ej. "NETFLIX.COM"), se usa esa. En ⋯ → "Icono de este comercio" puedes escribir la web de cualquier comercio (p. ej. el bar de tu barrio) para usar su logo.
