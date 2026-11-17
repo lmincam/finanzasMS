@@ -344,3 +344,22 @@ code{background:#f1f5f9;padding:1px 6px;border-radius:5px;font-size:12.5px}
   .mpick{min-width:0;flex:1}
   .per-sel .pin{flex:1;min-width:0}
 }
+
+/* ---------- Indicadores: flujo del periodo (izquierda) y situación de hoy (derecha) ---------- */
+.kpi-zona{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:16px;align-items:stretch}
+.kpi-flujo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.kpi-hoy{display:grid;grid-template-rows:1fr 1fr;gap:12px}
+.kpi-wide{grid-column:1/-1;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.bal-main{flex:1 1 200px}
+.bal-main .v{font-size:30px}
+.bal-calc{flex:1 1 260px;display:flex;flex-direction:column;gap:3px;font-size:13px;color:var(--slate);border-left:1px dashed rgba(15,31,58,.18);padding-left:16px}
+.bal-calc div{display:flex;justify-content:space-between;gap:10px}
+.bal-calc b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.bal-calc small{color:var(--muted);font-size:11px}
+.bal-calc .tot{border-top:1px solid rgba(15,31,58,.15);padding-top:4px;margin-top:2px;color:var(--navy)}
+.kpi.bal-pos{border-left-color:#16a34a;background:linear-gradient(180deg,#fff,#f0fdf4)}
+.kpi.bal-pos .v,.kpi.bal-pos .tot b{color:#15803d}
+.kpi.bal-neg{border-left-color:#dc2626;background:linear-gradient(180deg,#fff,#fef2f2)}
+.kpi.bal-neg .v,.kpi.bal-neg .tot b{color:#b91c1c}
+@media (max-width:900px){ .kpi-zona{grid-template-columns:1fr} .kpi-hoy{grid-template-columns:1fr 1fr;grid-template-rows:auto} }
+@media (max-width:640px){ .bal-calc{border-left:0;padding-left:0;border-top:1px dashed rgba(15,31,58,.18);padding-top:8px} .bal-main .v{font-size:26px} }

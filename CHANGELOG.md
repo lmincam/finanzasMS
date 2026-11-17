@@ -1,5 +1,9 @@
 # Historial de versiones
 
+## 5.10.1 — 17/11/2026 · Balance mensual
+- "Capacidad de ahorro" pasa a llamarse **Balance mensual** y ocupa una tarjeta doble bajo Ingresos y Gastos, con la cuenta desglosada (ingresos − gastos operativos − capital de deuda). Verde si es positivo, rojo si es negativo.
+- Debajo, **Tasa de ahorro** (nueva tarjeta, con el mismo diseño que la de inversión) y **Tasa de inversión**. Liquidez y patrimonio van a la derecha en el ordenador, y debajo en el móvil.
+
 ## 5.10.0 — 17/11/2026 · Mes de nómina
 - Cada "mes" va del día en que cobras la nómina al día antes del siguiente cobro (p. ej. noviembre = 27 oct → 26 nov). Los gastos de después de cobrar cuentan en el mes de esa nómina, así que ingresos y gastos se comparan sobre el mismo tramo y la capacidad de ahorro cuadra.
 - El inicio de cada mes se detecta con la fecha real de la nómina. Mientras no llega la siguiente, el fin se estima con tu día habitual de cobro, y si la nómina se retrasa, el mes sigue abierto hasta que entre.

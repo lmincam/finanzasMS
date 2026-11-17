@@ -26,9 +26,9 @@ function explicacion(k) {
         ${nM > 1 ? linea(`Media por mes (${nM} meses)`, fmtEUR(st.gastos / nM)) : ''}</div>` }),
     ahorro: () => {
       const inv = st.aport.inversion, res = st.aport.ahorro, resto = round2(st.ahorro - inv - res);
-      return { t: 'Capacidad de ahorro', h: `<p>El dinero que te <b>queda en las cuentas</b> en ${per}: <b>ingresos − todo lo que ha salido en gastos</b>, con la cuota del préstamo completa.</p>
+      return { t: 'Balance mensual', h: `<p>El dinero que te ha <b>sobrado (o faltado) en las cuentas</b> en ${per}: verde si sobra, rojo si falta. Es <b>ingresos − todo lo que ha salido en gastos</b>, con la cuota del préstamo completa.</p>
         <p>La parte de capital de la cuota no se resta de los gastos operativos (no es gasto), pero <b>tampoco es dinero que tengas disponible</b>: se ha convertido en vivienda. Por eso aquí no se suma: esto es solo lo líquido.</p>
-        <div class="exp-box">${linea('Ingresos', fmtEUR(st.ingresos))}${linea('− Gastos operativos', '− ' + fmtEUR(st.gastos))}${st.capital > 0 ? linea('− Capital de deuda amortizado (sale de la cuenta)', '− ' + fmtEUR(st.capital)) : ''}${linea('= Capacidad de ahorro líquida', fmtEUR(st.ahorro), 'tot')}
+        <div class="exp-box">${linea('Ingresos', fmtEUR(st.ingresos))}${linea('− Gastos operativos', '− ' + fmtEUR(st.gastos))}${st.capital > 0 ? linea('− Capital de deuda amortizado (sale de la cuenta)', '− ' + fmtEUR(st.capital)) : ''}${linea('= Balance', fmtEUR(st.ahorro), 'tot')}
         ${st.ingresos > 0 ? linea('Tasa de ahorro (ahorro ÷ ingresos)', fmtPct(st.ahorro / st.ingresos)) : ''}
         ${st.capital > 0 ? linea('Aumento de patrimonio por el trabajo (ahorro + capital amortizado)', fmtEUR(st.ahorro + st.capital)) : ''}</div>
         <p><b>¿Dónde está ese dinero?</b></p>
@@ -36,6 +36,9 @@ function explicacion(k) {
         ${linea(resto >= 0 ? 'Sigue en tus cuentas corrientes y efectivo' : 'Has tirado de dinero que ya tenías', fmtEUR(resto), resto >= 0 ? '' : 'neg')}</div>
         <p class="small muted">Con el mes a medias la cifra engaña: la nómina ya está contada y faltan gastos por llegar. Una referencia sana es una tasa de ahorro del 15-20 % o más.</p>` };
     },
+    'tasa-ahorro': () => ({ t: 'Tasa de ahorro', h: `<p>Qué parte de lo que has ingresado en ${per} te ha sobrado: <b>balance ÷ ingresos</b>. Es el balance en porcentaje, para comparar meses aunque cambien los ingresos.</p>
+        <div class="exp-box">${linea('Balance', fmtEUR(st.ahorro))}${linea('÷ Ingresos', fmtEUR(st.ingresos))}${linea('= Tasa de ahorro', st.ingresos > 0 ? fmtPct(st.ahorro / st.ingresos) : '—', 'tot')}</div>
+        <p class="small muted">Referencia: un 15-20 % es una tasa sana; por encima del 30 %, muy buena. No incluye el capital amortizado de la hipoteca, que no es dinero disponible.</p>` }),
     inversion: () => ({ t: 'Tasa de inversión', h: `<p>Qué parte de tus ingresos de ${per} ha ido a <b>cuentas de inversión</b>: <b>aportaciones netas a inversión ÷ ingresos imputados</b>.</p>
         <p>"Neto" son las transferencias que entran en cuentas de inversión menos las retiradas hacia tus cuentas corrientes. No incluye la revalorización de la cartera, solo el dinero que pones tú.</p>
         <div class="exp-box">${linea('Aportado a inversión (neto)', fmtEUR(st.aport.inversion))}${linea('÷ Ingresos imputados', fmtEUR(st.ingresos))}${linea('= Tasa de inversión', st.ingresos > 0 ? fmtPct(st.aport.inversion / st.ingresos) : '—', 'tot')}</div>` }),

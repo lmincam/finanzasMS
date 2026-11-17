@@ -65,14 +65,28 @@ function renderDashboard() {
         : '<span class="small muted">Meses naturales · ingresos según <b>mes de imputación</b> (regla de nómina)</span>'}</div>
     </div>
 
-    <div class="kpis">
-      ${kpiLink('ingresos', 'Ingresos <button class="info-btn" data-action="kpi-info" data-k="ingresos" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(st.ingresos), (nM > 1 ? `Media ${fmtEUR(st.ingresos / nM)}/mes · ` : '') + 'sin devoluciones de gastos compartidos', 'pos')}
-      ${kpiLink('gastos', 'Gastos operativos <button class="info-btn" data-action="kpi-info" data-k="gastos" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(st.gastos), (nM > 1 ? `Media ${fmtEUR(st.gastos / nM)}/mes · ` : '') + (st.capital > 0 ? `sin <b>${fmtEUR(st.capital)}</b> de capital amortizado` : 'sin transferencias internas'), 'neg')}
-      ${kpi('Capacidad de ahorro <button class="info-btn" data-action="kpi-info" data-k="ahorro" title="¿De dónde sale este dato?">ⓘ</button>', `<span class="${st.ahorro >= 0 ? '' : 'neg'}">${fmtEUR(st.ahorro)}</span>`, `Líquido, en tus cuentas · tasa <b>${fmtPct(tasaAh)}</b>${st.capital > 0 ? `<br>+ ${fmtEUR(st.capital, 0)} a capital de deuda (no líquido)` : ''}`, 'yellow')}
-      ${kpi('Tasa de inversión <button class="info-btn" data-action="kpi-info" data-k="inversion" title="¿De dónde sale este dato?">ⓘ</button>', fmtPct(tasaInv), `Invertido: ${fmtEUR(st.aport.inversion)} · A reserva: ${fmtEUR(st.aport.ahorro)}`, 'yellow')}
-      ${kpi('Liquidez disponible <button class="info-btn" data-action="kpi-info" data-k="liquidez" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(P.liquidez), `Operativa ${fmtEUR(P.operativa, 0)} · Fondo emerg. ${fmtEUR(P.reserva, 0)}`, 'sky')}
-      ${kpi('Patrimonio neto total <button class="info-btn" data-action="kpi-info" data-k="patrimonio" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(P.neto, 0), (() => { const prev = S.patrimonio_mensual.filter(x => x.anio_mes < ymOf(todayISO())).sort((a, b) => a.anio_mes < b.anio_mes ? 1 : -1)[0];
+    <div class="kpi-zona">
+      <div class="kpi-flujo">
+        ${kpiLink('ingresos', 'Ingresos <button class="info-btn" data-action="kpi-info" data-k="ingresos" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(st.ingresos), (nM > 1 ? `Media ${fmtEUR(st.ingresos / nM)}/mes · ` : '') + 'sin devoluciones de gastos compartidos', 'pos')}
+        ${kpiLink('gastos', 'Gastos operativos <button class="info-btn" data-action="kpi-info" data-k="gastos" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(st.gastos), (nM > 1 ? `Media ${fmtEUR(st.gastos / nM)}/mes · ` : '') + (st.capital > 0 ? `sin <b>${fmtEUR(st.capital)}</b> de capital amortizado` : 'sin transferencias internas'), 'neg')}
+        ${(() => { const pos = st.ahorro >= 0, tit = nM === 1 ? 'Balance mensual' : `Balance del periodo · ${nM} meses`;
+          return `<div class="kpi kpi-wide ${pos ? 'bal-pos' : 'bal-neg'}">
+            <div class="bal-main"><div class="l">${tit} <button class="info-btn" data-action="kpi-info" data-k="ahorro" title="¿De dónde sale este dato?">ⓘ</button></div><div class="v">${pos ? '+' : ''}${fmtEUR(st.ahorro)}</div>
+              <div class="s">${pos ? 'Te ha sobrado' : 'Te ha faltado'} dinero en las cuentas${nM > 1 ? ` · media ${pos ? '+' : ''}${fmtEUR(st.ahorro / nM)}/mes` : ''}</div></div>
+            <div class="bal-calc">
+              <div><span>Ingresos</span><b>${fmtEUR(st.ingresos)}</b></div>
+              <div><span>− Gastos operativos</span><b>${fmtEUR(st.gastos)}</b></div>
+              ${st.capital > 0 ? `<div><span>− Capital de deuda <small>(pasa a patrimonio, no líquido)</small></span><b>${fmtEUR(st.capital)}</b></div>` : ''}
+              <div class="tot"><span>= Balance</span><b>${pos ? '+' : ''}${fmtEUR(st.ahorro)}</b></div>
+            </div></div>`; })()}
+        ${kpi('Tasa de ahorro <button class="info-btn" data-action="kpi-info" data-k="tasa-ahorro" title="¿De dónde sale este dato?">ⓘ</button>', fmtPct(tasaAh), `Ahorrado: ${fmtEUR(st.ahorro)} de ${fmtEUR(st.ingresos)} ingresados`, 'yellow')}
+        ${kpi('Tasa de inversión <button class="info-btn" data-action="kpi-info" data-k="inversion" title="¿De dónde sale este dato?">ⓘ</button>', fmtPct(tasaInv), `Invertido: ${fmtEUR(st.aport.inversion)} · A reserva: ${fmtEUR(st.aport.ahorro)}`, 'yellow')}
+      </div>
+      <div class="kpi-hoy">
+        ${kpi('Liquidez disponible <button class="info-btn" data-action="kpi-info" data-k="liquidez" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(P.liquidez), `Operativa ${fmtEUR(P.operativa, 0)} · Fondo emerg. ${fmtEUR(P.reserva, 0)}`, 'sky')}
+        ${kpi('Patrimonio neto total <button class="info-btn" data-action="kpi-info" data-k="patrimonio" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(P.neto, 0), (() => { const prev = S.patrimonio_mensual.filter(x => x.anio_mes < ymOf(todayISO())).sort((a, b) => a.anio_mes < b.anio_mes ? 1 : -1)[0];
         return prev ? `<span class="${P.neto - num(prev.patrimonio_neto) >= 0 ? 'pos' : 'neg'}"><b>${signed(P.neto - num(prev.patrimonio_neto))}</b></span> vs ${ymLabel(prev.anio_mes, true)}` : `Activos ${fmtEUR(P.activos, 0)} · Deudas ${fmtEUR(P.deudas, 0)}`; })(), 'sky')}
+      </div>
     </div>
 
     ${renderAnioEnCurso(P)}
