@@ -9,7 +9,8 @@
      3. el de su categoría (Restaurantes → cubiertos, Gasolina → surtidor…);
         si el movimiento no tiene categoría, la de otros movimientos del mismo comercio
      4. uno genérico según el tipo (transferencia, Bizum, ingreso, gasto)
-   Las marcas se representan con su inicial y un color, no con su logotipo.
+   Para los comercios con web conocida se muestra el icono que publica la propia web (favicon),
+   descargado al vuelo; si no carga (sin conexión…), queda la inicial o el icono genérico.
    Depende de: iconos.js, utilidades.js
    ===================================================================== */
 
@@ -47,45 +48,45 @@ Object.assign(ICONOS, {
   swap: '<path d="M4 8h14l-3-3M20 16H6l3 3"/>'
 });
 
-/* Comercios conocidos: [expresión, letras o icono, color de fondo]. Se comprueban en orden. */
+/* Comercios conocidos: [expresión, letras o icono, color de fondo, web]. Se comprueban en orden. */
 const COMERCIOS = [
   // Supermercados
-  [/mercadona/, '@cart', '#0f8a3a'], [/carrefour/, '@cart', '#1e5bc6'], [/\blidl\b/, '@cart', '#0050aa'], [/\baldi\b/, '@cart', '#00205b'],
-  [/supermercados? dia\b|dia retail|\bdia %/, '@cart', '#e30613'], [/eroski/, '@cart', '#d4001a'], [/alcampo|auchan/, '@cart', '#e2001a'], [/\bconsum\b/, '@cart', '#f18a00'],
-  [/coviran|covirán/, '@cart', '#2f8f3b'], [/hipercor/, '@cart', '#1c7a3d'], [/supersol|ahorramas|bm supermercados|gadis|froiz|masymas|\bspar\b|el arbol|mas supermercados/, '@cart', '#2f7d32'],
-  [/el corte ingles|elcorteingles/, 'ECI', '#1c7a3d'],
+  [/mercadona/, '@cart', '#0f8a3a', 'mercadona.es'], [/carrefour/, '@cart', '#1e5bc6', 'carrefour.es'], [/\blidl\b/, '@cart', '#0050aa', 'lidl.es'], [/\baldi\b/, '@cart', '#00205b', 'aldi.es'],
+  [/supermercados? dia\b|dia retail|\bdia %/, '@cart', '#e30613', 'dia.es'], [/eroski/, '@cart', '#d4001a', 'eroski.es'], [/alcampo|auchan/, '@cart', '#e2001a', 'alcampo.es'], [/\bconsum\b/, '@cart', '#f18a00', 'consum.es'],
+  [/coviran|covirán/, '@cart', '#2f8f3b', 'coviran.es'], [/hipercor/, '@cart', '#1c7a3d', 'hipercor.es'], [/supersol|ahorramas|bm supermercados|gadis|froiz|masymas|\bspar\b|el arbol|mas supermercados/, '@cart', '#2f7d32'],
+  [/el corte ingles|elcorteingles/, 'ECI', '#1c7a3d', 'elcorteingles.es'],
   // Plataformas y suscripciones
-  [/netflix/, 'N', '#111111'], [/spotify/, '@music', '#1db954'], [/hbo|\bmax\.com|hbomax/, 'max', '#2f2fbd'], [/disney/, 'D+', '#0e3a7a'],
-  [/prime video|primevideo|amazon prime/, 'P', '#0f79af'], [/youtube/, '@play', '#e62117'], [/dazn/, 'DZ', '#111111'], [/apple\.com|itunes|apple\b/, 'A', '#555555'],
-  [/google|google play/, 'G', '#4285f4'], [/microsoft|xbox/, 'MS', '#107c10'], [/playstation|sony interactive/, 'PS', '#003791'], [/filmin/, 'F', '#d6001c'],
-  [/audible/, '@book', '#f39200'], [/kindle/, '@book', '#232f3e'], [/chatgpt|openai/, 'AI', '#10a37f'], [/claude\.ai|anthropic/, 'AI', '#c96442'],
+  [/netflix/, 'N', '#111111', 'netflix.com'], [/spotify/, '@music', '#1db954', 'spotify.com'], [/hbo|\bmax\.com|hbomax/, 'max', '#2f2fbd', 'max.com'], [/disney/, 'D+', '#0e3a7a', 'disneyplus.com'],
+  [/prime video|primevideo|amazon prime/, 'P', '#0f79af', 'primevideo.com'], [/youtube/, '@play', '#e62117', 'youtube.com'], [/dazn/, 'DZ', '#111111', 'dazn.com'], [/apple\.com|itunes|apple\b/, 'A', '#555555', 'apple.com'],
+  [/google|google play/, 'G', '#4285f4', 'google.com'], [/microsoft|xbox/, 'MS', '#107c10', 'microsoft.com'], [/playstation|sony interactive/, 'PS', '#003791', 'playstation.com'], [/filmin/, 'F', '#d6001c', 'filmin.es'],
+  [/audible/, '@book', '#f39200', 'audible.es'], [/kindle/, '@book', '#232f3e', 'amazon.es'], [/chatgpt|openai/, 'AI', '#10a37f', 'openai.com'], [/claude\.ai|anthropic/, 'AI', '#c96442', 'claude.ai'],
   // Telefonía e internet
-  [/movistar|telefonica/, 'M', '#019df4'], [/vodafone/, 'V', '#e60000'], [/\borange\b/, 'O', '#ff7900'], [/masmovil|más ?movil/, 'm', '#ffd200'],
-  [/\bdigi\b/, 'DG', '#1f5ca8'], [/yoigo/, 'Y', '#7f2b8f'], [/pepephone/, 'PP', '#e5004b'], [/\blowi\b/, 'L', '#3cb371'], [/jazztel/, 'J', '#ffb400'], [/simyo/, 'S', '#ff6b00'], [/\bo2 (fibra|movil)/, 'O2', '#0019a5'],
+  [/movistar|telefonica/, 'M', '#019df4', 'movistar.es'], [/vodafone/, 'V', '#e60000', 'vodafone.es'], [/\borange\b/, 'O', '#ff7900', 'orange.es'], [/masmovil|más ?movil/, 'm', '#ffd200', 'masmovil.es'],
+  [/\bdigi\b/, 'DG', '#1f5ca8', 'digimobil.es'], [/yoigo/, 'Y', '#7f2b8f', 'yoigo.com'], [/pepephone/, 'PP', '#e5004b', 'pepephone.com'], [/\blowi\b/, 'L', '#3cb371', 'lowi.es'], [/jazztel/, 'J', '#ffb400', 'jazztel.com'], [/simyo/, 'S', '#ff6b00', 'simyo.es'], [/\bo2 (fibra|movil)/, 'O2', '#0019a5'],
   // Energía y agua
-  [/iberdrola|curenergia/, '@bolt', '#00a443'], [/endesa/, '@bolt', '#0072ce'], [/naturgy|gas natural/, '@flame', '#004571'], [/totalenergies|holaluz|octopus|repsol luz/, '@bolt', '#e95f00'],
-  [/emasagra|aguas de|canal de isabel|aqualia|emasesa|hidralia/, '@drop', '#0b82c4'],
+  [/iberdrola|curenergia/, '@bolt', '#00a443', 'iberdrola.es'], [/endesa/, '@bolt', '#0072ce', 'endesa.com'], [/naturgy|gas natural/, '@flame', '#004571', 'naturgy.es'], [/totalenergies|holaluz|octopus|repsol luz/, '@bolt', '#e95f00', 'totalenergies.es'],
+  [/emasagra|aguas de|canal de isabel|aqualia|emasesa|hidralia/, '@drop', '#0b82c4', 'emasagra.es'],
   // Gasolineras
-  [/repsol/, '@fuel', '#ff8200'], [/cepsa|moeve/, '@fuel', '#d8262e'], [/\bbp\b|bp oil/, '@fuel', '#009900'], [/shell/, '@fuel', '#e30613'], [/galp/, '@fuel', '#ff6600'],
-  [/ballenoil|plenoil|petroprix|petronor|\bavia\b|carrefour gas|gasolinera|estacion de servicio|e\.s\./, '@fuel', '#475569'],
+  [/repsol/, '@fuel', '#ff8200'], [/cepsa|moeve/, '@fuel', '#d8262e', 'moeve.es'], [/\bbp\b|bp oil/, '@fuel', '#009900', 'bp.com'], [/shell/, '@fuel', '#e30613', 'shell.es'], [/galp/, '@fuel', '#ff6600', 'galp.com'],
+  [/ballenoil|plenoil|petroprix|petronor|\bavia\b|carrefour gas|gasolinera|estacion de servicio|e\.s\./, '@fuel', '#475569', 'ballenoil.es'],
   // Tiendas
-  [/amazon|amzn/, 'a', '#232f3e'], [/aliexpress/, 'AE', '#e62e04'], [/\bzara\b/, 'Z', '#111111'], [/primark/, 'P', '#0095d9'], [/decathlon/, 'D', '#0082c3'],
-  [/ikea/, 'IK', '#0058a3'], [/leroy merlin/, '@tool', '#78be20'], [/bricomart|bricodepot|brico/, '@tool', '#f39200'], [/media ?markt/, 'MM', '#df0000'],
-  [/\bmango\b/, 'M', '#111111'], [/lefties/, 'L', '#e4002b'], [/pull ?& ?bear|bershka|stradivarius|massimo dutti|h&m|hm\b/, '@shirt', '#333333'], [/\baction\b/, 'A', '#003f8c'],
-  [/fnac/, 'F', '#e1a925'], [/pccomponentes/, 'PC', '#ff6000'], [/tiendanimal|kiwoko/, '@paw', '#e7542a'], [/druni|primor|sephora|douglas/, '@bag', '#8e2a76'],
+  [/amazon|amzn/, 'a', '#232f3e', 'amazon.es'], [/aliexpress/, 'AE', '#e62e04', 'aliexpress.com'], [/\bzara\b/, 'Z', '#111111', 'zara.com'], [/primark/, 'P', '#0095d9', 'primark.com'], [/decathlon/, 'D', '#0082c3', 'decathlon.es'],
+  [/ikea/, 'IK', '#0058a3', 'ikea.com'], [/leroy merlin/, '@tool', '#78be20', 'leroymerlin.es'], [/bricomart|bricodepot|brico/, '@tool', '#f39200', 'bricomart.es'], [/media ?markt/, 'MM', '#df0000', 'mediamarkt.es'],
+  [/\bmango\b/, 'M', '#111111', 'mango.com'], [/lefties/, 'L', '#e4002b', 'lefties.com'], [/pull ?& ?bear|bershka|stradivarius|massimo dutti|h&m|hm\b/, '@shirt', '#333333'], [/\baction\b/, 'A', '#003f8c', 'action.com'],
+  [/fnac/, 'F', '#e1a925', 'fnac.es'], [/pccomponentes/, 'PC', '#ff6000', 'pccomponentes.com'], [/tiendanimal|kiwoko/, '@paw', '#e7542a', 'tiendanimal.es'], [/druni|primor|sephora|douglas/, '@bag', '#8e2a76', 'druni.es'],
   // Comer fuera y reparto
-  [/mcdonald/, 'M', '#da291c'], [/burger king/, 'BK', '#d62300'], [/telepizza/, '@fork', '#e30613'], [/domino/, 'D', '#006491'], [/starbucks/, '@cup', '#00704a'],
-  [/glovo/, 'G', '#ffc244'], [/just ?eat/, 'JE', '#ff8000'], [/uber ?eats/, 'UE', '#06c167'], [/kfc/, 'KFC', '#a3080c'], [/100 montaditos|tgb|goiko|vips|foster/, '@fork', '#8a4b2a'],
+  [/mcdonald/, 'M', '#da291c', 'mcdonalds.es'], [/burger king/, 'BK', '#d62300', 'burgerking.es'], [/telepizza/, '@fork', '#e30613', 'telepizza.es'], [/domino/, 'D', '#006491', 'dominospizza.es'], [/starbucks/, '@cup', '#00704a', 'starbucks.es'],
+  [/glovo/, 'G', '#ffc244', 'glovoapp.com'], [/just ?eat/, 'JE', '#ff8000', 'just-eat.es'], [/uber ?eats/, 'UE', '#06c167', 'ubereats.com'], [/kfc/, 'KFC', '#a3080c', 'kfc.es'], [/100 montaditos|tgb|goiko|vips|foster/, '@fork', '#8a4b2a'],
   // Transporte y viajes
-  [/\buber\b(?! ?eats)/, 'U', '#000000'], [/cabify/, 'C', '#7145d6'], [/renfe/, '@train', '#702082'], [/\balsa\b/, '@bus', '#1d4e9e'], [/ryanair/, '@plane', '#073590'],
-  [/vueling/, '@plane', '#ffcc00'], [/iberia/, '@plane', '#d7192d'], [/booking/, 'B', '#003580'], [/airbnb/, 'A', '#ff5a5f'], [/blablacar/, 'BB', '#00aff5'],
+  [/\buber\b(?! ?eats)/, 'U', '#000000', 'uber.com'], [/cabify/, 'C', '#7145d6', 'cabify.com'], [/renfe/, '@train', '#702082', 'renfe.com'], [/\balsa\b/, '@bus', '#1d4e9e', 'alsa.es'], [/ryanair/, '@plane', '#073590', 'ryanair.com'],
+  [/vueling/, '@plane', '#ffcc00', 'vueling.com'], [/iberia/, '@plane', '#d7192d', 'iberia.com'], [/booking/, 'B', '#003580', 'booking.com'], [/airbnb/, 'A', '#ff5a5f', 'airbnb.es'], [/blablacar/, 'BB', '#00aff5', 'blablacar.es'],
   [/parking|aparcamiento|empark|\bsaba\b|\bora\b|telpark/, '@parking', '#1e5bc6'], [/autopista|peaje|via-t|viat/, '@car', '#555555'], [/\bitv\b/, '@doc', '#475569'],
   // Salud, deporte, seguros
   [/farmacia|parafarmacia/, '@pill', '#00a650'], [/altafit|basic-?fit|mcfit|holmes place|vivagym|anytime fitness|gimnasio|\bgym\b|dreamfit|go fit/, '@dumbbell', '#e4572e'],
-  [/sanitas|adeslas|dkv|asisa|mapfre salud/, '@heart', '#0072bc'], [/mapfre|mutua|linea directa|allianz|axa\b|generali|reale|zurich|pelayo|santalucia|ocaso/, '@shield', '#c4161c'],
+  [/sanitas|adeslas|dkv|asisa|mapfre salud/, '@heart', '#0072bc', 'sanitas.es'], [/mapfre|mutua|linea directa|allianz|axa\b|generali|reale|zurich|pelayo|santalucia|ocaso/, '@shield', '#c4161c'],
   [/clinica|dentist|optica|hospital|fisioterap/, '@heart', '#0ea5e9'],
   // Dinero, administraciones
-  [/bizum/, '@swap', '#0f766e'], [/hacienda|aeat|agencia tributaria/, '@doc', '#7a1f1f'], [/\bdgt\b|trafico/, '@doc', '#334155'], [/ayuntamiento|\bibi\b|seguridad social|tgss/, '@doc', '#334155'],
+  [/bizum/, '@swap', '#0f766e', 'bizum.es'], [/hacienda|aeat|agencia tributaria/, '@doc', '#7a1f1f', 'agenciatributaria.gob.es'], [/\bdgt\b|trafico/, '@doc', '#334155', 'dgt.es'], [/ayuntamiento|\bibi\b|seguridad social|tgss/, '@doc', '#334155'],
   [/nomina|nómina/, '@coin', '#15803d'], [/cajero|reintegro|atm\b/, '@coin', '#64748b'],
   [/peluquer|barber/, '@scissors', '#a855f7'], [/colegio|guarderia|academia|universidad|escuela/, '@school', '#2563eb'], [/veterinari/, '@paw', '#e7542a']
 ];
@@ -125,15 +126,20 @@ function categoriaHabitual(clave) {
   }
   return _catComercio.get(clave) || null;
 }
-const pastilla = (contenido, color, cls = '') => `<span class="mv-ico ${cls}" style="--ic:${esc(color)}">${contenido}</span>`;
+const pastilla = (contenido, color, cls = '', web = null) => `<span class="mv-ico ${cls}${web ? ' con-logo' : ''}" style="--ic:${esc(color)}">${contenido}${web ? `<img src="${urlLogo(web)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.remove('con-logo');this.remove()">` : ''}</span>`;
+/** Icono que publica la web del comercio (servicio de favicons de Google, 64 px). */
+const urlLogo = web => `https://www.google.com/s2/favicons?sz=64&domain=${encodeURIComponent(String(web).replace(/^https?:\/\//, '').replace(/\/.*$/, ''))}`;
+/** Web que aparece escrita en el propio concepto (p. ej. "NETFLIX.COM", "WWW.PCCOMPONENTES.COM"). */
+const webEnConcepto = txt => { const m = normText(txt || '').match(/\b([a-z0-9-]{3,}\.(?:com|es|net|org|eu|io|tv|app))\b/); return m ? m[1] : null; };
 const letras = t => `<b>${esc(t)}</b>`;
 /** Icono (HTML) de un movimiento. */
 function iconoMovimiento(m) {
   const isT = m.tipo === 'transferencia', imp = num(m.importe);
   const k = claveComercio(m.concepto), propio = k && iconosComercio()[k];
-  if (propio) return propio.l ? pastilla(letras(propio.l), propio.c || '#475569') : pastilla(icono(propio.i), propio.c || '#475569');
-  const cc = comercioConocido(`${m.concepto || ''} ${m.notas || ''}`);
-  if (cc) return cc[1].startsWith('@') ? pastilla(icono(cc[1].slice(1)), cc[2]) : pastilla(letras(cc[1] || '•'), cc[2]);
+  if (propio) return propio.l ? pastilla(letras(propio.l), propio.c || '#475569', '', propio.w) : pastilla(icono(propio.i || 'tag'), propio.c || '#475569', '', propio.w);
+  const cc = comercioConocido(`${m.concepto || ''} ${m.notas || ''}`), web = (cc && cc[3]) || webEnConcepto(m.concepto);
+  if (cc) return cc[1].startsWith('@') ? pastilla(icono(cc[1].slice(1)), cc[2], '', web) : pastilla(letras(cc[1] || '•'), cc[2], '', web);
+  if (web) return pastilla(letras(web[0].toUpperCase()), '#475569', '', web);
   if (isT) return pastilla(icono('swap'), '#64748b', 'suave');
   const cat = m.categoria_id || categoriaHabitual(k), c = catById(cat), r = c ? rootOf(c) : null;
   const color = (c && c.color) || (r && r.color) || (imp >= 0 ? '#16a34a' : '#94a3b8');
@@ -147,14 +153,14 @@ const ICONOS_ELEGIBLES = ['cart', 'fork', 'cup', 'beer', 'fuel', 'car', 'parking
 const COLORES_ICONO = ['#0f8a3a', '#16a34a', '#0ea5e9', '#1e5bc6', '#7c3aed', '#c026d3', '#e11d48', '#dc2626', '#ea580c', '#f59e0b', '#475569', '#111111'];
 function elegirIconoComercio(m) {
   const k = claveComercio(m.concepto); if (!k) { toast('No reconozco el comercio de este movimiento', 'warn'); return; }
-  const actual = iconosComercio()[k] || {}; let sel = { i: actual.i || null, l: actual.l || '', c: actual.c || '#475569' };
+  const actual = iconosComercio()[k] || {}; let sel = { i: actual.i || null, l: actual.l || '', c: actual.c || '#475569', w: actual.w || '' };
   const md = modal(`<h3>Icono de "${esc(k)}"</h3><p class="small muted" style="margin-top:0">Se usará en todos los movimientos de este comercio.</p>
     <div class="ico-prev" id="ico-prev"></div>
     <div class="ico-grid">${ICONOS_ELEGIBLES.map(n => `<button type="button" class="ico-op" data-i="${n}" title="${n}">${icono(n)}</button>`).join('')}</div>
-    <div class="form-grid" style="margin-top:12px"><div><label>O unas letras (máx. 3)</label><input id="ico-letras" maxlength="3" value="${esc(sel.l)}" placeholder="Ej. N"></div>
+    <div class="form-grid" style="margin-top:12px"><div class="full"><label>Web del comercio (para usar su logo)</label><input id="ico-web" value="${esc(sel.w)}" placeholder="Ej. barpepe.es"></div><div><label>O unas letras (máx. 3)</label><input id="ico-letras" maxlength="3" value="${esc(sel.l)}" placeholder="Ej. N"></div>
       <div><label>Color</label><div class="ico-cols">${COLORES_ICONO.map(c => `<button type="button" class="ico-col" data-c="${c}" style="background:${c}"></button>`).join('')}</div></div></div>
     <div class="actions" style="margin-top:14px">${actual.i || actual.l ? '<button class="btn ghost" data-quitar>Quitar el mío</button>' : ''}<button class="btn ghost" data-close>Cancelar</button><button class="btn primary" data-guardar>Guardar</button></div>`);
-  const prev = () => { md.el.querySelector('#ico-prev').innerHTML = (sel.l ? pastilla(letras(sel.l), sel.c) : sel.i ? pastilla(icono(sel.i), sel.c) : iconoMovimiento(m)) + `<span>${esc(m.concepto || '')}</span>`;
+  const prev = () => { md.el.querySelector('#ico-prev').innerHTML = (sel.l ? pastilla(letras(sel.l), sel.c, '', sel.w) : sel.i || sel.w ? pastilla(icono(sel.i || 'tag'), sel.c, '', sel.w) : iconoMovimiento(m)) + `<span>${esc(m.concepto || '')}</span>`;
     md.el.querySelectorAll('.ico-op').forEach(b => b.classList.toggle('on', !sel.l && b.dataset.i === sel.i)); md.el.querySelectorAll('.ico-col').forEach(b => b.classList.toggle('on', b.dataset.c === sel.c)); };
   md.el.addEventListener('click', async e => {
     const op = e.target.closest('.ico-op'), col = e.target.closest('.ico-col');
@@ -163,7 +169,7 @@ function elegirIconoComercio(m) {
     if (e.target.closest('[data-close]')) md.close();
     if (e.target.closest('[data-guardar]') || e.target.closest('[data-quitar]')) {
       const mapa = { ...iconosComercio() };
-      if (e.target.closest('[data-quitar]')) delete mapa[k]; else { if (!sel.i && !sel.l) { toast('Elige un icono o escribe unas letras', 'warn'); return; } mapa[k] = sel.l ? { l: sel.l, c: sel.c } : { i: sel.i, c: sel.c }; }
+      if (e.target.closest('[data-quitar]')) delete mapa[k]; else { if (!sel.i && !sel.l && !sel.w) { toast('Elige un icono, escribe unas letras o la web', 'warn'); return; } mapa[k] = { ...(sel.l ? { l: sel.l } : { i: sel.i || 'tag' }), c: sel.c, ...(sel.w ? { w: sel.w } : {}) }; }
       const r = await withSaving(null, async () => {
         await DB.upsert('ajustes', { clave: 'iconos_comercio', valor: mapa, updated_at: new Date().toISOString() }, 'clave');
         const row = (S.ajustesRows = S.ajustesRows || []).find(x => x.clave === 'iconos_comercio'); if (row) row.valor = mapa; else S.ajustesRows.push({ clave: 'iconos_comercio', valor: mapa });
@@ -172,6 +178,7 @@ function elegirIconoComercio(m) {
     }
   });
   md.el.querySelector('#ico-letras').addEventListener('input', e => { sel.l = e.target.value.trim().slice(0, 3); prev(); });
+  md.el.querySelector('#ico-web').addEventListener('change', e => { sel.w = e.target.value.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, ''); prev(); });
   prev();
 }
 Object.assign(Actions, { 'mov-icono': el => { const m = S.movimientos.find(x => x.id === el.dataset.id); if (m) elegirIconoComercio(m); } });

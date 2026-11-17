@@ -1,5 +1,9 @@
 # Historial de versiones
 
+## 5.20.1 — 17/11/2026 · Vuelve el Inicio anterior, con más aire, y logos reales
+- **Inicio**: vuelve el diseño anterior (rejilla de indicadores y "año en curso"), con más espacio entre recuadros y un separador del año más grande y despejado. "Mayores gastos" sigue debajo del presupuesto.
+- **Logos de los comercios**: los comercios conocidos (unos 90 con web: Mercadona, Netflix, Iberdrola, Amazon, Repsol, Renfe…) muestran el icono de su propia web; si no carga, la inicial o el icono genérico. Si el concepto trae una web (p. ej. "NETFLIX.COM"), se usa esa. En ⋯ → "Icono de este comercio" puedes escribir la web de cualquier comercio (p. ej. el bar de tu barrio) para usar su logo.
+
 ## 5.20.0 — 17/11/2026 · Inicio más tranquilo, iconos de comercios y Ajustes ordenados
 - **Inicio**: la misma información en dos tarjetas en lugar de nueve recuadros. Arriba el periodo (Ingresos · Gastos · Balance con su cuenta y las tasas de ahorro e inversión); debajo la situación (Liquidez · Patrimonio neto · Ingresos del año · Patrimonio en el año). Importes sin céntimos en los indicadores.
 - **Mayores gastos** debajo del presupuesto también en el ordenador, con el icono de cada comercio.
