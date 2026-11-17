@@ -1,5 +1,11 @@
 # Historial de versiones
 
+## 5.16.0 — 17/11/2026 · Historial de cambios y pruebas automáticas
+- **Historial de cambios** (bloque 13 del SQL): la base de datos anota cada alta, cambio o borrado con quién lo hizo y qué campos cambiaron, de forma que no se puede saltar desde la app. No anota la valoración automática diaria de las inversiones ni ajustes internos. Se guarda 2 años.
+- ⚙️ Ajustes → **🕘 Historial de cambios**, en lenguaje normal (p. ej. "Tú cambiaste movimiento Mercadona · −120,50 €: categoría Alimentación → Supermercado"), con filtros por tipo y por persona. En el menú ⋯ de cada movimiento: "Ver historial de cambios".
+- **Pruebas automáticas** en `tests/` (23 pruebas): sintaxis y versiones; todas las pantallas en ordenador y móvil; cálculos clave (mes de nómina, balance, hipoteca, participaciones, anualidades); flujos (conciliar, calendario, cierre de mes, menú, historial, usuario sin acceso); tarea de precios; y SQL en PostgreSQL real.
+- Nuevo flujo `.github/workflows/pruebas.yml`: ejecuta las pruebas en cada cambio y solo publica la web si todas pasan.
+
 ## 5.15.0 — 17/11/2026 · Menos ruido
 - **Dashboard**: los indicadores muestran solo el dato, más grande; las explicaciones van en ⓘ. Ingresos y Gastos llevan una flecha › para ver los movimientos. El balance mantiene su cuenta en una línea por concepto. El rango del mes de nómina va en una sola línea (📅 27/10 – 26/11).
 - Fuera: la tarjeta de movimientos internos y la composición del patrimonio (están en los ⓘ y en sus pestañas), los subtítulos y notas al pie de gráficos, presupuesto y avisos. "Mayores gastos" muestra los 5 primeros y se pueden abrir.

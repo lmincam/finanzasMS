@@ -22,6 +22,7 @@ function renderAjustes() {
     </div>
     ${renderAppCard()}
     ${renderAccesosCard()}
+    ${renderHistorialCard()}
     ${renderCopiasCard()}
     <div class="grid-2e">
       <div class="card"><div class="card-head"><h3>⏭ Regla de desfase de nómina</h3></div>

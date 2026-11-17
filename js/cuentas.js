@@ -104,6 +104,7 @@ function abrirMenuMov(m) {
   if (S.v6 && m.tipo === 'gasto' && imp < 0 && !m.reembolso_de) ops.push(op('mov-compartir', '👥', 'Gasto compartido (cuánto te deben)'));
   if (S.v6 && imp > 0 && m.tipo !== 'transferencia' && !m.reembolso_de) ops.push(op('mov-reembolso', '↩', 'Es la devolución de un gasto (Bizum…)'));
   if (S.v6 && m.reembolso_de) ops.push(op('mov-desvincular', '⛓', 'Quitar vínculo con el gasto'));
+  ops.push(op('mov-hist', '🕘', 'Ver historial de cambios'));
   ops.push(op('mov-del', '🗑', 'Eliminar'));
   const md = modal(`<h3 style="margin-bottom:4px">${esc(m.concepto || 'Movimiento')}</h3><div class="small muted" style="margin-bottom:12px">${fmtDate(m.fecha)} · <b class="${imp >= 0 ? 'pos' : 'neg'}">${signed(imp)}</b></div><div class="mv-ops">${ops.join('')}</div>`);
   md.el.addEventListener('click', e => { if (e.target.closest('.mv-op')) md.close(); });

@@ -670,6 +670,74 @@ notify pgrst, 'reload schema';
 
 
 -- #####################################################################
+--  BLOQUE 13 · Historial de cambios (v5.16.0)
+-- #####################################################################
+-- Cada alta, cambio o borrado queda anotado con quién lo hizo y qué cambió (solo los campos modificados).
+-- Lo rellena la propia base de datos (no se puede saltar desde la app). Se guarda 2 años.
+create table if not exists public.historial (
+  id           bigserial primary key,
+  fecha        timestamptz not null default now(),
+  usuario      text,
+  tabla        text not null,
+  registro_id  text,
+  accion       text not null,          -- alta, cambio, borrado
+  antes        jsonb,
+  despues      jsonb
+);
+create index if not exists historial_fecha_idx on public.historial(fecha desc);
+create index if not exists historial_registro_idx on public.historial(tabla, registro_id);
+
+create or replace function public.registrar_historial() returns trigger
+  language plpgsql security definer set search_path = public as $$
+declare
+  u text; o jsonb; n jsonb; a jsonb; d jsonb; rid text;
+  ignorar text[] := array['updated_at','created_at'];
+begin
+  begin u := nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'email'; exception when others then u := null; end;
+  u := coalesce(u, 'sistema');
+  o := case when tg_op <> 'INSERT' then to_jsonb(old) end;
+  n := case when tg_op <> 'DELETE' then to_jsonb(new) end;
+  -- Ajustes internos que cambian solos (estado de la descarga de precios, mapa de tickers): no se anotan
+  if tg_table_name = 'ajustes' and coalesce(n ->> 'clave', o ->> 'clave') in ('precios_estado', 'tickers_isin') then return coalesce(new, old); end if;
+  if tg_op = 'UPDATE' then
+    select jsonb_object_agg(key, value) into a from jsonb_each(o) where not (key = any(ignorar)) and (n -> key) is distinct from value;
+    select jsonb_object_agg(key, value) into d from jsonb_each(n) where not (key = any(ignorar)) and (o -> key) is distinct from value;
+    if d is null then return new; end if;
+    -- La valoración automática diaria de las inversiones no se anota (sería ruido)
+    if tg_table_name = 'cuentas' and (select bool_and(k in ('valor_mercado','fecha_valor_mercado','valor_actualizado')) from jsonb_object_keys(d) k) then return new; end if;
+  elsif tg_op = 'INSERT' then d := n - ignorar;
+  else a := o - ignorar;
+  end if;
+  rid := coalesce(n ->> 'id', o ->> 'id', n ->> 'clave', o ->> 'clave', n ->> 'email', o ->> 'email');
+  insert into public.historial (usuario, tabla, registro_id, accion, antes, despues)
+    values (u, tg_table_name, rid, case tg_op when 'INSERT' then 'alta' when 'UPDATE' then 'cambio' else 'borrado' end, a, d);
+  if random() < 0.01 then delete from public.historial where fecha < now() - interval '2 years'; end if;
+  return coalesce(new, old);
+end $$;
+revoke all on function public.registrar_historial() from public, anon, authenticated;
+
+do $$
+declare t text;
+begin
+  foreach t in array array['cuentas','categorias','movimientos','inmuebles','vehiculos','deudas','snapshots','ajustes',
+                           'amortizaciones','amortizaciones_plan','aportaciones_periodicas','posiciones','seguros',
+                           'reglas_categoria','partidas_previstas','metas','usuarios_permitidos','precios_m2'] loop
+    if to_regclass('public.' || t) is not null then
+      execute format('drop trigger if exists trg_historial on public.%I', t);
+      execute format('create trigger trg_historial after insert or update or delete on public.%I for each row execute function public.registrar_historial()', t);
+    end if;
+  end loop;
+end $$;
+
+alter table public.historial enable row level security;
+drop policy if exists solo_lectura on public.historial;
+create policy solo_lectura on public.historial for select to authenticated using (public.es_permitido());
+revoke all on public.historial from anon, authenticated;
+grant select on public.historial to authenticated;
+notify pgrst, 'reload schema';
+
+
+-- #####################################################################
 --  BLOQUE 5 · Seguridad: solo usuarios con sesión + espacio para copias
 -- #####################################################################
 -- Quita cualquier permiso del rol anónimo en las tablas de la app
@@ -706,7 +774,7 @@ select 'Tabla ' || t as elemento,
        case when to_regclass('public.' || t) is not null then '✅ OK' else '❌ FALTA' end as estado
 from unnest(array['cuentas','categorias','movimientos','inmuebles','vehiculos','deudas','snapshots','ajustes',
                   'valoraciones','precios_m2','amortizaciones','amortizaciones_plan','aportaciones_periodicas',
-                  'posiciones','seguros','reglas_categoria','patrimonio_mensual','partidas_previstas','metas','precios']) as t
+                  'posiciones','seguros','reglas_categoria','patrimonio_mensual','partidas_previstas','metas','precios','historial']) as t
 union all
 select 'Columna ' || tb || '.' || col,
        case when exists (select 1 from information_schema.columns
