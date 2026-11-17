@@ -1,5 +1,12 @@
 # Historial de versiones
 
+## 5.11.0 — 17/11/2026 · Seguridad: solo vuestros usuarios
+- Nueva lista **usuarios_permitidos**. Todas las tablas y las copias de seguridad solo se pueden leer o modificar con un email de esa lista, aunque alguien consiga crearse una cuenta en el proyecto de Supabase. La primera vez se rellena sola con los usuarios que ya existen.
+- Si entra una cuenta que no está en la lista, la app no carga nada, cierra la sesión y lo explica.
+- ⚙️ Ajustes → **Usuarios con acceso**: ver, añadir y quitar emails.
+- La comprobación final del SQL muestra quién tiene acceso y avisa si queda alguna tabla abierta.
+- Requiere ejecutar `sql/esquema_completo.sql` (bloque 0) y se recomienda desactivar "Allow new users to sign up" en Supabase.
+
 ## 5.10.2 — 17/11/2026 · Tasa de ahorro real y capital de la hipoteca exacto
 - **Tasa de ahorro**: ahora es lo que pasas de verdad a cuentas de ahorro (neto) ÷ ingresos, no lo que sobra en la cuenta. Lo que va a la cuenta de anualidades se muestra aparte y no cuenta como ahorro.
 - **Capital pendiente de los préstamos**: se calcula cuota a cuota desde el último dato del banco, con el importe y la fecha reales de cada cuota registrada. El capital amortizado del Dashboard y el pendiente salen de la misma cuenta.

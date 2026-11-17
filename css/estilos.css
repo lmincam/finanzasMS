@@ -363,3 +363,5 @@ code{background:#f1f5f9;padding:1px 6px;border-radius:5px;font-size:12.5px}
 .kpi.bal-neg .v,.kpi.bal-neg .tot b{color:#b91c1c}
 @media (max-width:900px){ .kpi-zona{grid-template-columns:1fr} .kpi-hoy{grid-template-columns:1fr 1fr;grid-template-rows:auto} }
 @media (max-width:640px){ .bal-calc{border-left:0;padding-left:0;border-top:1px dashed rgba(15,31,58,.18);padding-top:8px} .bal-main .v{font-size:26px} }
+
+.acc-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:13.5px;color:var(--text,#0f172a)}

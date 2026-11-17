@@ -1,5 +1,5 @@
 -- =====================================================================
---  PATRIMONIO FAMILIAR · ESQUEMA COMPLETO DE BASE DE DATOS (v5.5)
+--  PATRIMONIO MIÑÁN SÁNCHEZ · ESQUEMA COMPLETO DE BASE DE DATOS (v5.11)
 --  ---------------------------------------------------------------------
 --  Un único script para Supabase → SQL Editor → New query → Run.
 --
@@ -9,12 +9,46 @@
 --    modifica tus datos (solo "create … if not exists", "add column
 --    if not exists" y datos de ejemplo únicamente si las tablas están vacías).
 --
---  SEGURIDAD (v5): solo pueden leer y escribir los usuarios que hayan
---  iniciado sesión (Supabase Auth). El acceso anónimo queda bloqueado.
---  ⚠ Ejecútalo DESPUÉS de crear vuestros usuarios y de subir la app v5.
+--  SEGURIDAD: solo pueden leer y escribir los usuarios de la lista
+--  "usuarios_permitidos" (bloque 0), aunque alguien se cree una cuenta.
+--  El acceso anónimo queda bloqueado.
+--  ⚠ Ejecútalo DESPUÉS de crear vuestros usuarios en Supabase → Authentication.
 --
 --  Al terminar muestra una tabla de comprobación con ✅ / ❌.
 -- =====================================================================
+
+
+-- #####################################################################
+--  BLOQUE 0 · Lista de usuarios con acceso (v5.11.0)
+-- #####################################################################
+-- Solo los emails de esta lista pueden leer o modificar datos, aunque alguien consiga crearse
+-- una cuenta en el proyecto. La primera vez se rellena sola con los usuarios que ya existen
+-- (tú y tu pareja). Después se gestiona desde la app: ⚙️ Ajustes → Usuarios con acceso.
+create table if not exists public.usuarios_permitidos (
+  email       text primary key,
+  created_at  timestamptz default now()
+);
+create or replace function public.es_permitido() returns boolean
+  language plpgsql stable security definer set search_path = public as $$
+begin
+  return exists (select 1 from public.usuarios_permitidos u
+                 where u.email = lower(coalesce(auth.jwt() ->> 'email', '')));
+end $$;
+revoke all on function public.es_permitido() from public, anon;
+grant execute on function public.es_permitido() to authenticated;
+do $$
+begin
+  if not exists (select 1 from public.usuarios_permitidos) and to_regclass('auth.users') is not null then
+    insert into public.usuarios_permitidos (email)
+      select distinct lower(email) from auth.users where email is not null on conflict do nothing;
+  end if;
+end $$;
+alter table public.usuarios_permitidos enable row level security;
+drop policy if exists acceso_personal on public.usuarios_permitidos;
+create policy acceso_personal on public.usuarios_permitidos for all to authenticated
+  using (public.es_permitido()) with check (public.es_permitido());
+revoke all on public.usuarios_permitidos from anon;
+grant select, insert, delete on public.usuarios_permitidos to authenticated;
 
 
 -- #####################################################################
@@ -192,7 +226,7 @@ begin
   foreach t in array array['cuentas','categorias','movimientos','inmuebles','vehiculos','deudas','snapshots','ajustes'] loop
     execute format('alter table public.%I enable row level security', t);
     execute format('drop policy if exists acceso_personal on public.%I', t);
-    execute format('create policy acceso_personal on public.%I for all to authenticated using (true) with check (true)', t);
+    execute format('create policy acceso_personal on public.%I for all to authenticated using (public.es_permitido()) with check (public.es_permitido())', t);
     execute format('grant select, insert, update, delete on public.%I to anon, authenticated', t);
   end loop;
 end $$;
@@ -287,7 +321,7 @@ create index if not exists valoraciones_cuenta_idx on public.valoraciones(cuenta
 -- Mismo acceso que el resto de tablas (uso personal sin login)
 alter table public.valoraciones enable row level security;
 drop policy if exists acceso_personal on public.valoraciones;
-create policy acceso_personal on public.valoraciones for all to authenticated using (true) with check (true);
+create policy acceso_personal on public.valoraciones for all to authenticated using (public.es_permitido()) with check (public.es_permitido());
 grant select, insert, update, delete on public.valoraciones to authenticated;
 
 -- Punto de partida: guarda como primera valoración el valor actual que ya tengas introducido
@@ -444,7 +478,7 @@ begin
   foreach t in array array['precios_m2','amortizaciones','amortizaciones_plan','aportaciones_periodicas','posiciones','seguros'] loop
     execute format('alter table public.%I enable row level security', t);
     execute format('drop policy if exists acceso_personal on public.%I', t);
-    execute format('create policy acceso_personal on public.%I for all to authenticated using (true) with check (true)', t);
+    execute format('create policy acceso_personal on public.%I for all to authenticated using (public.es_permitido()) with check (public.es_permitido())', t);
     execute format('grant select, insert, update, delete on public.%I to anon, authenticated', t);
   end loop;
 end $$;
@@ -473,7 +507,7 @@ create unique index if not exists reglas_patron_uq on public.reglas_categoria (l
 
 alter table public.reglas_categoria enable row level security;
 drop policy if exists acceso_personal on public.reglas_categoria;
-create policy acceso_personal on public.reglas_categoria for all to authenticated using (true) with check (true);
+create policy acceso_personal on public.reglas_categoria for all to authenticated using (public.es_permitido()) with check (public.es_permitido());
 grant select, insert, update, delete on public.reglas_categoria to authenticated;
 
 -- Subcategoría útil para las reglas predefinidas (Glovo, Just Eat, Uber Eats…)
@@ -509,7 +543,7 @@ create table if not exists public.patrimonio_mensual (
 );
 alter table public.patrimonio_mensual enable row level security;
 drop policy if exists acceso_personal on public.patrimonio_mensual;
-create policy acceso_personal on public.patrimonio_mensual for all to authenticated using (true) with check (true);
+create policy acceso_personal on public.patrimonio_mensual for all to authenticated using (public.es_permitido()) with check (public.es_permitido());
 grant select, insert, update, delete on public.patrimonio_mensual to authenticated;
 
 -- Subcategoría para amortizaciones anticipadas (cuenta como ahorro, no como gasto)
@@ -559,7 +593,7 @@ begin
   foreach t in array array['partidas_previstas','metas'] loop
     execute format('alter table public.%I enable row level security', t);
     execute format('drop policy if exists acceso_personal on public.%I', t);
-    execute format('create policy acceso_personal on public.%I for all to authenticated using (true) with check (true)', t);
+    execute format('create policy acceso_personal on public.%I for all to authenticated using (public.es_permitido()) with check (public.es_permitido())', t);
     execute format('grant select, insert, update, delete on public.%I to authenticated', t);
   end loop;
 end $$;
@@ -629,7 +663,7 @@ begin
     insert into storage.buckets (id, name, public) values ('copias', 'copias', false) on conflict (id) do nothing;
     execute 'drop policy if exists copias_familia on storage.objects';
     execute $p$create policy copias_familia on storage.objects for all to authenticated
-              using (bucket_id = 'copias') with check (bucket_id = 'copias')$p$;
+              using (bucket_id = 'copias' and public.es_permitido()) with check (bucket_id = 'copias' and public.es_permitido())$p$;
   end if;
 end $$;
 
@@ -655,6 +689,12 @@ from (values ('inmuebles','metros_construidos'), ('inmuebles','precio_m2_venta')
              ('movimientos','reembolso_de'), ('movimientos','a_cobrar'),
              ('cuentas','saldo_actualizado'), ('cuentas','valor_actualizado'),
              ('categorias','presupuesto_anual'), ('categorias','gasto_fijo'), ('deudas','base_interes')) as y(tb, col)
+union all
+select 'Usuarios con acceso: ' || coalesce((select string_agg(email, ', ' order by email) from public.usuarios_permitidos), 'ninguno'),
+       case when exists (select 1 from public.usuarios_permitidos) then '✅ revisa que sean solo los vuestros' else '❌ VACÍA: añade vuestros emails' end
+union all
+select 'Tablas abiertas a cualquier usuario',
+       case when exists (select 1 from pg_policies where schemaname = 'public' and qual = 'true') then '❌ REVISAR' else '✅ Ninguna' end
 union all
 select 'Acceso anónimo bloqueado',
        case when exists (select 1 from pg_roles where rolname = 'anon')

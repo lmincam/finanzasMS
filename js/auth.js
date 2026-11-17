@@ -107,7 +107,19 @@ function iniciarSesion(session, forzar = false) {
   Auth.started = true;
   ocultarLogin(); bloquearApp(false);
   const u = $('#user-chip'); if (u) u.textContent = Auth.user.email ? Auth.user.email[0].toUpperCase() : '·';
-  loadAll();
+  comprobarPermiso().then(ok => { if (ok) loadAll(); });
+}
+/** ¿Está este usuario en la lista de acceso? (si la lista aún no existe en la base de datos, se deja pasar como antes) */
+async function comprobarPermiso() {
+  try {
+    const { data, error } = await DB.client.rpc('es_permitido');
+    if (error || data !== false) { S.listaAcceso = !error; return true; }
+  } catch (e) { return true; }
+  bloquearApp(true);
+  try { sessionStorage.setItem('pf_auth_msg', `La cuenta ${Auth.user.email} no está autorizada para ver estos datos. Pide que la añadan en ⚙️ Ajustes → Usuarios con acceso.`); } catch (e) { /* sin almacenamiento */ }
+  await borrarCopiaLocal().catch(() => {});
+  await DB.client.auth.signOut().catch(() => {});   // recarga la página y muestra el aviso en el login
+  return false;
 }
 
 /** Arranque: comprueba si hay sesión guardada; si no, muestra el login. */
@@ -122,7 +134,25 @@ async function arrancarAuth() {
   if (recuperando) { bloquearApp(true); renderLogin('recuperar'); return; }
   const { data } = await DB.client.auth.getSession();
   if (data && data.session) iniciarSesion(data.session);
-  else { bloquearApp(true); renderLogin('login'); }
+  else { bloquearApp(true); let msg = ''; try { msg = sessionStorage.getItem('pf_auth_msg') || ''; sessionStorage.removeItem('pf_auth_msg'); } catch (e) { /* — */ } renderLogin('login', msg); }
+}
+
+/* ---------- Usuarios con acceso (lista usuarios_permitidos) ---------- */
+async function cargarAccesos() {
+  const box = $('#accesos-list'); if (!box) return;
+  const { data, error } = await DB.client.from('usuarios_permitidos').select('email, created_at').order('email');
+  if (error) { box.innerHTML = '<div class="banner amber">Ejecuta <code>sql/esquema_completo.sql</code> en Supabase para activar la lista de usuarios con acceso.</div>'; return; }
+  const yo = (Auth.user && Auth.user.email || '').toLowerCase();
+  box.innerHTML = data.map(r => `<div class="acc-row"><span>👤 <b>${esc(r.email)}</b>${r.email === yo ? ' <span class="badge green">tú</span>' : ''}</span>
+    ${r.email === yo ? '' : `<button class="mini" data-action="acceso-del" data-email="${esc(r.email)}" title="Quitar acceso">🗑</button>`}</div>`).join('') || '<div class="small muted">Lista vacía</div>';
+}
+function renderAccesosCard() {
+  setTimeout(cargarAccesos, 0);
+  return `<div class="card"><div class="card-head"><h3>🔐 Usuarios con acceso</h3></div>
+    <p class="small muted" style="margin-top:0">Solo estas cuentas pueden ver y modificar los datos, aunque alguien consiga crearse un usuario en tu Supabase. Para añadir a alguien: créale el usuario en Supabase → Authentication → Users y añade aquí su email.</p>
+    <div id="accesos-list" class="small muted">Cargando…</div>
+    <div class="btn-row" style="margin-top:10px"><button class="btn sm" data-action="acceso-add">+ Añadir email</button></div>
+    <div class="banner blue" style="margin-top:12px">🛡️ Recomendado: en Supabase → Authentication → <strong>Sign In / Providers</strong>, desactiva <strong>"Allow new users to sign up"</strong>. Así nadie puede crearse una cuenta en tu proyecto; tú sigues pudiendo crear usuarios desde Authentication → Users → Add user.</div></div>`;
 }
 
 /* ---------- Tarjeta de sesión en Ajustes ---------- */
@@ -130,11 +160,18 @@ function renderSesionCard() {
   const u = Auth.user;
   return `<div class="card"><div class="card-head"><h3>👤 Sesión</h3><span class="badge green">Conectado</span></div>
     <p style="margin-top:0">Has iniciado sesión como <b>${esc(u ? u.email : '—')}</b>.</p>
-    <p class="small muted">La sesión se recuerda en este dispositivo. Para añadir o quitar usuarios: Supabase → Authentication → Users.</p>
+    <p class="small muted">La sesión se recuerda en este dispositivo.</p>
     <div class="btn-row"><button class="btn" data-action="auth-cambiar">Cambiar contraseña</button><button class="btn ghost" data-action="auth-logout">Cerrar sesión</button></div></div>`;
 }
 
 Object.assign(Actions, {
+  'acceso-add': () => openForm({ title: 'Dar acceso a un usuario', fields: [{ name: 'email', label: 'Email (el mismo con el que entra)', type: 'email', required: true }],
+    onSubmit: async v => { const { error } = await DB.client.from('usuarios_permitidos').insert([{ email: v.email.trim().toLowerCase() }]); if (error) throw error; toast('Acceso añadido ✓', 'ok'); } }),
+  'acceso-del': async el => {
+    if (!(await confirmDlg(`¿Quitar el acceso a <b>${esc(el.dataset.email)}</b>? No podrá ver ni modificar nada.`, 'Quitar acceso'))) return;
+    const r = await withSaving(null, async () => { const { error } = await DB.client.from('usuarios_permitidos').delete().eq('email', el.dataset.email); if (error) throw error; }, 'Acceso retirado');
+    if (r !== FAIL) cargarAccesos();
+  },
   'auth-modo': el => renderLogin(el.dataset.m),
   'auth-logout': async () => {
     if (!(await confirmDlg('¿Cerrar sesión en este dispositivo?', 'Cerrar sesión', false))) return;
