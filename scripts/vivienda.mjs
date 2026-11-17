@@ -175,13 +175,14 @@ try {
   const m = parsearMivau(txt.replace(/^\uFEFF/, ''));
   Object.assign(series, m.series);
   console.log(`Ministerio de Vivienda (provincias): ${m.diag}`);
+  const faltan = Object.keys(PROV).filter(k => !m.series['p:' + k]); if (faltan.length) console.log(`  Sin dato: ${faltan.join(', ')} (usarán su comunidad)`);
   if (m.series['p:granada']) console.log(`  Granada: ${Object.entries(m.series['p:granada']).slice(-4).map(([q, v]) => `${q} ${v > 0 ? '+' : ''}${v} %`).join(' · ')}`);
 } catch (e) { console.warn(`Ministerio de Vivienda: ${e.message} (se usará la comunidad autónoma)`); }
 
 if (!Object.keys(series).length) { console.error('No se obtuvieron datos utilizables.'); process.exit(prev ? 0 : 1); }
 // Solo los últimos 12 años (de sobra para cualquier €/m² de referencia)
 for (const k of Object.keys(series)) for (const q of Object.keys(series[k])) if (q < `${new Date().getUTCFullYear() - 12}T1`) delete series[k][q];
-const ultimo = Object.keys(series.nacional || series[Object.keys(series)[0]]).sort().pop();
+const ultimo = Object.values(series).flatMap(x => Object.keys(x)).sort().pop();
 const valor = { consultado: hoy, ultimo, fuente: 'Ministerio de Vivienda (valor tasado por provincia) e INE (IPV por comunidad)', series };
 await sb('ajustes?on_conflict=clave', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
   body: JSON.stringify([{ clave: 'indice_vivienda', valor, updated_at: new Date().toISOString() }]) });
