@@ -70,31 +70,43 @@ function renderMovList() {
   const list = filteredMovs();
   const ing = sum(list.filter(m => m.tipo === 'ingreso'), 'importe'), gas = -sum(list.filter(m => m.tipo === 'gasto'), 'importe');
   const shown = list.slice(0, S.movLimit);
-  box.innerHTML = `<div class="imp-summary"><span>${list.length} movimientos</span><span class="pos">Ingresos ${fmtEUR(ing)}</span><span class="neg">Gastos ${fmtEUR(gas)}</span></div>` +
-    (shown.length ? shown.map(movRow).join('') : '<div class="empty">No hay movimientos con estos filtros</div>') +
+  // Agrupados por día, con el neto del día (sin transferencias internas)
+  const grupos = []; for (const m of shown) { const g = grupos[grupos.length - 1]; if (g && g.f === m.fecha) g.ms.push(m); else grupos.push({ f: m.fecha, ms: [m] }); }
+  box.innerHTML = `<div class="mv-sum"><span>${list.length} movimientos</span><span class="pos">+${fmtEUR(ing)}</span><span class="neg">−${fmtEUR(gas)}</span></div>` +
+    (shown.length ? grupos.map(g => { const neto = sum(g.ms.filter(m => m.tipo !== 'transferencia'), 'importe');
+      return `<div class="mv-day"><span>${DIAS[weekday(g.f)]} ${fmtDate(g.f).slice(0, 5)}</span>${neto ? `<span class="${neto >= 0 ? 'pos' : 'neg'}">${signed(neto)}</span>` : ''}</div>${g.ms.map(movRow).join('')}`; }).join('')
+      : '<div class="empty">No hay movimientos con estos filtros</div>') +
     (list.length > shown.length ? `<div style="text-align:center;padding:12px"><button class="btn sm" data-action="mov-more">Mostrar más (${list.length - shown.length})</button></div>` : '');
 }
+/** Fila de movimiento: toca la fila para editar; las acciones extra van en el menú ⋯ */
 function movRow(m) {
-  const cta = cuentaById(m.cuenta_id), imp = num(m.importe);
-  let chip;
-  if (m.tipo === 'transferencia') { const o = cuentaById(m.cuenta_contraria_id); chip = `<span class="chip t">${imp < 0 ? '→' : '←'} ${esc(o ? o.nombre : '?')} · ${SUBTIPO[m.subtipo_transferencia] || ''}</span>`; }
-  else chip = `<span class="chip">${esc(catName(m.categoria_id) || 'Sin categoría')}</span>`;
-  if (S.v6 && m.reembolso_de) { const g = S.movimientos.find(x => x.id === m.reembolso_de); chip += ` <span class="badge green">↩ reembolso de ${esc(g ? g.concepto : '¿gasto borrado?')}</span>`; }
-  if (S.v6 && num(m.a_cobrar) > 0) { const i = infoCompartido(m); chip += ` <span class="badge ${i.pendiente > 0.01 ? 'amber' : 'green'}">👥 ${i.pendiente > 0.01 ? `te deben ${fmtEUR(i.pendiente)}` : 'cobrado'} · tu parte ${fmtEUR(i.miParte)}</span>`; }
-  const desf = m.tipo !== 'transferencia' && ymOf(m.mes_imputacion) !== ymOf(m.fecha) ? `<span class="badge blue">Imputado a ${ymLabel(ymOf(m.mes_imputacion), true)}</span>` : '';
-  return `<div class="mov-row">
-    <div class="mov-date">${fmtDateShort(m.fecha)}<br><span class="small">${DIAS[weekday(m.fecha)]}</span></div>
-    <div style="min-width:0"><div class="mov-concept">${esc(m.concepto || '—')}</div>
-      <div class="mov-meta"><span>${esc(cta ? cta.nombre : '?')}</span>${chip}${desf}${m.origen === 'import' ? '<span class="badge">Excel</span>' : ''}</div></div>
-    <div class="mov-amt ${m.tipo === 'transferencia' ? 'muted' : imp >= 0 ? 'pos' : 'neg'}">${signed(imp)}</div>
-    <div class="mov-act">
-      ${m.tipo === 'ingreso' ? `<button class="mini" data-action="mov-imput" data-id="${m.id}" title="Cambiar mes de imputación (mes de la fecha ↔ mes siguiente)">⏭</button>` : ''}
-      ${S.v6 && m.tipo === 'gasto' && imp < 0 && !m.reembolso_de ? `<button class="mini" data-action="mov-compartir" data-id="${m.id}" title="Gasto compartido: cuánto te deben">👥</button>` : ''}
-      ${S.v6 && imp > 0 && m.tipo !== 'transferencia' && !m.reembolso_de ? `<button class="mini" data-action="mov-reembolso" data-id="${m.id}" title="Es la devolución de un gasto (Bizum…)">↩</button>` : ''}
-      ${S.v6 && m.reembolso_de ? `<button class="mini" data-action="mov-desvincular" data-id="${m.id}" title="Quitar vínculo con el gasto">⛓</button>` : ''}
-      <button class="mini" data-action="mov-edit" data-id="${m.id}" title="Editar">✎</button>
-      <button class="mini" data-action="mov-del" data-id="${m.id}" title="Eliminar">🗑</button>
-    </div></div>`;
+  const cta = cuentaById(m.cuenta_id), imp = num(m.importe), isT = m.tipo === 'transferencia';
+  const c = catById(m.categoria_id), r = c ? rootOf(c) : null, color = isT ? '#94a3b8' : (c && c.color) || (r && r.color) || '#cbd5e1';
+  const sub = isT ? `${imp < 0 ? '→' : '←'} ${esc((cuentaById(m.cuenta_contraria_id) || {}).nombre || '?')}` : esc(catName(m.categoria_id) || 'Sin categoría');
+  const tags = [];
+  if (S.v6 && m.reembolso_de) tags.push('<span class="badge green">↩ devolución</span>');
+  if (S.v6 && num(m.a_cobrar) > 0) { const i = infoCompartido(m); tags.push(`<span class="badge ${i.pendiente > 0.01 ? 'amber' : 'green'}">👥 ${i.pendiente > 0.01 ? `te deben ${fmtEUR(i.pendiente)}` : 'cobrado'}</span>`); }
+  if (!isT && ymOf(m.mes_imputacion) !== ymOf(m.fecha)) tags.push(`<span class="badge blue">→ ${ymLabel(ymOf(m.mes_imputacion), true)}</span>`);
+  if (!isT && !m.categoria_id) tags.push('<span class="badge amber">sin categoría</span>');
+  return `<div class="mv" data-action="mov-edit" data-id="${m.id}" role="button" tabindex="0">
+    <span class="mv-dot" style="background:${esc(color)}"></span>
+    <div class="mv-main"><div class="mv-con">${esc(m.concepto || '—')}</div>
+      <div class="mv-sub">${sub} · ${esc(cta ? cta.nombre : '?')}${tags.length ? ' ' + tags.join(' ') : ''}</div></div>
+    <div class="mv-amt ${isT ? 'muted' : imp >= 0 ? 'pos' : 'neg'}">${signed(imp)}</div>
+    <button class="mv-more" data-action="mov-menu" data-id="${m.id}" aria-label="Más acciones">⋯</button>
+  </div>`;
+}
+/** Menú de acciones de un movimiento (en lugar de muchos botones pequeños en cada fila). */
+function abrirMenuMov(m) {
+  const imp = num(m.importe), op = (a, ic, t, extra = '') => `<button class="mv-op" data-action="${a}" data-id="${m.id}"><span>${ic}</span>${t}${extra}</button>`;
+  const ops = [op('mov-edit', '✎', 'Editar')];
+  if (m.tipo === 'ingreso') ops.push(op('mov-imput', '⏭', ymOf(m.mes_imputacion) === ymOf(m.fecha) ? 'Imputar al mes siguiente' : 'Imputar al mes de su fecha'));
+  if (S.v6 && m.tipo === 'gasto' && imp < 0 && !m.reembolso_de) ops.push(op('mov-compartir', '👥', 'Gasto compartido (cuánto te deben)'));
+  if (S.v6 && imp > 0 && m.tipo !== 'transferencia' && !m.reembolso_de) ops.push(op('mov-reembolso', '↩', 'Es la devolución de un gasto (Bizum…)'));
+  if (S.v6 && m.reembolso_de) ops.push(op('mov-desvincular', '⛓', 'Quitar vínculo con el gasto'));
+  ops.push(op('mov-del', '🗑', 'Eliminar'));
+  const md = modal(`<h3 style="margin-bottom:4px">${esc(m.concepto || 'Movimiento')}</h3><div class="small muted" style="margin-bottom:12px">${fmtDate(m.fecha)} · <b class="${imp >= 0 ? 'pos' : 'neg'}">${signed(imp)}</b></div><div class="mv-ops">${ops.join('')}</div>`);
+  md.el.addEventListener('click', e => { if (e.target.closest('.mv-op')) md.close(); });
 }
 
 /* ---------- Guardado de movimientos (incluye parejas de transferencia) ---------- */
@@ -230,6 +242,7 @@ Object.assign(Actions, {
       fields: [{ name: 'saldo', label: 'Saldo real (€)', type: 'number', required: true }, { name: 'fecha', label: 'A cierre del día', type: 'date' }], values: { saldo: Calc.saldo(c), fecha: todayISO() },
       onSubmit: v => saveEntity('cuentas', c.id, Calc.fijarSaldo(c, v.saldo, v.fecha || todayISO())) });
   },
+  'mov-menu': el => { const m = S.movimientos.find(x => x.id === el.dataset.id); if (m) abrirMenuMov(m); },
   'mov-edit': el => { const m = S.movimientos.find(x => x.id === el.dataset.id); if (m) openMovEdit(m); },
   'mov-del': async el => {
     const m = S.movimientos.find(x => x.id === el.dataset.id); if (!m) return;

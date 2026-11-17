@@ -76,17 +76,14 @@ function renderAnioEnCurso(P) {
   const flujos = round2(st.ahorro + st.capital); // ahorro líquido + capital amortizado
   const aumento = base ? round2(P.neto - base.valor) : null;
   const desglose = base ? `Ahorro líquido ${fmtEUR(st.ahorro, 0)} · capital amortizado ${fmtEUR(st.capital, 0)} · revalorización y otros ${signed(round2(aumento - flujos))}` : '';
-  return `<div class="ytd-sep"><span>📅 Año ${y} · de enero a hoy</span></div>
+  return `<div class="ytd-sep"><span>📅 ${y} · enero → hoy</span></div>
     <div class="ytd">
       <div class="kpi pos clickable" data-action="ytd-detalle" role="button" tabindex="0" title="Ver los ingresos del año">
-        <div class="l">Ingresos del año</div><div class="v">${fmtEUR(st.ingresos)}</div>
-        <div class="s">Media ${fmtEUR(st.ingresos / nMes)}/mes · ${nMes} ${nMes === 1 ? 'mes' : 'meses'} · sin devoluciones de gastos compartidos</div><div class="kpi-go">Ver movimientos ›</div></div>
+        <div class="l">Ingresos del año</div><div class="v">${fmtEUR(st.ingresos, 0)}</div><span class="kpi-arrow" aria-hidden="true">›</span></div>
       <div class="kpi navy">
-        <div class="l">Aumento de patrimonio del año <button class="mini" data-action="ytd-base" title="Indicar el patrimonio neto a 1 de enero">✎</button></div>
-        ${base ? `<div class="v ${aumento >= 0 ? 'pos' : 'neg'}">${signed(aumento)}</div>
-          <div class="s">De ${fmtEUR(base.valor, 0)} a 1 de enero (${base.fuente}) a ${fmtEUR(P.neto, 0)} hoy${base.valor > 0 ? ` · ${aumento >= 0 ? '+' : ''}${fmtPct(aumento / base.valor)}` : ''}<br>${desglose}</div>`
-        : `<div class="v">≈ ${signed(flujos)}</div>
-          <div class="s">Estimado: ahorro líquido (${fmtEUR(st.ahorro, 0)}) + capital amortizado (${fmtEUR(st.capital, 0)}), sin revalorizaciones. Para el dato exacto, pulsa ✎ e indica tu patrimonio neto a 1 de enero.</div>`}
+        <div class="l">Aumento de patrimonio <button class="info-btn" data-action="kpi-info" data-k="anio" title="¿De dónde sale este dato?">ⓘ</button> <button class="mini" data-action="ytd-base" title="Indicar el patrimonio neto a 1 de enero">✎</button></div>
+        ${base ? `<div class="v ${aumento >= 0 ? 'pos' : 'neg'}">${signed(aumento)}</div>`
+        : `<div class="v">≈ ${signed(flujos)}</div><div class="s">Estimado · pulsa ✎ e indica tu patrimonio a 1 de enero</div>`}
       </div>
     </div>`;
 }

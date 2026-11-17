@@ -36,6 +36,14 @@ function explicacion(k) {
         ${linea(resto >= 0 ? 'Sigue en tus cuentas corrientes y efectivo' : 'Has tirado de dinero que ya tenías', fmtEUR(resto), resto >= 0 ? '' : 'neg')}</div>
         <p class="small muted">Con el mes a medias la cifra engaña: la nómina ya está contada y faltan gastos por llegar. Una referencia sana es una tasa de ahorro del 15-20 % o más.</p>` };
     },
+    anio: () => {
+      const y = +mesActual().slice(0, 4), ms = Array.from({ length: +mesActual().slice(5, 7) }, (_, i) => `${y}-${pad(i + 1)}`), sa = periodStats(ms), b = baseAnio(y);
+      const aum = b ? round2(P.neto - b.valor) : null, fl = round2(sa.ahorro + sa.capital);
+      return { t: `Aumento de patrimonio en ${y}`, h: `<p>Cuánto ha crecido tu patrimonio neto desde el 1 de enero, sea cual sea el periodo elegido arriba.</p>
+        <div class="exp-box">${b ? linea(`Patrimonio a 1 de enero (${b.fuente})`, fmtEUR(b.valor, 0)) + linea('Patrimonio hoy', fmtEUR(P.neto, 0)) + linea('= Aumento', signed(aum), 'tot') : ''}
+        ${linea('Ahorro líquido del año', fmtEUR(sa.ahorro))}${linea('Capital de deuda amortizado', fmtEUR(sa.capital))}${b ? linea('Revalorización y otros (inversiones, vivienda…)', signed(round2(aum - fl))) : linea('= Estimación sin revalorizaciones', signed(fl), 'tot')}</div>
+        ${b ? '' : '<p class="small muted">Para el dato exacto, pulsa ✎ en la tarjeta e indica tu patrimonio neto a 1 de enero.</p>'}` };
+    },
     'tasa-ahorro': () => ({ t: 'Tasa de ahorro', h: `<p>Qué parte de tus ingresos de ${per} has <b>pasado de verdad a cuentas de ahorro</b>: <b>aportaciones netas a ahorro ÷ ingresos</b>. Lo que se queda en la cuenta corriente no cuenta, aunque sobre (eso es el balance).</p>
         <p>"Neto" son las transferencias que entran en cuentas de tipo ahorro menos las que sacas de ellas. Lo que pasas a la cuenta de anualidades no cuenta como ahorro: es dinero apartado para pagos anuales.</p>
         <div class="exp-box">${linea('Pasado a ahorro (neto)', fmtEUR(st.aport.ahorro))}${linea('÷ Ingresos', fmtEUR(st.ingresos))}${linea('= Tasa de ahorro', st.ingresos > 0 ? fmtPct(st.aport.ahorro / st.ingresos) : '—', 'tot')}

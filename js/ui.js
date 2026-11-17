@@ -101,6 +101,6 @@ const subOpts = sel => Object.entries(SUBTIPO).map(([k, l]) => `<option value="$
 /* ---------- Piezas de tarjetas ---------- */
 const kpi = (l, v, s = '', cls = '') => `<div class="kpi ${cls}"><div class="l">${l}</div><div class="v">${v}</div>${s ? `<div class="s">${s}</div>` : ''}</div>`;
 /** KPI que se puede pulsar para ver el detalle (lista de movimientos). */
-const kpiLink = (k, l, v, s = '', cls = '') => `<div class="kpi ${cls} clickable" data-action="dash-detalle" data-k="${k}" role="button" tabindex="0" title="Ver el detalle">${'<div class="l">' + l + '</div>'}<div class="v">${v}</div>${s ? `<div class="s">${s}</div>` : ''}<div class="kpi-go">Ver movimientos ›</div></div>`;
+const kpiLink = (k, l, v, s = '', cls = '') => `<div class="kpi ${cls} clickable" data-action="dash-detalle" data-k="${k}" role="button" tabindex="0" title="Ver el detalle">${'<div class="l">' + l + '</div>'}<div class="v">${v}</div>${s ? `<div class="s">${s}</div>` : ''}<span class="kpi-arrow" aria-hidden="true">›</span></div>`;
 const metric = (l, v, cls = '') => `<div class="metric"><div class="l">${l}</div><div class="v ${cls}">${v}</div></div>`;
 const pctBar = (p, cls = '') => `<div class="bar ${cls}"><span style="width:${Math.max(0, Math.min(100, (p || 0) * 100)).toFixed(1)}%"></span></div>`;

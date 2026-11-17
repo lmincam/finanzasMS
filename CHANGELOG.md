@@ -1,5 +1,12 @@
 # Historial de versiones
 
+## 5.15.0 — 17/11/2026 · Menos ruido
+- **Dashboard**: los indicadores muestran solo el dato, más grande; las explicaciones van en ⓘ. Ingresos y Gastos llevan una flecha › para ver los movimientos. El balance mantiene su cuenta en una línea por concepto. El rango del mes de nómina va en una sola línea (📅 27/10 – 26/11).
+- Fuera: la tarjeta de movimientos internos y la composición del patrimonio (están en los ⓘ y en sus pestañas), los subtítulos y notas al pie de gráficos, presupuesto y avisos. "Mayores gastos" muestra los 5 primeros y se pueden abrir.
+- **Año en curso**: solo las dos cifras; el desglose del aumento de patrimonio va en su ⓘ.
+- **Calendario**: sin gastos fijos (hipoteca, alquiler, cuotas…) por defecto, para que el "día de más gasto" sea útil. Casilla para incluirlos.
+- **Movimientos (Cuentas)**: lista agrupada por día con el neto diario. Cada fila tiene concepto, categoría · cuenta, importe y un botón ⋯. Al tocar la fila se edita; las demás acciones (imputar a otro mes, gasto compartido, devolución, eliminar) van en el menú ⋯. Ya no se solapan botones en el móvil.
+
 ## 5.14.2 — 17/11/2026 · Versión junto al nombre
 - La versión de la app aparece en la cabecera justo después de "Patrimonio Miñán Sánchez", también en el móvil.
 

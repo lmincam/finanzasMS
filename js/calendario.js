@@ -13,9 +13,12 @@ const DIAS_SEM = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 /** Gastos del calendario: los gastos de esos meses (de nómina), colocados en su fecha de operación. Sin amortizaciones de deuda; las devoluciones restan.
  *  Devuelve { dias: { fecha: [movs] }, porMes: { ym: [fechas] } }. */
 function gastosPorDia(months) {
-  const set = new Set(months), dias = {}, porMes = {};
+  const set = new Set(months), dias = {}, porMes = {}, fijo = {};
+  // Los gastos fijos (hipoteca, alquiler, cuotas…) no se muestran salvo que se pida: siempre harían del día del cargo el "día de más gasto"
+  const esFijoCat = id => id && (fijo[id] ??= esGastoFijo(id, mesActual()) || S.deudas.some(d => d.activa !== false && categoriaCuota(d) === id));
   for (const m of S.movimientos) {
     if (m.tipo !== 'gasto' || esCatAmortizacion(m.categoria_id)) continue;
+    if (!S.calFijos && esFijoCat(m.categoria_id)) continue;
     const ym = mesDe(m); if (!set.has(ym)) continue;
     (dias[m.fecha] = dias[m.fecha] || []).push(m); (porMes[ym] = porMes[ym] || []).push(m.fecha);
   }
@@ -72,17 +75,17 @@ function renderCalendario(el, months) {
       ${nav}
       <div class="period-label">📅 ${periodLabel(months)}</div>
       <div class="sp"></div>
-      <span class="small muted">Cada gasto en su <b>fecha de operación</b>. Pulsa un gasto para verlo o corregirlo.</span>
+      <label class="chk small"><input type="checkbox" id="cal-fijos" ${S.calFijos ? 'checked' : ''}> Incluir gastos fijos</label>
     </div>
     <div class="kpis">
-      ${kpi('Gasto del periodo', fmtEUR(total), `${Object.keys(dias).length} día(s) con gastos`, 'neg')}
+      ${kpi(S.calFijos ? 'Gasto del periodo' : 'Gasto sin fijos', fmtEUR(total), `${Object.keys(dias).length} día(s) con gastos`, 'neg')}
       ${kpi('Día de más gasto', top ? fmtEUR(top.t) : '—', top ? fmtDate(top.f) : 'Sin gastos', '')}
     </div>
     ${months.map(ym => mesCalendario(ym, G, maxDia)).join('')}
-    <div class="small muted" style="margin:4px 2px 14px">No incluye transferencias internas ni amortizaciones de deuda. Las devoluciones (Bizum de un gasto compartido) aparecen en verde y restan del día.
-      Son los mismos meses que el Dashboard; la diferencia con “Gastos operativos” es que aquí la cuota del préstamo va completa (con su parte de capital).</div>`;
+    `;
 }
 
+Object.assign(Changes, { 'cal-fijos': el => { S.calFijos = el.checked; render(); } });
 Object.assign(Actions, {
   'cal-open': () => { S.dashCal = true; S.dashDet = null; render(); window.scrollTo(0, 0); },
   'cal-close': () => { S.dashCal = false; render(); }

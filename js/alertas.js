@@ -225,7 +225,7 @@ function renderAlertas(months, st, P, rows) {
       ${cnt('blue') ? `<span class="badge blue">${cnt('blue')} consejo(s)</span>` : ''}${cnt('green') ? `<span class="badge green">${cnt('green')} bien</span>` : ''}</div></div>
     <div class="alerts">${vis.map(item).join('')}<div class="alerts" id="alert-more" hidden>${rest.map(item).join('')}</div></div>
     ${rest.length ? `<div style="text-align:center;margin-top:10px"><button class="btn sm ghost" data-action="alert-more" data-more="Ver ${rest.length} más">Ver ${rest.length} más</button></div>` : ''}
-    <div class="small muted" style="margin-top:10px">Pulsa ✕ en un aviso para ocultarlo un tiempo (vuelve si la situación sigue igual).${nOcultos ? ` <a href="#" data-action="alert-reset">Mostrar ${nOcultos} oculto(s)</a>.` : ''} Consejos orientativos calculados con tus propios datos; no sustituyen el asesoramiento de un profesional financiero.</div></div>`;
+    ${nOcultos ? `<div class="small muted" style="margin-top:8px"><a href="#" data-action="alert-reset">Mostrar ${nOcultos} aviso(s) oculto(s)</a></div>` : ''}</div>`;
 }
 async function guardarOcultas(valor) {
   const hoy = todayISO(); Object.keys(valor).forEach(k => { if (!(valor[k] >= hoy)) delete valor[k]; });
