@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.14.2 — 17/11/2026 · Versión junto al nombre
+- La versión de la app aparece en la cabecera justo después de "Patrimonio Miñán Sánchez", también en el móvil.
+
 ## 5.14.1 — 17/11/2026 · Corrección del reparto de la aportación
 - Si algún producto de la cuenta tenía el % vacío o a 0 (por ejemplo, un fondo al que ya no aportas), la app ignoraba todos los % y repartía la aportación según el valor de cada producto. Ahora siempre usa el % de cada producto, y el que tiene 0 % no recibe nada. Solo si ningún producto tiene % se reparte por valor.
 - La tarjeta "Aportación mensual" muestra el % aplicado a cada producto.
