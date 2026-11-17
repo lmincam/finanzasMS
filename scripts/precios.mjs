@@ -5,7 +5,8 @@
 //  2. Descarga los precios de cierre desde EODHD (si hay clave EODHD_API_KEY) o, si no, desde Yahoo Finance.
 //  3. Los guarda en la tabla "precios". La app calcula con ellos el valor de cada cuenta de inversión.
 //  Secretos necesarios en GitHub (Settings → Secrets and variables → Actions):
-//    SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY y, recomendado, EODHD_API_KEY (plan gratuito: 20 consultas/día).
+//    SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (la secret key sb_secret_… o la antigua service_role)
+//    y, recomendado, EODHD_API_KEY (plan gratuito: 20 consultas/día).
 //  Sin dependencias: Node 20 (fetch nativo).
 // =====================================================================
 const URL_SB = (process.env.SUPABASE_URL || '').replace(/\/$/, '');
@@ -15,7 +16,8 @@ if (!URL_SB || !KEY_SB) { console.error('Faltan los secretos SUPABASE_URL y/o SU
 
 const hoy = new Date().toISOString().slice(0, 10);
 const restarDias = (iso, n) => new Date(Date.parse(iso) - n * 864e5).toISOString().slice(0, 10);
-const H = { apikey: KEY_SB, Authorization: `Bearer ${KEY_SB}`, 'Content-Type': 'application/json' };
+// Las claves nuevas (sb_secret_…) van solo en "apikey"; las antiguas (service_role, JWT "eyJ…") también en Authorization
+const H = { apikey: KEY_SB, 'Content-Type': 'application/json', ...(KEY_SB.startsWith('eyJ') ? { Authorization: `Bearer ${KEY_SB}` } : {}) };
 async function sb(path, opts = {}) {
   const r = await fetch(`${URL_SB}/rest/v1/${path}`, { ...opts, headers: { ...H, ...(opts.headers || {}) } });
   if (!r.ok) throw new Error(`Supabase ${r.status}: ${(await r.text()).slice(0, 200)}`);

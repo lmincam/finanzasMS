@@ -60,8 +60,8 @@ function renderPreciosCard() {
     ${isins.length ? filas : '<div class="small muted">Añade productos con su ISIN en cada cuenta de inversión.</div>'}
     ${sinPart.length ? `<div class="banner amber" style="margin-top:10px">Para valorar solo ${sinPart.length === 1 ? 'este producto' : 'estos productos'} falta indicar las <b>participaciones</b>: ${sinPart.map(p => esc(p.nombre)).join(', ')}. Edita el producto (✎) en su cuenta.</div>` : ''}
     ${activo ? '' : `<details class="small" style="margin-top:10px"><summary><b>Cómo activarlo (5 minutos, una sola vez)</b></summary><ol style="line-height:1.6;padding-left:18px">
-      <li>Crea una clave gratuita en <a href="https://eodhd.com/register" target="_blank" rel="noopener">eodhd.com</a> (plan Free: hasta 20 consultas al día). Es opcional, pero cubre mejor los fondos europeos.</li>
-      <li>En Supabase → Project Settings → API Keys, copia la clave <b>service_role</b> (secreta).</li>
+      <li>Regístrate gratis en <a href="https://eodhd.com/register" target="_blank" rel="noopener">eodhd.com/register</a> y copia tu <b>API token</b> del <a href="https://eodhd.com/cp/dashboard" target="_blank" rel="noopener">Dashboard</a> (también llega por email). Es opcional, pero cubre mejor los fondos europeos.</li>
+      <li>En Supabase → ⚙️ Project Settings → <b>API Keys</b> → apartado <b>Secret keys</b>, copia la clave que empieza por <code>sb_secret_</code> (si no hay, pulsa <i>Create new API keys</i>).</li>
       <li>En <a href="${REPO_GH}/settings/secrets/actions" target="_blank" rel="noopener">GitHub → Settings → Secrets → Actions</a> crea <code>SUPABASE_URL</code>, <code>SUPABASE_SERVICE_ROLE_KEY</code> y <code>EODHD_API_KEY</code>.</li>
       <li>En <a href="${REPO_GH}/actions/workflows/precios.yml" target="_blank" rel="noopener">Actions → Precios diarios</a> pulsa <b>Run workflow</b> para la primera carga.</li></ol></details>`}
   </div>`;

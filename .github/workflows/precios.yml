@@ -1,7 +1,7 @@
 # Precios diarios de los ISIN de tus productos de inversión → Supabase (tabla "precios").
 # Configura los secretos en GitHub: Settings → Secrets and variables → Actions → New repository secret
 #   SUPABASE_URL                 (la Project URL de Supabase)
-#   SUPABASE_SERVICE_ROLE_KEY    (Supabase → Project Settings → API Keys → service_role / secret)
+#   SUPABASE_SERVICE_ROLE_KEY    (Supabase → Project Settings → API Keys → Secret keys: sb_secret_…)
 #   EODHD_API_KEY                (opcional pero recomendado: eodhd.com, plan gratuito)
 name: Precios diarios
 
