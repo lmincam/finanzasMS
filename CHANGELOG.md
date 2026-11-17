@@ -1,5 +1,10 @@
 # Historial de versiones
 
+## 5.19.2 — 17/11/2026 · Movimientos: cuentas y lista, nada más
+- Las **anualidades** van dentro de la tarjeta de su cuenta (lo que toca pasar este mes y si falta); al tocarla se abre el reparto completo.
+- "Te deben" (gastos compartidos) pasa a ser un botón en la cabecera de Movimientos.
+- La pestaña queda: todas las cuentas con su saldo y, justo debajo, la lista de movimientos del periodo elegido.
+
 ## 5.19.1 — 17/11/2026 · Precio de la vivienda más fino
 - El precio de venta se actualiza con la evolución de **tu provincia** (valor tasado del Ministerio de Vivienda, trimestral). Si no hubiera dato provincial, usa la comunidad (INE) y, en último caso, España.
 - El €/m² de referencia se toma de tu **código postal** en el portal del notariado (precios reales de compraventa); la app avisa una vez al año para revisarlo.

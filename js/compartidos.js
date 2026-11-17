@@ -59,6 +59,12 @@ function destinoReembolso(id, items = []) {
 }
 
 /* ---------- Tarjeta "Te deben" en Cuentas ---------- */
+/** Chip "Te deben X €" para la cabecera de Movimientos (abre el detalle en una ventana). */
+function chipPendientes() {
+  if (!S.v6) return ''; const ab = gastosAbiertos(); if (!ab.length) return '';
+  return `<button class="btn sm chip-deben" data-action="comp-ver">👥 Te deben ${fmtEUR(sum(ab, g => infoCompartido(g).pendiente))}</button>`;
+}
+Object.assign(Actions, { 'comp-ver': () => { const md = modal(renderPendientesCard()); md.el.classList.add('modal-wide'); md.el.addEventListener('click', e => { if (e.target.closest('[data-action="comp-saldar"]')) setTimeout(() => md.close(), 0); }); } });
 function renderPendientesCard() {
   if (!S.v6) return '';
   const ab = gastosAbiertos();

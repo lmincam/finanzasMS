@@ -7,7 +7,7 @@
      se guardan en el dispositivo para que abra al instante y sin cobertura.
    • NUNCA guarda las llamadas a Supabase (tus datos van por otro camino).
    ===================================================================== */
-const CACHE = 'patrimonio-v5.19.1';
+const CACHE = 'patrimonio-v5.19.2';
 const SHELL = ['./', './index.html', './manifest.json', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {

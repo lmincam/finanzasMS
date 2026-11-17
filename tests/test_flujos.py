@@ -112,3 +112,14 @@ def test_editar_inmueble_mantiene_precio_actualizado(app):
     a.page.fill('.modal [name="precio_m2_venta"]', '2900'); a.page.fill('.modal [name="fecha_precio_m2"]', '2026-11-17')
     a.page.click('.modal [type=submit]'); a.page.wait_for_timeout(300)
     assert a.ev("S.inmuebles[0].precio_m2_base") == 2900 and a.ev("S.inmuebles[0].trimestre_ipv") == '2026T4'
+
+
+def test_movimientos_solo_cuentas_y_lista(app):
+    """Anualidades dentro de su cuenta (y su detalle en una ventana); nada entre las cuentas y la lista de movimientos."""
+    a = app
+    a.ev("S.categorias.find(c => c.nombre === 'Alimentación').presupuesto_anual = 600; S.ajustesRows.push({ clave: 'cuenta_anualidades', valor: { id: 'b' } })")
+    a.ir('cuentas')
+    assert a.page.locator('#tab-cuentas .anual-card').count() == 0
+    assert a.page.locator('.acc-card .acc-anual').count() == 1
+    a.page.click('.acc-anual'); a.page.wait_for_timeout(150)
+    assert a.page.locator('.modal .anual-card').count() == 1

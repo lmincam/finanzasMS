@@ -64,6 +64,23 @@ function renderAnualidadesCard() {
   </div>`;
 }
 
+/** Línea corta dentro de la tarjeta de la cuenta de anualidades: lo que toca pasar este mes. */
+function resumenAnualidades(c) {
+  const ca = cuentaAnualidades(), items = partidasAnuales();
+  if (!items.length || !ca || ca.id !== c.id) return '';
+  const total = round2(sum(items, 'mensual')), ym = mesActual();
+  const pasado = round2(sum(S.movimientos.filter(m => m.cuenta_id === ca.id && cicloDe(m.fecha) === ym && num(m.importe) > 0 && m.tipo === 'transferencia'), 'importe'));
+  const falta = round2(Math.max(0, total - pasado));
+  return `<button class="acc-anual" data-action="anual-ver" title="Ver el reparto de las anualidades">
+    <span>🗓️ ${fmtEUR(total)}/mes</span><b class="${falta > 0 ? 'neg' : 'pos'}">${falta > 0 ? `faltan ${fmtEUR(falta)}` : '✅ este mes hecho'}</b><span class="acc-anual-go">›</span></button>`;
+}
+function abrirAnualidades() {
+  const md = modal(`<div class="anual-modal">${renderAnualidadesCard() || '<div class="empty">No tienes pagos anuales. Ponlos en Planificar → Presupuestos (presupuesto anual).</div>'}</div>`);
+  md.el.classList.add('modal-wide');
+  md.el.addEventListener('change', e => { if (e.target.id === 'anual-cuenta') setTimeout(() => md.close(), 0); });
+}
+Object.assign(Actions, { 'anual-ver': () => abrirAnualidades() });
+
 Object.assign(Changes, {
   'anual-cuenta': async el => {
     const r = await withSaving(null, async () => {

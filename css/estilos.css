@@ -742,3 +742,12 @@ body.locked .bottomnav{display:none}
 @media (max-width:420px){ .sim-g{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px} .sim-g label{font-size:12.5px} }
 @media (max-width:700px){ .inm-calc{grid-template-columns:minmax(0,1fr)} .ic-steps div{flex-wrap:wrap} .ic-steps span{min-width:0} }
 .metric{min-width:0}.metric .v .small{white-space:normal;display:inline-block}
+/* Anualidades dentro de su cuenta y "te deben" como chip */
+.modal.modal-wide{max-width:860px}
+.modal-wide>.card,.anual-modal>.card{box-shadow:none;margin:0;padding:0;border:0;background:transparent}
+.acc-anual{display:flex;align-items:center;gap:8px;width:100%;margin:8px 0 2px;padding:7px 10px;border:1px dashed var(--line2);border-radius:9px;background:var(--card2);color:var(--slate);font:inherit;font-size:13px;cursor:pointer;text-align:left}
+.acc-anual:hover{border-color:var(--ink);color:var(--txt)}
+.acc-anual b{margin-left:auto;font-weight:700}.acc-anual b.neg{color:var(--red)}.acc-anual b.pos{color:var(--green)}
+.acc-anual-go{color:var(--muted);font-size:16px;line-height:1}
+.chip-deben{background:var(--amber-soft);border-color:var(--amber-line);color:var(--amber-ink)}
+.anual-modal .card-head{padding-right:44px}

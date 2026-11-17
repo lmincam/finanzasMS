@@ -27,6 +27,7 @@ function renderCuentas() {
       <div class="acc-val ${val < 0 ? 'neg' : ''}">${fmtEUR(val)}</div>
       ${tieneVM ? `<div class="acc-meta">Aportado neto: ${fmtEUR(saldo)} · <b class="${plus >= 0 ? 'pos' : 'neg'}">${signed(plus)}</b> ${saldo ? `(${fmtPct(plus / saldo)})` : ''}</div><div class="acc-meta">Valor de mercado a ${fmtDate(c.fecha_valor_mercado)} + aportaciones posteriores</div>`
         : ''}
+      ${resumenAnualidades(c)}
       ${(k => k ? `<div class="acc-meta">${Math.abs(num(k.dif)) < 0.01 ? '<span class="pos">🏦 ✅ Cuadra con el banco</span>' : `<span class="warn-t">🏦 ⚠ Descuadre ${signed(num(k.dif))}</span>`} a ${fmtDate(k.fecha)}</div>` : '')(conciliacionDe(c.id))}
       <div class="acc-actions">
         ${inv ? `<button class="btn sm" data-action="cuenta-valor" data-id="${c.id}">Actualizar valor</button>` : `<button class="btn sm" data-action="cuenta-conciliar" data-id="${c.id}">Conciliar saldo</button>`}
@@ -36,7 +37,7 @@ function renderCuentas() {
   }).join('');
 
   el.innerHTML = `
-    <div class="section-head"><div><h2>Cuentas</h2><div class="small muted">Liquidez ${fmtEUR(P.liquidez)}</div></div>
+    <div class="section-head"><div><h2>Cuentas</h2><div class="small muted">Liquidez ${fmtEUR(P.liquidez)}${partidasAnuales().length && !cuentaAnualidades() ? ` · <a href="#" data-action="anual-ver">elige tu cuenta de anualidades</a>` : ''}</div></div>
       <div class="acc-btns">
         <button class="btn" data-action="cuenta-new">+ Cuenta</button>
         <button class="btn" data-action="quick-open" data-tipo="gasto">+ Movimiento</button>
@@ -44,14 +45,11 @@ function renderCuentas() {
         <button class="btn btn-ico" data-action="imp-open" title="Importar extracto del banco (Excel o CSV)" aria-label="Importar extracto del banco">${icono('upload')}</button>
       </div></div>
     <div class="acc-grid">${cards || '<div class="card empty">Sin cuentas</div>'}</div>
-    ${renderAnualidadesCard()}
-
-    ${renderPendientesCard()}
     <div class="card" id="import-card" hidden></div>
 
     <div class="card">
-      <div class="card-head mv-head"><h3>Movimientos</h3>
-        <button class="btn sm" data-action="mov-regla" title="Imputa al mes siguiente los ingresos de los últimos días laborables del mes">⏭ Regla de nómina</button></div>
+      <div class="card-head mv-head"><h3>Movimientos</h3><div class="btn-row">${chipPendientes()}
+        <button class="btn sm" data-action="mov-regla" title="Imputa al mes siguiente los ingresos de los últimos días laborables del mes">⏭ Regla de nómina</button></div></div>
       <div class="mov-filters">
         <input type="month" id="mf-mes" value="${S.movFilter.mes || ''}" title="Mes (fecha de operación)">
         <select id="mf-cuenta">${accOpts(S.movFilter.cuenta, { empty: 'Todas las cuentas', soloActivas: false })}</select>
