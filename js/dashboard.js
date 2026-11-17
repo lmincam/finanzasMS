@@ -24,6 +24,7 @@ function snapshotBanner() {
 function renderDashboard() {
   const el = $('#tab-dashboard');
   const months = periodMonths();
+  if (S.dashCierre) return renderCierre(el, S.dashCierre);
   if (S.dashDet) return renderDetalle(el, months);
   if (S.dashCal) return renderCalendario(el, months);
   const st = periodStats(months);
@@ -55,6 +56,7 @@ function renderDashboard() {
 
   el.innerHTML = `
     ${snapshotBanner()}
+    ${bannerCierre()}
     <div class="card period per-main">
       <div class="seg per-modes">${modes.map(([k, l]) => `<button data-action="period-mode" data-mode="${k}" class="${p.mode === k ? 'active' : ''}">${l}</button>`).join('')}</div>
       <div class="per-sel">

@@ -365,3 +365,19 @@ code{background:#f1f5f9;padding:1px 6px;border-radius:5px;font-size:12.5px}
 @media (max-width:640px){ .bal-calc{border-left:0;padding-left:0;border-top:1px dashed rgba(15,31,58,.18);padding-top:8px} .bal-main .v{font-size:26px} }
 
 .acc-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:13.5px;color:var(--text,#0f172a)}
+
+/* ---------- Cierre de mes ---------- */
+.cz-banner{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.cz-banner span{flex:1;min-width:200px}
+.cz-prog{display:flex;flex-direction:column;gap:8px}.cz-prog-t{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.cz-prog .bar{height:10px}
+.cz-paso{border-left:4px solid #f59e0b}.cz-paso.hecho{border-left-color:#16a34a}
+.cz-head{display:flex;align-items:center;gap:10px}.cz-head h3{flex:1;margin:0;font-size:15.5px}
+.cz-n{width:26px;height:26px;border-radius:50%;background:#fef3c7;color:#92400e;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none}
+.cz-paso.hecho .cz-n{background:#dcfce7;color:#15803d}
+.cz-paso.hecho .cz-body{opacity:.75}
+.cz-body{margin-top:10px;font-size:13.5px}.cz-body p{margin:0 0 10px;line-height:1.5}
+.cz-list{display:flex;flex-direction:column;gap:2px;margin:0 0 10px;background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:6px 12px}
+.cz-list>div{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.cz-list>div:last-child{border-bottom:0}
+.cz-list select{max-width:220px;font-size:13px;padding:5px 8px}
+.cz-chk{white-space:nowrap;font-size:13px}

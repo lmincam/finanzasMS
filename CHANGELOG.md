@@ -1,5 +1,17 @@
 # Historial de versiones
 
+## 5.12.0 — 17/11/2026 · Cierre de mes guiado
+- Al empezar un mes de nómina, el Dashboard propone **cerrar el anterior** (📋 Empezar cierre). Pasos:
+  1. Movimientos al día hasta el último día del mes.
+  2. Saldos cuadrados con el banco (con botón Conciliar en cada cuenta).
+  3. Todo categorizado (se elige la categoría desde la propia lista).
+  4. Dinero que te deben de gastos compartidos.
+  5. Traspasos: lo que sobró y sigue sin mover, con botón que prepara la transferencia a ahorro con el importe exacto, y la aportación del mes a anualidades.
+  6. Capital pendiente de los préstamos comparado con el recibo.
+  7. Valor de las inversiones.
+- Los pasos que la app puede comprobar se marcan solos; el resto con "Hecho". Al cerrar se guarda un resumen del mes (ingresos, gastos, balance, ahorro, inversión, patrimonio y presupuestos superados), que se puede consultar o reabrir.
+- El registro rápido acepta importe y concepto ya rellenos.
+
 ## 5.11.0 — 17/11/2026 · Seguridad: solo vuestros usuarios
 - Nueva lista **usuarios_permitidos**. Todas las tablas y las copias de seguridad solo se pueden leer o modificar con un email de esa lista, aunque alguien consiga crearse una cuenta en el proyecto de Supabase. La primera vez se rellena sola con los usuarios que ya existen.
 - Si entra una cuenta que no está en la lista, la app no carga nada, cierra la sesión y lo explica.
