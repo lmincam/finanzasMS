@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f1f3a">
+<script>try{var t=localStorage.getItem('pf_tema');if(t&&t!=='auto')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Patrimonio MS">
@@ -18,23 +19,22 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-<link rel="stylesheet" href="css/estilos.css?v=5.16.0">
+<link rel="stylesheet" href="css/estilos.css?v=5.17.0">
 </head>
 <body>
 <div class="sticky">
   <header class="topbar">
-    <button class="icon-btn menu-btn" data-action="menu-open" aria-label="Abrir menú">☰</button>
     <div class="logo">€</div>
-    <div class="brand">Patrimonio Miñán Sánchez <span class="brand-ver" id="app-version"></span><small>Dashboard ejecutivo</small></div>
+    <div class="brand">Patrimonio Miñán Sánchez <span class="brand-ver" id="app-version"></span></div>
     <div class="sp"></div>
     <div class="conn"><span class="dot" id="conn-dot"></span><span id="conn-txt">Sin conectar</span></div>
-    <button class="icon-btn" data-action="refresh" title="Recargar datos">⟳</button>
+    <button class="icon-btn" data-action="refresh" title="Recargar datos" aria-label="Recargar datos"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button>
     <button class="user-chip" id="user-chip" data-action="tab" data-tab="ajustes" title="Sesión y ajustes">·</button>
   </header>
-  <nav class="tabs" id="tabs"></nav>
+  <nav class="tabs" id="tabs" aria-label="Secciones"></nav>
   <div id="offline-bar" hidden></div>
-  <button class="tab-current" data-action="menu-open" aria-label="Cambiar de sección"><span id="tab-current-label"></span><span class="chev">▾</span></button>
 </div>
+<nav class="bottomnav" id="bottomnav" aria-label="Secciones"></nav>
 
 <!-- Menú lateral de secciones (móvil) -->
 <div id="drawer" class="drawer" aria-hidden="true">
@@ -48,6 +48,7 @@
 </div>
 
 <main id="main">
+  <nav class="subtabs" id="subtabs" hidden aria-label="Apartados"></nav>
   <section class="tab" id="tab-dashboard"></section>
   <section class="tab" id="tab-cuentas"></section>
   <section class="tab" id="tab-planificacion"></section>
@@ -68,38 +69,40 @@
 
 <!-- Módulos de la app: el ORDEN importa (cada uno usa lo definido en los anteriores).
      Al publicar una versión nueva, cambia ?v= en todos para que los navegadores no usen la copia antigua. -->
-<script src="js/config.js?v=5.16.0"></script>
-<script src="js/utilidades.js?v=5.16.0"></script>
-<script src="js/estado.js?v=5.16.0"></script>
-<script src="js/datos.js?v=5.16.0"></script>
-<script src="js/calculos.js?v=5.16.0"></script>
-<script src="js/ui.js?v=5.16.0"></script>
-<script src="js/graficos.js?v=5.16.0"></script>
-<script src="js/alertas.js?v=5.16.0"></script>
-<script src="js/dashboard.js?v=5.16.0"></script>
-<script src="js/calendario.js?v=5.16.0"></script>
-<script src="js/explicaciones.js?v=5.16.0"></script>
-<script src="js/detalle.js?v=5.16.0"></script>
-<script src="js/cierre.js?v=5.16.0"></script>
-<script src="js/cuentas.js?v=5.16.0"></script>
-<script src="js/anualidades.js?v=5.16.0"></script>
-<script src="js/compartidos.js?v=5.16.0"></script>
-<script src="js/reglas.js?v=5.16.0"></script>
-<script src="js/importador.js?v=5.16.0"></script>
-<script src="js/prevision.js?v=5.16.0"></script>
-<script src="js/metas.js?v=5.16.0"></script>
-<script src="js/inversiones.js?v=5.16.0"></script>
-<script src="js/inmuebles.js?v=5.16.0"></script>
-<script src="js/deudas.js?v=5.16.0"></script>
-<script src="js/seguros.js?v=5.16.0"></script>
-<script src="js/futuro.js?v=5.16.0"></script>
-<script src="js/auditoria.js?v=5.16.0"></script>
-<script src="js/categorias.js?v=5.16.0"></script>
-<script src="js/auth.js?v=5.16.0"></script>
-<script src="js/historial.js?v=5.16.0"></script>
-<script src="js/copias.js?v=5.16.0"></script>
-<script src="js/ajustes.js?v=5.16.0"></script>
-<script src="js/pwa.js?v=5.16.0"></script>
-<script src="js/app.js?v=5.16.0"></script>
+<script src="js/config.js?v=5.17.0"></script>
+<script src="js/utilidades.js?v=5.17.0"></script>
+<script src="js/estado.js?v=5.17.0"></script>
+<script src="js/iconos.js?v=5.17.0"></script>
+<script src="js/datos.js?v=5.17.0"></script>
+<script src="js/calculos.js?v=5.17.0"></script>
+<script src="js/ui.js?v=5.17.0"></script>
+<script src="js/graficos.js?v=5.17.0"></script>
+<script src="js/tema.js?v=5.17.0"></script>
+<script src="js/alertas.js?v=5.17.0"></script>
+<script src="js/dashboard.js?v=5.17.0"></script>
+<script src="js/calendario.js?v=5.17.0"></script>
+<script src="js/explicaciones.js?v=5.17.0"></script>
+<script src="js/detalle.js?v=5.17.0"></script>
+<script src="js/cierre.js?v=5.17.0"></script>
+<script src="js/cuentas.js?v=5.17.0"></script>
+<script src="js/anualidades.js?v=5.17.0"></script>
+<script src="js/compartidos.js?v=5.17.0"></script>
+<script src="js/reglas.js?v=5.17.0"></script>
+<script src="js/importador.js?v=5.17.0"></script>
+<script src="js/prevision.js?v=5.17.0"></script>
+<script src="js/metas.js?v=5.17.0"></script>
+<script src="js/inversiones.js?v=5.17.0"></script>
+<script src="js/inmuebles.js?v=5.17.0"></script>
+<script src="js/deudas.js?v=5.17.0"></script>
+<script src="js/seguros.js?v=5.17.0"></script>
+<script src="js/futuro.js?v=5.17.0"></script>
+<script src="js/auditoria.js?v=5.17.0"></script>
+<script src="js/categorias.js?v=5.17.0"></script>
+<script src="js/auth.js?v=5.17.0"></script>
+<script src="js/historial.js?v=5.17.0"></script>
+<script src="js/copias.js?v=5.17.0"></script>
+<script src="js/ajustes.js?v=5.17.0"></script>
+<script src="js/pwa.js?v=5.17.0"></script>
+<script src="js/app.js?v=5.17.0"></script>
 </body>
 </html>

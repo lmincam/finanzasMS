@@ -22,7 +22,7 @@ ${tipo === 'gasto' ? badgeFijo(c) : ''}
       <button class="btn sm" data-action="cat-new" data-tipo="${tipo}">+ Categoría</button></div>
       ${roots.map(r => row(r, 0) + childrenOf(r.id).map(c => row(c, 1)).join('')).join('') || '<div class="empty">Sin categorías</div>'}</div>`;
   };
-  el.innerHTML = `<div class="section-head"><div><h2>🏷️ Categorías y presupuestos</h2><div class="small muted">Si una categoría principal no tiene presupuesto propio, se usa la suma (Σ) de sus subcategorías.</div></div></div>
+  el.innerHTML = `<div class="section-head"><div><h2>Presupuestos</h2></div></div>
     <div class="grid-2e">${col('gasto')}${col('ingreso')}</div>
     ${renderReglasCard()}`;
 }

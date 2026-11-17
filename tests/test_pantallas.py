@@ -52,3 +52,29 @@ def test_estructura_dashboard(app):
     assert a.ev("document.querySelector('.kpi-wide > .bal-calc') !== null")
     assert a.ev("document.querySelector('.kpi-hoy').children.length") == 2
     assert a.ev("document.querySelector('.ytd') !== null")
+
+
+def test_navegacion_movil(movil):
+    """En el móvil: barra inferior con 5 secciones + botón de añadir, y sub-pestañas dentro de cada sección."""
+    a = movil
+    assert a.page.locator('#bottomnav .bn-item').count() == 5
+    assert a.page.locator('#bottomnav .bn-plus').count() == 1
+    a.page.click('#bottomnav [data-action="sec"][data-sec="patrimonio"]'); a.page.wait_for_timeout(200)
+    assert a.ev('S.tab') == 'inversiones'
+    assert a.page.locator('#subtabs button').count() == 5
+    a.page.click('#subtabs button:has-text("Deudas")'); a.page.wait_for_timeout(200)
+    assert a.ev('S.tab') == 'deudas'
+    a.page.click('#bottomnav [data-action="sec"][data-sec="inicio"]'); a.page.wait_for_timeout(150)
+    a.page.click('#bottomnav [data-action="sec"][data-sec="patrimonio"]'); a.page.wait_for_timeout(150)
+    assert a.ev('S.tab') == 'deudas', 'Debe recordar la última sub-pestaña de la sección'
+
+
+def test_modo_oscuro(abrir):
+    a = abrir("localStorage.setItem('pf_tema','dark');")
+    assert a.ev("document.documentElement.dataset.theme") == 'dark'
+    fondo = a.ev("getComputedStyle(document.querySelector('.card')).backgroundColor")
+    assert fondo != 'rgb(255, 255, 255)', 'Las tarjetas deben oscurecerse'
+    a.ir('ajustes')
+    a.page.click('[data-action="tema"][data-v="light"]'); a.page.wait_for_timeout(150)
+    assert a.ev("document.documentElement.dataset.theme") == 'light'
+    assert a.ev("getComputedStyle(document.querySelector('.card')).backgroundColor") == 'rgb(255, 255, 255)'

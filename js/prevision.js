@@ -164,7 +164,7 @@ function renderPrevisionSection() {
   const ign = prevIgnorados(), usadosK = new Set(P.usados.map(r => r.key));
   const tensos = M.filter(m => m.minMes < (col || 0));
   return `
-    <div class="section-head"><div><h2>🔮 Previsión de tesorería</h2><div class="small muted">Dinero disponible previsto en cuentas operativas (corriente + efectivo)</div></div>
+    <div class="section-head"><div><h2>Previsión</h2></div>
       <div class="btn-row"><div class="seg">${[3, 6, 12].map(h => `<button data-action="prev-h" data-h="${h}" class="${S.prevH === h ? 'active' : ''}">${h} meses</button>`).join('')}</div>
         <label class="chk" style="margin:0"><input type="checkbox" id="prev-metas" ${S.prevMetas ? 'checked' : ''}> Incluir aportación a metas</label></div></div>
     <div class="kpis">
@@ -191,7 +191,6 @@ function renderPrevisionSection() {
           <button class="mini" data-action="prev-ign" data-k="${esc(r.key)}" title="${ign.has(r.key) ? 'Volver a tener en cuenta' : 'No tener en cuenta'}">${ign.has(r.key) ? '↺' : '✕'}</button></div>`).join('')
           : '<div class="empty">Aún no hay suficiente historial: con 3 meses de movimientos importados empezaré a detectar nóminas, recibos y suscripciones.</div>'}</div>
       <div class="card"><div class="card-head"><h3>📌 Partidas previstas</h3><button class="btn sm" data-action="pp-new">+ Partida</button></div>
-        <p class="small muted" style="margin-top:0">Lo que sabes que va a llegar y la app no puede adivinar: <b>pagas extra</b> (junio y diciembre), IBI, matrícula del colegio, ITV, regalos de Navidad, devolución de la renta…</p>
         ${S.partidas_previstas.length ? S.partidas_previstas.map(p => `<div class="cat-row" style="${p.activa === false ? 'opacity:.5' : ''}"><span class="cname"><b>${esc(p.concepto)}</b> <span class="small muted">${FREQ_LABEL[num(p.frecuencia_meses)] || `Cada ${p.frecuencia_meses} meses`} · desde ${fmtDate(p.fecha_inicio)}${p.fecha_fin ? ' hasta ' + fmtDate(p.fecha_fin) : ''}</span></span>
           <span class="num ${p.tipo === 'ingreso' ? 'pos' : 'neg'}">${p.tipo === 'ingreso' ? '+' : '−'}${fmtEUR(p.importe)}</span>
           <button class="mini" data-action="pp-edit" data-id="${p.id}">✎</button><button class="mini" data-action="pp-del" data-id="${p.id}">🗑</button></div>`).join('') : '<div class="empty">Sin partidas previstas.</div>'}</div>

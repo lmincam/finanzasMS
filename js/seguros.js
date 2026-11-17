@@ -34,9 +34,10 @@ function renderSeguros() {
   }));
 
   el.innerHTML = `
-    <div class="section-head"><div><h2>🛡️ Seguros de la familia</h2><div class="small muted">Todas las pólizas activas: coste, recibos, vencimientos y coberturas.</div></div>
+    <div class="section-head"><div><h2>Seguros</h2></div>
       <button class="btn" data-action="seg-new">+ Seguro</button></div>
-    <div class="kpis">
+    ${!S.seguros.length ? `<div class="card"><div class="empty">Aún no has añadido ningún seguro.<br><br><button class="btn primary" data-action="seg-new">+ Añadir el primero</button><div class="small muted" style="margin-top:10px">Coche, hogar, vida, salud… La app te avisará antes de cada renovación.</div></div></div>` : ''}
+    <div class="kpis" ${!S.seguros.length ? 'hidden' : ''}>
       ${kpi('Pólizas activas', fmtNum(act.length, 0), inact.length ? `${inact.length} dada(s) de baja` : '', 'navy')}
       ${kpi('Coste anual total', fmtEUR(total), `Equivale a ${fmtEUR(total / 12)}/mes`, 'warn')}
       ${kpi('Próximo vencimiento', prox.length ? fmtDate(prox[0].x.venc) : '—', prox.length ? `${esc(prox[0].s.nombre)} · en ${prox[0].x.dias} días` : '')}
@@ -48,13 +49,13 @@ function renderSeguros() {
       <div class="card"><div class="card-head"><h3>Coste anual por tipo</h3></div><div class="chart-box sm"><canvas id="ch-seg-tipo"></canvas></div></div>
     </div>` : ''}
     ${porTipo.map(g => `<div class="sub-title">${TIPO_SEGURO[g.t]} · ${fmtEUR(sum(g.items, o => o.x.prima), 0)}/año</div>
-      <div class="grid-2e" style="margin-bottom:16px">${g.items.map(({ s, x }) => tarjetaSeguro(s, x)).join('')}</div>`).join('') || '<div class="card empty">Aún no has registrado ningún seguro. Pulsa “+ Seguro”.</div>'}
+      <div class="grid-2e" style="margin-bottom:16px">${g.items.map(({ s, x }) => tarjetaSeguro(s, x)).join('')}</div>`).join('')}
     ${inact.length ? `<details class="card"><summary>Pólizas dadas de baja (${inact.length})</summary><div class="grid-2e" style="margin-top:10px">${inact.map(s => tarjetaSeguro(s, seguroInfo(s))).join('')}</div></details>` : ''}`;
 
   if (act.length) {
     mkChart('ch-seg-rec', { type: 'bar', data: { labels: meses.map(m => ymLabel(m, true)), datasets: [{ label: 'Recibos', data: recibosMes.map(round2), backgroundColor: '#1e3a8a', borderRadius: 5 }] },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: euroAxis, x: { grid: { display: false } } } } });
-    mkChart('ch-seg-tipo', { type: 'doughnut', data: { labels: porTipo.map(g => TIPO_SEGURO[g.t]), datasets: [{ data: porTipo.map(g => round2(sum(g.items, o => o.x.prima))), backgroundColor: porTipo.map((_, i) => PALETTE[i % PALETTE.length]), borderColor: '#fff', borderWidth: 2 }] },
+    mkChart('ch-seg-tipo', { type: 'doughnut', data: { labels: porTipo.map(g => TIPO_SEGURO[g.t]), datasets: [{ data: porTipo.map(g => round2(sum(g.items, o => o.x.prima))), backgroundColor: porTipo.map((_, i) => PALETTE[i % PALETTE.length]), borderColor: Tema.hueco(), borderWidth: 2 }] },
       options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { position: 'right' } } } });
   }
 }

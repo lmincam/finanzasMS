@@ -26,7 +26,7 @@ function renderCuentas() {
         ${c.activa === false ? '<span class="badge">Inactiva</span>' : ''}</div>
       <div class="acc-val ${val < 0 ? 'neg' : ''}">${fmtEUR(val)}</div>
       ${tieneVM ? `<div class="acc-meta">Aportado neto: ${fmtEUR(saldo)} · <b class="${plus >= 0 ? 'pos' : 'neg'}">${signed(plus)}</b> ${saldo ? `(${fmtPct(plus / saldo)})` : ''}</div><div class="acc-meta">Valor de mercado a ${fmtDate(c.fecha_valor_mercado)} + aportaciones posteriores</div>`
-        : `<div class="acc-meta">Saldo a ${fmtDate(c.fecha_saldo_inicial)} + movimientos posteriores</div>`}
+        : ''}
       ${(k => k ? `<div class="acc-meta">${Math.abs(num(k.dif)) < 0.01 ? '<span class="pos">🏦 ✅ Cuadra con el banco</span>' : `<span class="warn-t">🏦 ⚠ Descuadre ${signed(num(k.dif))}</span>`} a ${fmtDate(k.fecha)}</div>` : '')(conciliacionDe(c.id))}
       <div class="acc-actions">
         ${inv ? `<button class="btn sm" data-action="cuenta-valor" data-id="${c.id}">Actualizar valor</button>` : `<button class="btn sm" data-action="cuenta-conciliar" data-id="${c.id}">Conciliar saldo</button>`}
@@ -36,7 +36,7 @@ function renderCuentas() {
   }).join('');
 
   el.innerHTML = `
-    <div class="section-head"><div><h2>Cuentas</h2><div class="small muted">Liquidez ${fmtEUR(P.liquidez)} · Las cuentas de inversión están en <a href="#inversiones" data-action="tab" data-tab="inversiones">📈 Inversiones</a></div></div>
+    <div class="section-head"><div><h2>Cuentas</h2><div class="small muted">Liquidez ${fmtEUR(P.liquidez)}</div></div>
       <div class="btn-row"><button class="btn" data-action="cuenta-new">+ Cuenta</button><button class="btn primary" data-action="quick-open" data-tipo="gasto">+ Movimiento</button><button class="btn" data-action="quick-open" data-tipo="transferencia">⇄ Transferencia</button></div></div>
     <div class="acc-grid">${cards || '<div class="card empty">Sin cuentas</div>'}</div>
     ${renderAnualidadesCard()}

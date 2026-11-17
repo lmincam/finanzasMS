@@ -26,7 +26,8 @@ function renderAnualidadesCard() {
   const ca = cuentaAnualidades();
   const selCuenta = `<select id="anual-cuenta" title="Cuenta donde apartas las anualidades">
       <option value="">— Elige la cuenta de anualidades —</option>${accOpts(ca ? ca.id : '')}</select>`;
-  if (!items.length) return `<div class="card"><div class="card-head"><h3>🗓️ Anualidades</h3>${selCuenta}</div>
+  if (!items.length) return ''; // sin pagos anuales no ocupa sitio (se configuran en Presupuestos)
+  if (false) return `<div class="card"><div class="card-head"><h3>🗓️ Anualidades</h3>${selCuenta}</div>
     <div class="small muted">Aún no tienes pagos anuales. En 🏷️ Categorías, edita una categoría (p. ej. Seguros) y pon su presupuesto como <b>Anual</b>: aquí verás cuánto pasar cada mes a ${ca ? `<b>${esc(ca.nombre)}</b>` : 'tu cuenta de anualidades'}.</div></div>`;
 
   const total = round2(sum(items, 'mensual')), hoy = todayISO(), ym = mesActual();

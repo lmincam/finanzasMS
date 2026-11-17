@@ -11,12 +11,11 @@ function renderImport() {
   const box = $('#import-card'); if (!box) return;
   const D = S.importData;
   if (!D) {
-    box.innerHTML = `<div class="card-head"><h3>📥 Importar extracto semanal</h3><span class="sub">.xlsx · .xls · .csv · periodo domingo → sábado</span></div>
+    box.innerHTML = `<div class="card-head"><h3>📥 Importar extracto</h3><span class="sub">Excel o CSV del banco</span></div>
       <div class="form-grid">
         <div><label>Cuenta del extracto</label><select id="imp-cuenta">${accOpts(S.importCuenta)}</select></div>
         <div><label>Archivo</label><input type="file" id="imp-file" accept=".xlsx,.xls,.csv,.txt"></div>
-      </div>
-      <p class="small muted" style="margin-bottom:0">Se usará la columna de <b>anotaciones</b> (tu concepto aclarado) si existe; si no, el concepto del banco. Antes de guardar verás una previsualización con detección de duplicados, sugerencia de categoría y regla de nómina aplicada.</p>`;
+      </div>`;
     return;
   }
   if (D.stage === 'map') {

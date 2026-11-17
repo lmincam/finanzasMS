@@ -14,6 +14,8 @@ css/estilos.css       Todo el diseño
 js/
   config.js           Versión de la app y claves de Supabase (vacías: se configuran en Ajustes)
   utilidades.js       Formato €, números, fechas, texto
+  iconos.js           Iconos SVG propios (icono('home')) y cambio automático de emojis por iconos
+  tema.js             Modo claro/oscuro (automático o elegido en Ajustes)
   estado.js           Estado global (S), constantes y registros de módulos
   datos.js            Única capa que habla con Supabase
   calculos.js         Saldos, patrimonio, préstamos, inmuebles, inversiones, periodos
@@ -67,7 +69,8 @@ Cada pestaña es un módulo independiente que se da de alta en unos registros co
 Para añadir una pestaña nueva:
 1. Crear `js/nueva.js` con su función de pintado y sus acciones.
 2. Añadir su `<section id="tab-nueva">` y su `<script>` en `index.html` (antes de `app.js`).
-3. Añadirla a `TABS` en `estado.js`.
+3. Añadirla a `TABS` en `estado.js` y a una de las 5 secciones de `SECCIONES` (Inicio, Movimientos, Patrimonio, Planificar, Ajustes).
+   Colores: usa siempre las variables de `:root` (`var(--card)`, `var(--txt)`…), así funciona sola en modo oscuro.
 4. Si necesita guardar datos nuevos, añadir un bloque al final de `sql/esquema_completo.sql` solo con `create table if not exists` o `add column if not exists`.
 
 Reglas de la casa: solo `datos.js` habla con Supabase; `calculos.js` no toca la pantalla; los scripts SQL nunca borran ni modifican datos existentes.

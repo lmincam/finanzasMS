@@ -85,7 +85,7 @@ function renderDashboard() {
       <div class="kpi-hoy">
         ${kpi('Liquidez disponible <button class="info-btn" data-action="kpi-info" data-k="liquidez" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(P.liquidez, 0), '', 'sky')}
         ${kpi('Patrimonio neto <button class="info-btn" data-action="kpi-info" data-k="patrimonio" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(P.neto, 0), (() => { const prev = S.patrimonio_mensual.filter(x => x.anio_mes < ymOf(todayISO())).sort((a, b) => a.anio_mes < b.anio_mes ? 1 : -1)[0];
-        return prev ? `<span class="${P.neto - num(prev.patrimonio_neto) >= 0 ? 'pos' : 'neg'}"><b>${signed(P.neto - num(prev.patrimonio_neto))}</b></span> vs ${ymLabel(prev.anio_mes, true)}` : ''; })(), 'sky')}
+        return prev ? `<span class="${P.neto - num(prev.patrimonio_neto) >= 0 ? 'pos' : 'neg'}"><b>${signed(P.neto - num(prev.patrimonio_neto))}</b></span> vs ${ymLabel(prev.anio_mes, true)}` : ''; })(), 'sky', true)}
       </div>
     </div>
 
@@ -120,7 +120,7 @@ function renderDashboard() {
   });
   if (donut.length) mkChart('ch-cat', {
     type: 'doughnut',
-    data: { labels: donut.map(d => d.k === '_none' ? 'Sin categoría' : d.c ? d.c.nombre : '—'), datasets: [{ data: donut.map(d => round2(d.v)), backgroundColor: donut.map((d, i) => (d.c && d.c.color) || PALETTE[i % PALETTE.length]), borderWidth: 2, borderColor: '#fff' }] },
+    data: { labels: donut.map(d => d.k === '_none' ? 'Sin categoría' : d.c ? d.c.nombre : '—'), datasets: [{ data: donut.map(d => round2(d.v)), backgroundColor: donut.map((d, i) => (d.c && d.c.color) || PALETTE[i % PALETTE.length]), borderWidth: 2, borderColor: Tema.hueco() }] },
     options: { responsive: true, maintainAspectRatio: false, cutout: '62%', plugins: { legend: { position: window.innerWidth < 700 ? 'bottom' : 'right' } } }
   });
 }

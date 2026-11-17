@@ -23,4 +23,4 @@ function mkChart(id, cfg) {
   if (Charts[id]) Charts[id].destroy();
   Charts[id] = new Chart(el, cfg);
 }
-const euroAxis = { ticks: { callback: v => fmtNum(v, 0) + ' €' }, grid: { color: '#eef2f7' } };
+const euroAxis = { ticks: { callback: v => fmtNum(v, 0) + ' €' }, grid: { color: () => Tema.rejilla() } };

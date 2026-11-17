@@ -18,7 +18,7 @@ function renderPatrimonio() {
       ${kpi('Valor neto inmobiliario', fmtEUR(totNeto, 0), 'Descontada la hipoteca pendiente')}
       ${kpi('Valor vehículos', fmtEUR(totVeh, 0), `Depreciación acumulada ${fmtEUR(totVehC - totVeh, 0)}`, 'warn')}
     </div>
-    <div class="section-head"><h2>🏠 Inmuebles</h2><button class="btn" data-action="inm-new">+ Inmueble</button></div>
+    <div class="section-head"><h2>Inmuebles</h2><button class="btn" data-action="inm-new">+ Inmueble</button></div>
     ${infos.map(({ i, x }) => `<div class="card">
       <div class="asset-head"><div class="asset-ico">🏠</div><div style="flex:1"><h3>${esc(i.nombre)}</h3><div class="small muted">${esc(i.descripcion || '')}${i.direccion ? ' · ' + esc(i.direccion) : ''}${i.fecha_valoracion ? ` · Valorado a ${fmtDate(i.fecha_valoracion)}` : ''}</div></div>
         <button class="mini" data-action="inm-edit" data-id="${i.id}">✎</button><button class="mini" data-action="inm-del" data-id="${i.id}">🗑</button></div>
@@ -34,13 +34,13 @@ function renderPatrimonio() {
         ${metric('Renta mensual estimada', fmtEUR(x.renta))}${metric('Rent. bruta s/ valor', fmtPct(x.brutaVM, 2))}${metric('Rent. bruta s/ coste', fmtPct(x.brutaCoste, 2))}
         ${metric('Rent. neta s/ valor', fmtPct(x.netaVM, 2), 'pos')}${metric('Rent. neta s/ coste', fmtPct(x.netaCoste, 2), 'pos')}
         ${metric('Cash-flow mensual tras cuota', fmtEUR(x.cashflow), x.cashflow >= 0 ? 'pos' : 'neg')}
-      </div><div class="small muted" style="margin-top:6px">Neta = renta × (12 − ${fmtNum(num(i.meses_vacio), 1)} meses vacío) − gastos anuales (${fmtEUR(x.gastos, 0)}: IBI, comunidad, seguro, mantenimiento). Antes de impuestos.</div>`
+      </div>`
       : '<div class="small muted">Introduce una renta mensual estimada (✎) para calcular la rentabilidad bruta y neta.</div>'}
       ${segurosDe('inmueble_id', i.id)}
       ${i.notas ? `<div class="notes">${esc(i.notas)}</div>` : ''}
     </div>`).join('') || '<div class="card empty">Sin inmuebles</div>'}
 
-    <div class="section-head"><h2>🚗 Vehículos</h2><button class="btn" data-action="veh-new">+ Vehículo</button></div>
+    <div class="section-head"><h2>Vehículos</h2><button class="btn" data-action="veh-new">+ Vehículo</button></div>
     <div class="grid-2e">${S.vehiculos.map(v => {
       const dep = num(v.valor_compra) - num(v.valor_actual);
       const desde = v.fecha_compra || (v.anio ? `${v.anio}-07-01` : null);
@@ -80,10 +80,6 @@ function bloqueM2(i, x) {
       ${metric('Tu coste por m²', x.costeM2 ? fmtEUR(x.costeM2, 0) : '—')}
       ${metric('Actualizado', i.fecha_precio_m2 ? fmtDate(i.fecha_precio_m2) : '—')}
     </div>
-    <div class="small muted" style="margin-top:6px">Venta = ${fmtNum(x.m2, 0)} m² × €/m² × (1 ${num(i.ajuste_pct) >= 0 ? '+' : '−'} ${fmtNum(Math.abs(num(i.ajuste_pct)), 1)} %)${num(i.valor_anejos) ? ` + ${fmtEUR(i.valor_anejos, 0)} parking/trastero` : ''}.
-      Alquiler = ${fmtNum(x.m2, 0)} m² × €/m²/mes × ajuste${num(i.renta_anejos) ? ` + ${fmtEUR(i.renta_anejos, 0)} anejos` : ''}.
-      ${i.valor_automatico !== false ? 'Se usan como valor de mercado y renta estimada.' : 'Modo manual: solo informativo.'}
-      ${i.url_precios ? ` · <a href="${esc(i.url_precios)}" target="_blank" rel="noopener">Ver informe de precios de tu zona ↗</a>` : ''}</div>
     <div class="btn-row" style="margin-top:8px"><button class="btn sm primary" data-action="inm-m2" data-id="${i.id}">Actualizar €/m² del trimestre</button></div>
     ${hist.length >= 2 ? `<div class="chart-box sm" style="margin-top:10px"><canvas id="ch-m2-${idx}"></canvas></div>` : ''}`;
 }

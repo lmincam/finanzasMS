@@ -1,5 +1,13 @@
 # Historial de versiones
 
+## 5.17.0 — 17/11/2026 · Nuevo diseño
+- **Navegación en 5 secciones**: Inicio, Movimientos, Patrimonio (inversiones, inmuebles y vehículos, deudas, seguros, evolución), Planificar (previsión y metas, presupuestos, proyección) y Ajustes. En el móvil van en una **barra inferior** con el botón **+** en el centro; dentro de cada sección, sub-pestañas arriba. Recuerda la última sub-pestaña de cada sección.
+- **Iconos propios** (SVG, mismo trazo en toda la app) en lugar de emojis en títulos, avisos y botones.
+- **Menos texto en todas las pestañas**, con el mismo criterio que el Dashboard: títulos cortos, fuera notas y párrafos explicativos; los subtítulos de los indicadores van en ⓘ. Seguros sin pólizas muestra un único botón para añadir la primera.
+- **Botón +**: en el móvil ya no tapa contenido (está en la barra inferior); en el ordenador queda espacio libre al final de la página. Botones pequeños (✎, papelera, ⓘ) más grandes para el dedo.
+- **Modo oscuro**: automático según el móvil/ordenador, o fijo en Ajustes → Apariencia (Automático · Claro · Oscuro). Gráficos incluidos.
+- Pruebas nuevas: navegación móvil y modo oscuro (25 en total).
+
 ## 5.16.0 — 17/11/2026 · Historial de cambios y pruebas automáticas
 - **Historial de cambios** (bloque 13 del SQL): la base de datos anota cada alta, cambio o borrado con quién lo hizo y qué campos cambiaron, de forma que no se puede saltar desde la app. No anota la valoración automática diaria de las inversiones ni ajustes internos. Se guarda 2 años.
 - ⚙️ Ajustes → **🕘 Historial de cambios**, en lenguaje normal (p. ej. "Tú cambiaste movimiento Mercadona · −120,50 €: categoría Alimentación → Supermercado"), con filtros por tipo y por persona. En el menú ⋯ de cada movimiento: "Ver historial de cambios".

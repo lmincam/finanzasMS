@@ -100,10 +100,10 @@ function renderFuturo() {
   const tabla = ME.filter(r => r.t % 5 === 0 || r.t === ME.length - 1);
 
   el.innerHTML = `
-    <div class="section-head"><div><h2>🚀 Proyección y libertad financiera</h2><div class="small muted">Hacia dónde vas si mantienes tu ritmo. Supuestos editables.</div></div>
+    <div class="section-head"><div><h2>Proyección</h2></div>
       <div class="btn-row"><div class="seg"><button data-action="proy-real" data-v="1" class="${real ? 'active' : ''}">Euros de hoy</button><button data-action="proy-real" data-v="0" class="${!real ? 'active' : ''}">Nominal</button></div>
         <button class="btn" data-action="proy-sup">⚙ Supuestos</button></div></div>
-    <div class="banner blue" style="display:block">Supuestos: aportas <b>${fmtEUR(F.aport0, 0)}/mes</b> a inversión (sube un ${fmtNum(sup.crecAport, 1)} %/año)${sup.invertirCuota ? ' + la cuota de cada préstamo cuando termine' : ''} · rentabilidad ${fmtNum(sup.rentP, 1)} / ${fmtNum(sup.rentM, 1)} / ${fmtNum(sup.rentO, 1)} % · vivienda +${fmtNum(sup.revVivienda, 1)} %/año · vehículos −${fmtNum(sup.depVeh, 0)} %/año · inflación ${fmtNum(sup.inflacion, 1)} %.</div>
+    <div class="small muted sup-line">Supuestos: aportas <b>${fmtEUR(F.aport0, 0)}/mes</b> a inversión (sube un ${fmtNum(sup.crecAport, 1)} %/año)${sup.invertirCuota ? ' + la cuota de cada préstamo cuando termine' : ''} · rentabilidad ${fmtNum(sup.rentP, 1)} / ${fmtNum(sup.rentM, 1)} / ${fmtNum(sup.rentO, 1)} % · vivienda +${fmtNum(sup.revVivienda, 1)} %/año · vehículos −${fmtNum(sup.depVeh, 0)} %/año · inflación ${fmtNum(sup.inflacion, 1)} %.</div>
     <div class="kpis">
       ${kpi('Patrimonio neto hoy', fmtEUR(ME[0].neto, 0), `Invertible: ${fmtEUR(F.capital, 0)}`, 'navy')}
       ${kpi(`En ${sup.anios} años (escenario medio)`, fmtEUR(v(ult), 0), `${real ? 'En euros de hoy' : 'Nominal'} · rango ${fmtEUR(v(PR[PR.length - 1]), 0)} – ${fmtEUR(v(OP[OP.length - 1]), 0)}`, 'pos')}
@@ -131,7 +131,6 @@ function renderFuturo() {
           ${F.esc.M && F.menos1 !== null ? `<li>Con <b>1 punto menos</b>, se retrasa <b>${fmtNum(F.menos1 - F.esc.M, 1)} años</b>: vigila las comisiones de tus fondos.</li>` : ''}
           <li>Gastar <b>100 €/mes menos</b> reduce el capital necesario en <b>${fmtEUR(1200 / (sup.tasaRetiro / 100), 0)}</b>.</li>
         </ul>` : '<div class="empty">Importa unos meses de movimientos (o indica tu gasto anual en ⚙ Supuestos) para calcularla.</div>'}
-        <p class="small muted" style="margin-bottom:0">La regla del 4 % viene de estudios históricos para jubilaciones de unos 30 años; para horizontes más largos muchos expertos prefieren un 3-3,5 %. Excluye la vivienda habitual y los vehículos porque no generan rentas.</p>
       </div>
       <div class="card"><div class="card-head"><h3>🏁 Hitos previstos</h3><span class="sub">Escenario medio</span></div>
         ${hitos.length ? `<div class="top-list">${hitos.map(([i, t, c]) => `<div class="it"><div class="c">${i} ${esc(t)}</div><div><b>${esc(c)}</b></div></div>`).join('')}</div>` : '<div class="empty">—</div>'}
@@ -139,8 +138,7 @@ function renderFuturo() {
         <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Año</th><th class="right">Invertido</th><th class="right">Inmuebles</th><th class="right">Deudas</th><th class="right">Neto</th></tr></thead><tbody>
           ${tabla.map(r => { const d = real ? Math.pow(1 + sup.inflacion / 100, r.t) : 1; return `<tr><td>${r.anio}${F.edadHoy !== null ? ` <span class="small muted">(${F.edadHoy + r.t})</span>` : ''}</td><td class="right num">${fmtEUR(r.inversiones / d, 0)}</td><td class="right num">${fmtEUR(r.inmuebles / d, 0)}</td><td class="right num neg">${fmtEUR(r.deudas / d, 0)}</td><td class="right num"><b>${fmtEUR(v(r), 0)}</b></td></tr>`; }).join('')}
         </tbody></table></div></div>
-    </div>
-    <p class="small muted">Proyección orientativa: supone rentabilidades constantes, que en la realidad varían mucho de un año a otro. No incluye impuestos sobre las ganancias ni cambios de vida (hijos, cambio de vivienda, herencias…). No es asesoramiento financiero.</p>`;
+    </div>`;
 
   const lab = ME.map(r => r.anio);
   mkChart('ch-proy', { type: 'line', data: { labels: lab, datasets: [

@@ -25,7 +25,6 @@ function renderAuditoria() {
           <div class="full"><label>Notas del trimestre</label><input id="snap-notas" placeholder="Ej: revalorización piso, aportación extra…"></div>
           <div class="full actions"><button class="btn success" data-action="snap-save">Guardar foto del trimestre</button></div>
         </div>
-        <p class="small muted" style="margin-bottom:0">Antes de guardar, actualiza el valor de las inversiones, inmuebles, vehículos y el capital pendiente de la hipoteca para que la foto sea fiel.</p>
       </div>
       <div class="card"><div class="card-head"><h3>Evolución anual</h3><span class="sub">Último snapshot de cada año</span></div>
         ${anios.length ? `<table class="tbl"><thead><tr><th>Año</th><th class="right">Neto cierre</th><th class="right">Δ vs año anterior</th></tr></thead><tbody>

@@ -66,7 +66,7 @@ function renderDeudas() {
   const fin = A.map(o => o.I.fin).filter(Boolean).sort().pop();
 
   el.innerHTML = `
-    <div class="section-head"><div><h2>🏦 Deudas y pasivos</h2><div class="small muted">Vista general de todo lo que debes. Pulsa en un préstamo para ver su cuadro de amortización y simular amortizaciones.</div></div>
+    <div class="section-head"><div><h2>Deudas</h2></div>
       <button class="btn" data-action="deu-new">+ Préstamo</button></div>
     ${bannerV4()}
     <div class="kpis">
@@ -117,8 +117,7 @@ function renderCuotasReales(d) {
     ${xs.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Fecha</th><th class="right">Cuota</th><th class="right">Intereses</th><th class="right">Capital</th><th class="right">Pendiente</th><th></th></tr></thead><tbody>
       ${xs.map(p => `<tr><td>${fmtDate(p.fecha)}</td><td class="right num">${fmtEUR(p.importe)}</td><td class="right num neg">${fmtEUR(p.interes)}</td><td class="right num pos">${fmtEUR(p.capital)}</td><td class="right num"><b>${fmtEUR(p.pendiente)}</b></td>
         <td>${p.real ? '<span class="badge green" title="Cargo registrado en tus movimientos">real</span>' : '<span class="badge" title="No hay cargo registrado ese mes: se supone la cuota habitual">estimada</span>'}</td></tr>`).join('')}
-    </tbody></table></div>` : '<div class="small muted">Aún no hay cuotas desde el último dato del banco.</div>'}
-    <div class="small muted" style="margin-top:8px">Se usa el importe y la fecha reales de cada cuota que registras (categoría ${esc(catName(categoriaCuota(d)) || 'de la cuota')}). Cuando copies el capital pendiente de un recibo con <b>Comparar con el banco</b>, la app ve cuánto se desviaba y, si el banco calcula los intereses por días, se ajusta sola para que no vuelva a pasar.</div></div>`;
+    </tbody></table></div>` : '<div class="small muted">Aún no hay cuotas desde el último dato del banco.</div>'}</div>`;
 }
 function renderDeudaDetalle(d) {
   const el = $('#tab-deudas');
@@ -147,7 +146,6 @@ function renderDeudaDetalle(d) {
     ${!I.viable ? '<div class="banner red">⚠ La cuota no cubre los intereses: revisa cuota e interés (✎ Editar).</div>' : ''}
     ${!num(d.capital_inicial) && !num(d.capital_pendiente) ? '<div class="banner blue">Completa los datos del préstamo (✎ Editar): capital inicial, fecha de inicio, plazo, interés, cuota y capital pendiente.</div>' : ''}
     ${tocaHoy ? `<div class="banner amber">📅 Según tu plan, este mes toca una amortización anticipada. Cuando la hagas, regístrala para actualizar el préstamo y tu ahorro. <button class="btn sm" data-action="amo-new" data-id="${d.id}">Registrar amortización</button></div>` : ''}
-    ${S.v5 && I.cuota ? `<div class="banner blue">📊 En el Dashboard, de cada cuota solo cuentan como <b>gasto los intereses</b>; la parte de <b>capital cuenta como ahorro</b> porque reduce tu deuda. ${categoriaCuota(d) ? `Las cuotas se identifican por la categoría <b>${esc(catName(categoriaCuota(d)))}</b>.` : '<b>Indica en ✎ Editar la categoría donde registras la cuota</b> para que se separe.'}</div>` : ''}
     ${d.tipo_interes && d.tipo_interes !== 'fijo' ? '<div class="banner blue">Interés variable/mixto: los cálculos suponen que el TIN actual se mantiene. Actualízalo en cada revisión.</div>' : ''}
 
     <div class="kpis">
@@ -186,7 +184,7 @@ function renderDeudaDetalle(d) {
             <td class="right num pos">${fmtEUR(num(a.ahorro_intereses) - num(a.comision))}</td><td class="right num pos">${fmtEUR(ahorroDevengado(a, d))}</td>
             <td><button class="mini" data-action="amo-del" data-id="${a.id}">🗑</button></td></tr>`).join('')}
           <tr class="root"><td>Total</td><td class="right num">${fmtEUR(sum(amos, 'importe'))}</td><td></td><td class="right num pos">${fmtEUR(ahorroPrev)}</td><td class="right num pos">${fmtEUR(ahorroYa)}</td><td></td></tr>
-          </tbody></table></div><p class="small muted">“Ahorro previsto”: intereses que dejas de pagar en toda la vida del préstamo, menos la comisión. “Ya ahorrado”: intereses que ya no has pagado desde la amortización hasta hoy.</p>`
+          </tbody></table></div>`
         : '<div class="empty">Aún no has registrado amortizaciones anticipadas.</div>'}</div>
       <div class="card"><div class="card-head"><h3>🗓️ Plan de amortizaciones periódicas</h3>${S.v4 ? `<button class="btn sm" data-action="plan-new" data-id="${d.id}">+ Añadir</button>` : ''}</div>
         ${planes.length ? planes.map(p => `<div class="cat-row"><span class="cname"><b>${fmtEUR(p.importe)}</b> · ${frecLabel(p.cada_meses)} · desde ${ymLabel(ymOf(p.desde), true)}${p.hasta ? ' hasta ' + ymLabel(ymOf(p.hasta), true) : ''}<br><span class="small muted">${MODO_AMORT[p.modo] || ''}${p.activo === false ? ' · pausado' : ''}</span></span>

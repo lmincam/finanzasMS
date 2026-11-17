@@ -98,7 +98,7 @@ function bloqueDistribucion(id, dist, titulo, sub) {
 }
 function chartDistribucion(id, dist) {
   if (!dist.length) return;
-  mkChart(id, { type: 'doughnut', data: { labels: dist.map(x => x.label), datasets: [{ data: dist.map(x => round2(x.val)), backgroundColor: dist.map(colorDe), borderColor: '#fff', borderWidth: 2 }] },
+  mkChart(id, { type: 'doughnut', data: { labels: dist.map(x => x.label), datasets: [{ data: dist.map(x => round2(x.val)), backgroundColor: dist.map(colorDe), borderColor: Tema.hueco(), borderWidth: 2 }] },
     options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { display: false },
       tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${fmtEUR(ctx.parsed)} (${fmtPct(dist[ctx.dataIndex].pct, 1)})` } } } } });
 }
@@ -146,7 +146,7 @@ function renderInversiones() {
   const avisos = avisosInversion(act);
 
   el.innerHTML = `
-    <div class="section-head"><div><h2>📈 Inversiones</h2><div class="small muted">${act.length} cuenta(s)${cambios.length ? ` · 📡 precios de cierre del ${fmtDate(cambios[0].A.fecha)}` : ''}</div></div>
+    <div class="section-head"><div><h2>Inversiones</h2><div class="small muted">${act.length} cuenta(s)${cambios.length ? ` · 📡 precios de cierre del ${fmtDate(cambios[0].A.fecha)}` : ''}</div></div>
       <button class="btn" data-action="inv-new">+ Cuenta de inversión</button></div>
     ${bannerV4()}
     ${avisos}

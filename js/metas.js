@@ -45,7 +45,7 @@ function renderMetasSection() {
   const hayFondo = S.metas.some(m => m.modo === 'cuenta' && cuentaById(m.cuenta_id) && cuentaById(m.cuenta_id).tipo === 'ahorro');
   const fondo = S.cuentas.find(c => c.tipo === 'ahorro' && c.activa !== false), gm = gastoMensualMedio();
   return `
-    <div class="section-head" style="margin-top:22px"><div><h2>🎯 Metas de ahorro</h2><div class="small muted">Para qué ahorras, cuánto te falta y cuánto apartar cada mes</div></div>
+    <div class="section-head" style="margin-top:22px"><div><h2>Metas de ahorro</h2></div>
       <div class="btn-row">${!hayFondo && fondo ? `<button class="btn" data-action="meta-fondo">+ Meta: fondo de emergencia</button>` : ''}<button class="btn primary" data-action="meta-new">+ Meta</button></div></div>
     ${act.length ? `<div class="kpis">
       ${kpi('Metas activas', fmtNum(act.length, 0), `${infos.length - act.length} conseguida(s)`, 'navy')}

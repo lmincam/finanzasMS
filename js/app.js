@@ -7,15 +7,22 @@
    Depende de: todos los módulos
    ===================================================================== */
 
+/** Navegación: 5 secciones (arriba en el ordenador, barra inferior en el móvil) y, dentro de cada una, sus pestañas. */
+S.ultimaSub = S.ultimaSub || {};
 function renderTabs() {
-  $('#tabs').innerHTML = TABS.map(([k, l]) => `<button data-action="tab" data-tab="${k}" class="${S.tab === k ? 'active' : ''}">${l}</button>`).join('');
+  const sec = seccionDe(S.tab); S.ultimaSub[sec.k] = S.tab;
+  const nombre = k => (TABS.find(t => t[0] === k) || [k, k])[1];
+  const btnSec = (x, cls) => `<button class="${cls} ${x.k === sec.k ? 'active' : ''}" data-action="sec" data-sec="${x.k}" aria-label="${x.l}">${icono(x.i)}<span>${x.l}</span></button>`;
+  $('#tabs').innerHTML = SECCIONES.map(x => btnSec(x, 'nav-sec')).join('');
+  const bn = $('#bottomnav');
+  if (bn) bn.innerHTML = SECCIONES.slice(0, 2).map(x => btnSec(x, 'bn-item')).join('')
+    + `<button class="bn-plus" data-action="quick-open" data-tipo="gasto" aria-label="Registrar movimiento">${icono('plus')}</button>`
+    + SECCIONES.slice(2).map(x => btnSec(x, 'bn-item')).join('');
+  const sub = $('#subtabs');
+  if (sub) { sub.hidden = sec.tabs.length < 2;
+    sub.innerHTML = sec.tabs.length < 2 ? '' : `<div class="subtabs-in">${sec.tabs.map(k => `<button class="${k === S.tab ? 'active' : ''}" data-action="tab" data-tab="${k}">${esc(nombre(k))}</button>`).join('')}</div>`;
+    const act = sub.querySelector('.active'); if (act && act.scrollIntoView) act.scrollIntoView({ block: 'nearest', inline: 'center' }); }
   $$('.tab').forEach(s => s.classList.toggle('active', s.id === 'tab-' + S.tab));
-  // Móvil: sección actual + menú lateral
-  const cur = TABS.find(t => t[0] === S.tab);
-  const lbl = $('#tab-current-label'); if (lbl && cur) lbl.textContent = cur[1];
-  const list = $('#drawer-list');
-  if (list) list.innerHTML = TABS.map(([k, l]) => { const [ico, ...rest] = l.split(' ');
-    return `<button class="drawer-item ${S.tab === k ? 'active' : ''}" data-action="tab" data-tab="${k}"><span class="ico">${ico}</span><span>${esc(rest.join(' '))}</span></button>`; }).join('');
 }
 function openMenu() { const d = $('#drawer'); if (!d) return; d.classList.add('open'); d.setAttribute('aria-hidden', 'false'); document.body.classList.add('no-scroll'); }
 function closeMenu() { const d = $('#drawer'); if (!d || !d.classList.contains('open')) return false; d.classList.remove('open'); d.setAttribute('aria-hidden', 'true'); document.body.classList.remove('no-scroll'); return true; }
@@ -36,6 +43,10 @@ function render() {
 
 Object.assign(Actions, {
   tab: el => { closeMenu(); S.tab = el.dataset.tab; history.replaceState(null, '', '#' + S.tab); render(); window.scrollTo({ top: 0 }); },
+  sec: el => { const x = SECCIONES.find(s => s.k === el.dataset.sec); if (!x) return;
+    const destino = x.k === seccionDe(S.tab).k ? x.tabs[0] : (S.ultimaSub[x.k] || x.tabs[0]);
+    if (x.k === 'inicio') { S.dashCal = false; S.dashDet = null; S.dashCierre = null; }
+    S.tab = destino; history.replaceState(null, '', '#' + S.tab); render(); window.scrollTo({ top: 0 }); },
   'menu-open': () => openMenu(),
   'menu-close': () => closeMenu(),
   refresh: () => loadAll()
@@ -64,6 +75,7 @@ function bindEvents() {
   const dv = $('#drawer-version'); if (dv) dv.textContent = 'v' + APP_VERSION;
   const h = location.hash.slice(1); if (TABS.some(t => t[0] === h)) S.tab = h;
   setupChartDefaults();
+  Tema.aplicar();
   bindEvents();
   // La cabecera es fija: el contenido empieza justo debajo de su altura real (cambia en móvil, al rotar o con la barra offline)
   const hdr = $('.sticky');
