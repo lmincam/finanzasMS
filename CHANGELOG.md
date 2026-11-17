@@ -1,5 +1,11 @@
 # Historial de versiones
 
+## 5.19.1 — 17/11/2026 · Precio de la vivienda más fino
+- El precio de venta se actualiza con la evolución de **tu provincia** (valor tasado del Ministerio de Vivienda, trimestral). Si no hubiera dato provincial, usa la comunidad (INE) y, en último caso, España.
+- El €/m² de referencia se toma de tu **código postal** en el portal del notariado (precios reales de compraventa); la app avisa una vez al año para revisarlo.
+- Formulario del inmueble más corto: provincia, m², €/m² de tu código postal y poco más. Al editar se ve tu €/m² de referencia y no se pierde la actualización trimestral.
+- Nueva tarea de GitHub "Precio de la vivienda" (`.github/workflows/vivienda.yml`, los lunes o a mano).
+
 ## 5.19.0 — 17/11/2026 · Patrimonio, inmuebles automáticos, mantenimiento y simulador
 - **Patrimonio** abre un **resumen**: patrimonio neto de la familia, en qué está (barra de composición) y recuadros de Liquidez (cuentas, fondo de emergencia, anualidades, efectivo), Inversiones (al cierre del día anterior), Inmuebles, Vehículos, Hipoteca y Préstamos. Cada recuadro abre su apartado y desde ahí "‹ Volver a Patrimonio". Sin pestañas arriba.
 - **Seguros** pasa a **Planificar** (junto a Presupuestos y Proyección). **Inmuebles** y **Vehículos** son pestañas separadas.

@@ -96,3 +96,19 @@ def test_mantenimiento_de_vehiculo(app):
     assert a.ev("S.vehiculos.find(v => v.id === 'v1').km") == 64000       # actualiza los km del coche
     a.ir('dashboard')
     assert 'Coche: ITV' in a.texto('#tab-dashboard')                       # la ITV vence en menos de 45 días
+
+
+def test_editar_inmueble_mantiene_precio_actualizado(app):
+    """El formulario enseña el €/m² de referencia; guardarlo sin tocarlo no deshace la actualización trimestral."""
+    a = app
+    a.ir('inmuebles')
+    antes = a.ev("S.inmuebles[0].precio_m2_venta")
+    a.page.click('[data-action="inm-edit"]'); a.page.wait_for_timeout(150)
+    assert a.page.input_value('.modal [name="precio_m2_venta"]') in ('2500', '2500,00', '2.500,00')
+    a.page.click('.modal [type=submit]'); a.page.wait_for_timeout(300)
+    assert a.ev("S.inmuebles[0].precio_m2_venta") == antes and a.ev("S.inmuebles[0].precio_m2_base") == 2500
+    # Un €/m² nuevo pasa a ser la referencia
+    a.page.click('[data-action="inm-edit"]'); a.page.wait_for_timeout(150)
+    a.page.fill('.modal [name="precio_m2_venta"]', '2900'); a.page.fill('.modal [name="fecha_precio_m2"]', '2026-11-17')
+    a.page.click('.modal [type=submit]'); a.page.wait_for_timeout(300)
+    assert a.ev("S.inmuebles[0].precio_m2_base") == 2900 and a.ev("S.inmuebles[0].trimestre_ipv") == '2026T4'

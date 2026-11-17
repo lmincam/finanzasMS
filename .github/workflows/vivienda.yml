@@ -1,0 +1,28 @@
+# Precio de la vivienda → Supabase (ajustes.indice_vivienda), para actualizar solo el valor de los inmuebles.
+# Fuentes públicas sin clave: Ministerio de Vivienda (valor tasado por provincia) e INE (IPV por comunidad).
+# Usa los mismos secretos que la tarea de precios: SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY.
+name: Precio de la vivienda
+
+on:
+  schedule:
+    - cron: '37 5 * * 1'      # lunes por la mañana (los datos son trimestrales)
+  workflow_dispatch: {}       # botón "Run workflow" para lanzarlo a mano
+
+permissions:
+  contents: read
+
+jobs:
+  vivienda:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Descargar índices de precios de vivienda
+        run: node scripts/vivienda.mjs
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          FORZAR: ${{ github.event_name == 'workflow_dispatch' && '1' || '' }}
