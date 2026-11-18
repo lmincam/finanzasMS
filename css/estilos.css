@@ -840,3 +840,14 @@ button.mpick{font:inherit;font-weight:600}
 .crs-alertas .crs-it{width:340px}
 .crs-alertas .alert{height:100%;box-sizing:border-box}
 @media (max-width:640px){ .crs-alertas .crs-it{width:82vw} .crs-track{gap:10px} }
+/* Cuentas de liquidez: cuadrícula de 2 columnas (2×2 con cuatro cuentas) */
+.acc-grid.acc-liq{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:640px){
+  .acc-grid.acc-liq{gap:10px}
+  .acc-liq .acc-card{padding:12px}
+  .acc-liq .acc-val{font-size:19px}
+  .acc-liq .acc-sub,.acc-liq .acc-meta{font-size:11.5px}
+  .acc-liq .acc-actions{flex-wrap:wrap;gap:6px}
+  .acc-liq .acc-actions .btn{flex:1 1 100%;justify-content:center}
+  .acc-liq .acc-anual{font-size:12px;flex-wrap:wrap;gap:2px 6px}
+}

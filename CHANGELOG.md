@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.21.2 — 18/11/2026
+- Movimientos: las cuentas de liquidez en una cuadrícula de 2×2 — arriba la cuenta corriente y el efectivo, abajo el fondo de emergencia y la cuenta de anualidades (también en el móvil).
+
 ## 5.21.1 — 17/11/2026
 - Patrimonio vuelve a sus recuadros en rejilla (Lo que tenéis · Lo que debéis · Seguimiento). El carrusel se queda solo en Alertas y consejos de Inicio.
 

@@ -17,7 +17,11 @@ const FIELDS_CUENTA = [
 function renderCuentas() {
   const el = $('#tab-cuentas');
   const P = Calc.patrimonio();
-  const cards = [...S.cuentas].filter(c => c.tipo !== 'inversion').sort(byOrden).map(c => {
+  // Liquidez en cuadrícula 2×2: arriba corriente y efectivo, abajo ahorro (fondo de emergencia) y anualidades
+  const ca = cuentaAnualidades();
+  const grupo = c => c.tipo === 'corriente' ? 0 : c.tipo === 'efectivo' ? 1 : ca && c.id === ca.id ? 3 : c.tipo === 'ahorro' ? 2 : 4;
+  const liq = [...S.cuentas].filter(c => c.tipo !== 'inversion').sort((a, b) => (grupo(a) - grupo(b)) || byOrden(a, b));
+  const cards = liq.map(c => {
     const saldo = Calc.saldo(c), val = Calc.valor(c), inv = c.tipo === 'inversion';
     const tieneVM = inv && c.valor_mercado !== null && c.valor_mercado !== undefined;
     const plus = val - saldo;
@@ -44,7 +48,7 @@ function renderCuentas() {
         <button class="btn" data-action="quick-open" data-tipo="transferencia">⇄ Transferencia</button>
         <button class="btn btn-ico" data-action="imp-open" title="Importar extracto del banco (Excel o CSV)" aria-label="Importar extracto del banco">${icono('upload')}</button>
       </div></div>
-    <div class="acc-grid">${cards || '<div class="card empty">Sin cuentas</div>'}</div>
+    <div class="acc-grid acc-liq ${liq.length === 4 ? 'acc-4' : ''}">${cards || '<div class="card empty">Sin cuentas</div>'}</div>
     <div class="card" id="import-card" hidden></div>
 
     <div class="card">

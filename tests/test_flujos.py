@@ -160,3 +160,14 @@ def test_selector_de_mes(movil):
     a.page.click('[data-action="mes-pick"]'); a.page.wait_for_timeout(150)
     a.page.click('.modal [data-ym="2026-08"]'); a.page.wait_for_timeout(200)
     assert a.ev('S.period.ref') == '2026-08'
+
+
+def test_cuentas_liquidez_2x2(app):
+    """Orden de la cuadrícula: corriente, efectivo, ahorro (fondo de emergencia) y anualidades."""
+    a = app
+    a.ev("S.ajustesRows.push({ clave: 'cuenta_anualidades', valor: { id: 'b' } }); S.cuentas.push({ ...S.cuentas.find(c => c.id === 'b'), id: 'fe', nombre: 'Fondo emergencia', tipo: 'ahorro', orden: 99 })")
+    a.ir('cuentas')
+    nombres = a.ev("[...document.querySelectorAll('.acc-liq .acc-name')].map(x => x.textContent)")
+    assert nombres[0] == 'Cuenta Principal' and nombres[1] == 'Efectivo' and nombres[2] == 'Fondo emergencia'
+    assert nombres[3] == a.ev("S.cuentas.find(c => c.id === 'b').nombre")
+    assert a.ev("getComputedStyle(document.querySelector('.acc-liq')).gridTemplateColumns.split(' ').length") == 2
