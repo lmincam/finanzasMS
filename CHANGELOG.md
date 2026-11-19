@@ -1,5 +1,17 @@
 # Historial de versiones
 
+## 5.23.0 — 19/11/2026 · Revisión visual completa
+- Sistema visual común: tarjetas de cifras con el mismo borde, sombra y etiquetas en minúscula; importes grandes sin céntimos; cabeceras de tabla alineadas con sus columnas; un solo azul para las acciones principales.
+- Escritorio: botón «+ Añadir» en la cabecera (el + flotante queda solo en el móvil). Migas de pan «Patrimonio › Sección» para volver.
+- Inicio: aviso de cierre de mes en una línea discreta; balance y variaciones redondeados.
+- Movimientos: las transferencias salen una sola vez («A → B»); cada cuenta con menú ⋯ (conciliar, ver movimientos, editar, eliminar) y lo que ha entrado y salido este mes; la regla de nómina pasa a Ajustes.
+- Previsión y metas: títulos con explicación, tabla mensual desplazable en el móvil, recurrentes con el icono del comercio y nombres legibles, botones de metas iguales.
+- Proyección: supuestos como etiquetas, «Vivir de tus inversiones» en vez de «Libertad financiera» y escenarios, pensión y aceleradores plegados.
+- Seguros: sin tarjetas vacías, recibo solo si difiere de la prima y continente/contenido en hogar.
+- Inversiones: TIR en gris con menos de un año, leyenda del gráfico en una línea, resumen de precios con la fecha de la última descarga.
+- Deudas: fechas «oct 2044», sin «Ahorro por amortizaciones» si es 0.
+- Evolución: primero la mensual automática, luego las fotos trimestrales; el formulario de foto plegado al final.
+
 ## 5.22.2 — 19/11/2026 · Presupuestos más limpio
 - Cada categoría con sus subcategorías en un bloque; el nombre a la izquierda con sus etiquetas debajo (cuota préstamo, fijo…), el importe alineado a la derecha y un único botón ⋯ (editar, añadir subcategoría, eliminar) en lugar de tres botones.
 - Total del presupuesto destacado en la cabecera; la nota de anualidades en su propia línea.

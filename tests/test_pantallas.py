@@ -63,7 +63,7 @@ def test_navegacion_movil(movil):
     assert a.ev("document.querySelector('#subtabs').hidden") is True
     a.page.click('.pz-box[data-k="vehiculos"]'); a.page.wait_for_timeout(200)
     assert a.ev('S.tab') == 'vehiculos'
-    a.page.click('#subtabs button:has-text("Volver a Patrimonio")'); a.page.wait_for_timeout(200)
+    a.page.click('.sub-back button[data-tab="patrimonio"]'); a.page.wait_for_timeout(200)
     assert a.ev('S.tab') == 'patrimonio'
     a.page.click('#bottomnav [data-action="sec"][data-sec="planificar"]'); a.page.wait_for_timeout(200)
     assert [x.strip() for x in a.page.locator('#subtabs button').all_inner_texts()] == ['Previsión y metas', 'Presupuestos', 'Proyección', 'Seguros']

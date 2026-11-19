@@ -101,15 +101,18 @@ const subOpts = sel => Object.entries(SUBTIPO).map(([k, l]) => `<option value="$
 /* ---------- Piezas de tarjetas ---------- */
 /** Indicador: título, dato grande y, si hay detalle, un ⓘ que lo muestra (visible = true lo deja a la vista). */
 const KPI_TXT = new Map(); let _kpiN = 0;
+/** En los indicadores, importes sin céntimos (3.200,00 € → 3.200 €; 906,51 € → 907 €). */
+const sinCent = v => String(v).replace(/(\d{1,3}(?:\.\d{3})*),(\d{2})(?=\s?€)/g, (m, a, b) => fmtNum(Math.round(parseFloat(a.replace(/\./g, '') + '.' + b)), 0));
 const kpi = (l, v, s = '', cls = '', visible = false) => {
+  v = sinCent(v);
   let info = '';
   if (s && !visible) { const id = 'k' + (++_kpiN); KPI_TXT.set(id, { t: String(l).replace(/<[^>]+>/g, '').trim(), s }); if (KPI_TXT.size > 400) KPI_TXT.delete(KPI_TXT.keys().next().value);
     info = ` <button class="info-btn" data-action="kpi-txt" data-id="${id}" title="Más detalle">ⓘ</button>`; }
   return `<div class="kpi ${cls}"><div class="l">${l}${info}</div><div class="v">${v}</div>${s && visible ? `<div class="s">${s}</div>` : ''}</div>`;
 };
 /** KPI que se puede pulsar para ver el detalle (lista de movimientos). */
-const kpiLink = (k, l, v, s = '', cls = '') => `<div class="kpi ${cls} clickable" data-action="dash-detalle" data-k="${k}" role="button" tabindex="0" title="Ver el detalle">${'<div class="l">' + l + '</div>'}<div class="v">${v}</div>${s ? `<div class="s">${s}</div>` : ''}<span class="kpi-arrow" aria-hidden="true">›</span></div>`;
-const metric = (l, v, cls = '') => `<div class="metric"><div class="l">${l}</div><div class="v ${cls}">${v}</div></div>`;
+const kpiLink = (k, l, v, s = '', cls = '') => (v = sinCent(v), `<div class="kpi ${cls} clickable" data-action="dash-detalle" data-k="${k}" role="button" tabindex="0" title="Ver el detalle">${'<div class="l">' + l + '</div>'}<div class="v">${v}</div>${s ? `<div class="s">${s}</div>` : ''}<span class="kpi-arrow" aria-hidden="true">›</span></div>`);
+const metric = (l, v, cls = '') => `<div class="metric"><div class="l">${l}</div><div class="v ${cls}">${sinCent(v)}</div></div>`;
 const pctBar = (p, cls = '') => `<div class="bar ${cls}"><span style="width:${Math.max(0, Math.min(100, (p || 0) * 100)).toFixed(1)}%"></span></div>`;
 
 Object.assign(Actions, {

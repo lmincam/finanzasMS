@@ -23,7 +23,7 @@ function renderTabs() {
   if (sub && sec.resumen) {
     // Secciones con resumen: sin pestañas; en cada apartado, una barra para volver al resumen
     sub.hidden = S.tab === sec.resumen;
-    sub.innerHTML = S.tab === sec.resumen ? '' : `<div class="subtabs-in sub-back"><button data-action="tab" data-tab="${sec.resumen}">‹ Volver a ${esc(sec.l)}</button></div>`;
+    sub.innerHTML = S.tab === sec.resumen ? '' : `<div class="subtabs-in sub-back"><button data-action="tab" data-tab="${sec.resumen}">${esc(sec.l)}</button><span class="sb-sep">›</span><span class="sb-cur">${esc(nombre(S.tab))}</span></div>`;
   } else if (sub) { sub.hidden = sec.tabs.length < 2;
     sub.innerHTML = sec.tabs.length < 2 ? '' : `<div class="subtabs-in">${sec.tabs.map(k => `<button class="${k === S.tab ? 'active' : ''}" data-action="tab" data-tab="${k}">${esc(nombre(k))}</button>`).join('')}</div>`;
     const act = sub.querySelector('.active'); if (act && act.scrollIntoView) act.scrollIntoView({ block: 'nearest', inline: 'center' }); }

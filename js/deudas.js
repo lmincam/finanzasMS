@@ -73,18 +73,18 @@ function renderDeudas() {
       ${kpi('Deuda pendiente total', fmtEUR(tot), `${act.length} préstamo(s) activo(s)`, 'neg')}
       ${kpi('Cuotas mensuales', fmtEUR(cuotas), `${fmtEUR(cuotas * 12, 0)} al año`)}
       ${kpi('Intereses pendientes', fmtEUR(intPend, 0), 'Si no amortizas nada más', 'warn')}
-      ${kpi('Ahorro por amortizaciones', fmtEUR(ahorroPrev, 0), `Ya conseguido hasta hoy: <b>${fmtEUR(ahorroYa, 0)}</b>`, 'pos')}
-      ${kpi('Libre de deudas', fin ? ymLabel(fin) : '—', fin ? `Dentro de ${fmtNum(monthsDiff(todayISO(), fin + '-01') / 12, 1)} años` : '')}
+      ${ahorroPrev > 0 ? kpi('Ahorro por amortizaciones', fmtEUR(ahorroPrev, 0), `Ya conseguido hasta hoy: <b>${fmtEUR(ahorroYa, 0)}</b>`, 'pos') : ''}
+      ${kpi('Libre de deudas', fin ? ymMedio(fin) : '—', fin ? `Dentro de ${fmtNum(monthsDiff(todayISO(), fin + '-01') / 12, 1)} años` : '')}
     </div>
     ${A.length ? `<div class="card"><div class="card-head"><h3>Evolución prevista de la deuda</h3><span class="sub">Capital pendiente a final de cada año</span></div><div class="chart-box sm"><canvas id="ch-deu-global"></canvas></div></div>` : ''}
     <div class="grid-2e">${infos.map(({ d: x, I }) => `
       <div class="card" style="margin-bottom:0;cursor:pointer" data-action="deu-open" data-id="${x.id}">
         <div class="asset-head"><div class="asset-ico">🏦</div><div style="flex:1"><h3>${esc(x.nombre)} ${x.activa === false ? '<span class="badge">Cancelada</span>' : ''}</h3>
           <div class="small muted">${TIPO_DEUDA[x.tipo] || ''}${x.entidad ? ' · ' + esc(x.entidad) : ''} · ${x.tipo_interes || 'fijo'} ${fmtNum(num(x.interes), 2)} %</div></div>
-          <span class="btn sm">Ver detalle →</span></div>
+          <span class="btn sm">Ver detalle</span></div>
         <div class="metrics">
           ${metric('Pendiente', fmtEUR(I.pendienteHoy, 0), 'neg')}${metric('Cuota', fmtEUR(I.cuota))}
-          ${metric('Cuotas restantes', I.restantes !== null ? fmtNum(I.restantes, 0) : '—')}${metric('Fin', I.fin ? ymLabel(I.fin, true) : '—')}
+          ${metric('Cuotas restantes', I.restantes !== null ? fmtNum(I.restantes, 0) : '—')}${metric('Fin', I.fin ? ymMedio(I.fin) : '—')}
         </div>
         ${I.pctAmort !== null ? `<div style="margin-top:10px"><div class="small muted" style="margin-bottom:4px">Amortizado ${fmtPct(I.pctAmort)}</div>${pctBar(I.pctAmort, 'navy')}</div>` : ''}
       </div>`).join('') || '<div class="card empty">Sin préstamos registrados</div>'}</div>`;
@@ -152,9 +152,9 @@ function renderDeudaDetalle(d) {
       ${kpi(`Capital pendiente${I.estimado ? ' (estimado hoy)' : ''}`, fmtEUR(I.pendienteHoy), `Inicial ${fmtEUR(d.capital_inicial, 0)}`, 'neg')}
       ${kpi('Cuota mensual', fmtEUR(I.cuota), (() => { const int = Math.min(I.cuota, pendienteEnMes(d, ymHoy) * I.r);
         return `Este mes: <b class="neg">${fmtEUR(int)}</b> intereses · <b class="pos">${fmtEUR(I.cuota - int)}</b> capital<br>${fmtNum(I.pagadas || 0, 0)} pagadas · ${I.restantes !== null ? fmtNum(I.restantes, 0) : '—'} restantes`; })())}
-      ${kpi('Fin previsto', I.fin ? ymLabel(I.fin) : '—', d.plazo_meses ? `Plazo contractual ${fmtNum(d.plazo_meses, 0)} meses` : '')}
+      ${kpi('Fin previsto', I.fin ? ymMedio(I.fin) : '—', d.plazo_meses ? `Plazo contractual ${fmtNum(d.plazo_meses, 0)} meses` : '')}
       ${kpi('Intereses pendientes', fmtEUR(I.interesesPendientes), 'Sin amortizar nada más', 'warn')}
-      ${kpi('Ahorro por amortizaciones', fmtEUR(ahorroPrev), `Ya conseguido hasta hoy: <b>${fmtEUR(ahorroYa)}</b>`, 'pos')}
+      ${ahorroPrev > 0 ? kpi('Ahorro por amortizaciones', fmtEUR(ahorroPrev), `Ya conseguido hasta hoy: <b>${fmtEUR(ahorroYa)}</b>`, 'pos') : ''}
     </div>
     ${I.pctAmort !== null ? `<div class="card" style="padding:14px 18px"><div class="small muted" style="margin-bottom:6px">Amortizado <b>${fmtPct(I.pctAmort)}</b> del capital inicial</div>${pctBar(I.pctAmort, 'navy')}</div>` : ''}
 
@@ -189,7 +189,7 @@ function renderDeudaDetalle(d) {
       <div class="card"><div class="card-head"><h3>🗓️ Plan de amortizaciones periódicas</h3>${S.v4 ? `<button class="btn sm" data-action="plan-new" data-id="${d.id}">+ Añadir</button>` : ''}</div>
         ${planes.length ? planes.map(p => `<div class="cat-row"><span class="cname"><b>${fmtEUR(p.importe)}</b> · ${frecLabel(p.cada_meses)} · desde ${ymLabel(ymOf(p.desde), true)}${p.hasta ? ' hasta ' + ymLabel(ymOf(p.hasta), true) : ''}<br><span class="small muted">${MODO_AMORT[p.modo] || ''}${p.activo === false ? ' · pausado' : ''}</span></span>
           <button class="mini" data-action="plan-edit" data-id="${p.id}">✎</button><button class="mini" data-action="plan-del" data-id="${p.id}">🗑</button></div>`).join('')
-          + (cmpPlan ? `<div class="metrics" style="margin-top:12px">${metric('Aportarás en total', fmtEUR(cmpPlan.totalExtra, 0))}${metric('Ahorro neto en intereses', fmtEUR(cmpPlan.neto, 0), 'pos')}${metric('Terminarías en', cmpPlan.finCon ? ymLabel(cmpPlan.finCon, true) : '—')}${metric('Cuota final', fmtEUR(cmpPlan.cuotaFinal))}</div>` : '')
+          + (cmpPlan ? `<div class="metrics" style="margin-top:12px">${metric('Aportarás en total', fmtEUR(cmpPlan.totalExtra, 0))}${metric('Ahorro neto en intereses', fmtEUR(cmpPlan.neto, 0), 'pos')}${metric('Terminarías en', cmpPlan.finCon ? ymMedio(cmpPlan.finCon) : '—')}${metric('Cuota final', fmtEUR(cmpPlan.cuotaFinal))}</div>` : '')
         : '<div class="empty">Sin plan. Simula arriba una amortización periódica y pulsa “Guardar como plan”.</div>'}</div>
     </div>
     ${d.notas ? `<div class="notes">${esc(d.notas)}</div>` : ''}`;
@@ -221,7 +221,7 @@ function renderSimulador(d, I, sim) {
       <div class="tbl-wrap" style="margin-top:14px"><table class="tbl"><thead><tr><th></th><th class="right">Sin amortizar</th><th class="right">Reducir plazo</th><th class="right">Reducir cuota</th></tr></thead><tbody>
         ${row('Importe amortizado', '—', fmtEUR(P.totalExtra), fmtEUR(C.totalExtra))}
         ${row('Cuotas restantes', fmtNum(P.base.length, 0), `${fmtNum(P.con.length, 0)} <span class="small pos">(−${P.mesesAhorro})</span>`, fmtNum(C.con.length, 0))}
-        ${row('Fecha de fin', P.finBase ? ymLabel(P.finBase, true) : '—', P.finCon ? ymLabel(P.finCon, true) : '—', C.finCon ? ymLabel(C.finCon, true) : '—')}
+        ${row('Fecha de fin', P.finBase ? ymMedio(P.finBase) : '—', P.finCon ? ymMedio(P.finCon) : '—', C.finCon ? ymMedio(C.finCon) : '—')}
         ${row('Cuota mensual', fmtEUR(I.cuota), fmtEUR(P.cuotaFinal), `${fmtEUR(C.cuotaFinal)} <span class="small pos">(−${fmtEUR(I.cuota - C.cuotaFinal)})</span>`)}
         ${row('Intereses que pagarás', fmtEUR(P.intBase), fmtEUR(P.intCon), fmtEUR(C.intCon))}
         ${row('Total que pagarás (cuotas + amortizaciones)', fmtEUR(P.pagadoBase), fmtEUR(P.pagadoCon), fmtEUR(C.pagadoCon))}
@@ -235,7 +235,7 @@ function renderSimulador(d, I, sim) {
           Te ahorras <b>${fmtEUR(mejorAmort.neto)}</b> netos en intereses${mejorNombre === 'reducir plazo' ? ` y terminas ${P.mesesAhorro} meses antes` : ` y tu cuota baja ${fmtEUR(I.cuota - C.cuotaFinal)}/mes`}.
           Amortizar equivale a una rentabilidad <b>segura del ${fmtNum(num(d.interes), 2)} % anual</b> sin riesgo ni impuestos. Reducir plazo siempre ahorra más intereses; reducir cuota da más margen mensual.</div></div>
         <div class="alert ${invNeta > mejorAmort.neto ? 'amber' : 'blue'}"><div class="ic">📈</div><div><b class="t">¿Y si lo invirtieras al ${fmtNum(num(sim.rent), 1)} % anual?</b>
-          Hasta ${P.finBase ? ymLabel(P.finBase, true) : 'el fin del préstamo'} ganarías unos <b>${fmtEUR(inv.ganancia, 0)}</b> brutos, <b>${fmtEUR(invNeta, 0)}</b> tras impuestos (${fmtNum(num(sim.tax), 0)} %), frente a ${fmtEUR(mejorAmort.neto, 0)} de ahorro seguro amortizando.
+          Hasta ${P.finBase ? ymMedio(P.finBase) : 'el fin del préstamo'} ganarías unos <b>${fmtEUR(inv.ganancia, 0)}</b> brutos, <b>${fmtEUR(invNeta, 0)}</b> tras impuestos (${fmtNum(num(sim.tax), 0)} %), frente a ${fmtEUR(mejorAmort.neto, 0)} de ahorro seguro amortizando.
           ${invNeta > mejorAmort.neto ? 'Sobre el papel compensa más invertir, pero esa rentabilidad no está garantizada y amortizar no tiene riesgo.' : 'Amortizar sale mejor que invertir a esa rentabilidad, y además sin riesgo.'}
           <span class="muted">Comparación orientativa: supone rentabilidad constante y no considera tu fondo de emergencia, desgravaciones ni seguros vinculados.</span></div></div>
       </div>

@@ -56,6 +56,7 @@ const ymOf = iso => String(iso || '').slice(0, 7);
 const addMonths = (ym, n) => { const [y, m] = ym.split('-').map(Number); const t = y * 12 + (m - 1) + n; return `${Math.floor(t / 12)}-${pad(t % 12 + 1)}`; };
 const monthsBetween = (a, b) => { if (a > b) [a, b] = [b, a]; const out = []; let c = a; while (c <= b && out.length < 240) { out.push(c); c = addMonths(c, 1); } return out; };
 const ymLabel = (ym, short = false) => { if (!ym) return '—'; const [y, m] = ym.split('-').map(Number); return short ? `${MES_C[m - 1]} ${String(y).slice(2)}` : `${MESES[m - 1]} ${y}`; };
+const ymMedio = ym => { if (!ym) return '—'; const [y, m] = ym.split('-').map(Number); return `${MES_C[m - 1]} ${y}`; };
 const fmtDate = iso => iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}` : '—';
 const fmtDateShort = iso => iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}` : '—';
 const daysInMonth = (y, m) => new Date(y, m, 0).getDate();

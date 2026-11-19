@@ -55,7 +55,7 @@ function renderPreciosCard() {
     return `<div class="acc-row"><span><b>${esc(p ? p.nombre : i)}</b> <span class="muted small">${i}</span></span>
       <span class="small">${u ? `<b class="num">${fmtNum(u.precio, 4)}</b> · ${fmtDate(u.fecha)}${u.fuente ? ` <span class="muted">(${esc(u.fuente)})</span>` : ''}` : (r && !r.ok ? `<span class="neg">❌ ${esc(r.error)}</span>` : '<span class="muted">sin precio aún</span>')}</span></div>`; }).join('');
   const activo = !!est;
-  return `<div class="card"><div class="card-head"><div><h3>📡 Precios automáticos</h3><div class="small muted">${activo ? `Última actualización: ${new Date(est.ejecutado).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}${est.eodhd ? ' · EODHD + Yahoo' : ' · Yahoo Finance (sin clave EODHD)'}` : 'Aún no se ha ejecutado la tarea diaria'}</div></div>
+  return `<div class="card"><div class="card-head"><div><h3>Precios automáticos</h3><div class="small muted">${activo ? `Última actualización: ${new Date(est.ejecutado).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}${est.eodhd ? ' · EODHD + Yahoo' : ' · Yahoo Finance (sin clave EODHD)'}` : 'Aún no se ha ejecutado la tarea diaria'}</div></div>
       <a class="btn sm" href="${REPO_GH}/actions/workflows/precios.yml" target="_blank" rel="noopener">Ver / lanzar en GitHub</a></div>
     ${isins.length ? filas : '<div class="small muted">Añade productos con su ISIN en cada cuenta de inversión.</div>'}
     ${sinPart.length ? `<div class="banner amber" style="margin-top:10px">Para valorar solo ${sinPart.length === 1 ? 'este producto' : 'estos productos'} falta indicar las <b>participaciones</b>: ${sinPart.map(p => esc(p.nombre)).join(', ')}. Edita el producto (✎) en su cuenta.</div>` : ''}
@@ -92,7 +92,7 @@ AfterLoad.push(sincronizarValoresAuto);
 function bloqueDistribucion(id, dist, titulo, sub) {
   return `<div class="card"><div class="card-head"><h3>${titulo}</h3><span class="sub">${sub}</span></div>
     ${dist.length ? `<div class="grid-2e" style="align-items:center"><div class="chart-box sm"><canvas id="${id}"></canvas></div>
-      <div class="brk">${dist.map((x, i) => `<div class="r" style="grid-template-columns:1fr 70px 100px"><span><span class="cdot" style="background:${colorDe(x, i)}"></span>${esc(x.label)}${x.isin ? ` <span class="small muted">${esc(x.isin)}</span>` : ''}</span>
+      <div class="brk">${dist.map((x, i) => `<div class="r" style="grid-template-columns:minmax(0,1fr) 56px 84px"><span class="brk-n" title="${esc(x.label)}${x.isin ? ' · ' + esc(x.isin) : ''}"><span class="cdot" style="background:${colorDe(x, i)}"></span>${esc(x.label)}</span>
         <span class="right num"><b>${fmtPct(x.pct, 1)}</b></span><span class="right num small">${fmtEUR(x.val, 0)}</span></div>`).join('')}</div></div>`
       : '<div class="empty">Añade los productos de cada cuenta (ISIN, fondo, ETF…) para ver la distribución.</div>'}</div>`;
 }
@@ -169,7 +169,7 @@ function renderInversiones() {
       ${tarjetaDistribucion('ch-inv-dist', dist, dimDist, '¿En qué está invertido?')}
     </div>
 
-    <details class="card inv-more"><summary><b>⚙️ Precios automáticos y aportaciones</b> <span class="small muted">· estado de la descarga diaria y planes mensuales</span></summary>
+    <details class="card inv-more"><summary><b>Precios automáticos y aportaciones</b> <span class="small muted">· ${(e => e ? `actualizado ${fmtDateShort(String(e.ejecutado).slice(0, 10))}` : "pendiente de la primera descarga")(((S.ajustesRows || []).find(r => r.clave === "precios_estado") || {}).valor)}</span></summary>
       <div style="margin-top:12px">${renderPreciosCard()}</div>
       <div class="card" style="box-shadow:none;border:1px solid var(--line)"><div class="card-head"><h3>🔁 Aportaciones periódicas</h3></div>${S.v4 ? listaAportPeriodicas(S.aportaciones_periodicas.filter(p => inv.some(c => c.id === p.cuenta_id)), true) : bannerV4()}</div>
     </details>`;
@@ -186,7 +186,7 @@ function heroInversion({ valor, aportado, plus, cambio, t, mensual, titulo }) {
     <div class="ih-grid">
       <div><div class="l">Invertido de tu bolsillo</div><div class="v num">${fmtEUR(aportado)}</div><div class="s">Aportaciones − retiradas</div></div>
       <div><div class="l">Ganancia</div><div class="v num ${plus >= 0 ? 'pos' : 'neg'}">${signed(plus)}</div><div class="s">${aportado > 0 ? `${plus >= 0 ? '+' : ''}${fmtPct(plus / aportado)} sobre lo invertido` : '—'}</div></div>
-      <div><div class="l">Rentabilidad anual (TIR)</div><div class="v num ${t.tir !== null && t.tir >= 0 ? 'pos' : t.tir !== null ? 'neg' : ''}">${t.tir !== null ? fmtPct(t.tir, 2) : '—'}</div><div class="s">${t.tir !== null ? (t.dias < 365 ? 'Menos de 1 año: orientativa' : `Real: ${fmtPct((1 + t.tir) / (1 + supuestos().inflacion / 100) - 1, 2)} tras inflación`) : esc(t.motivo || '')}</div></div>
+      <div><div class="l">Rentabilidad anual (TIR)</div><div class="v num ${t.tir !== null && t.dias < 365 ? 'muted' : t.tir !== null && t.tir >= 0 ? 'pos' : t.tir !== null ? 'neg' : ''}">${t.tir !== null ? fmtPct(t.tir, 2) : '—'}</div><div class="s">${t.tir !== null ? (t.dias < 365 ? 'Menos de 1 año: orientativa' : `Real: ${fmtPct((1 + t.tir) / (1 + supuestos().inflacion / 100) - 1, 2)} tras inflación`) : esc(t.motivo || '')}</div></div>
       <div><div class="l">Aportas</div><div class="v num">${fmtEUR(mensual)}/mes</div><div class="s">${fmtEUR(mensual * 12, 0)} al año</div></div>
     </div></div>`;
 }
@@ -195,7 +195,7 @@ function tarjetaDistribucion(id, dist, dim, titulo) {
   const tabs = [['producto', 'Producto'], ['clase', 'Clase'], ['region', 'Región']];
   return `<div class="card"><div class="card-head"><h3>${titulo}</h3><div class="seg seg-sm">${tabs.map(([k, l]) => `<button data-action="inv-dist" data-k="${k}" class="${dim === k ? 'active' : ''}">${l}</button>`).join('')}</div></div>
     ${dist.length ? `<div class="dist-wrap"><div class="chart-box sm"><canvas id="${id}"></canvas></div>
-      <div class="brk">${dist.map((x, i) => `<div class="r" style="grid-template-columns:1fr 60px 90px"><span><span class="cdot" style="background:${colorDe(x, i)}"></span>${esc(x.label)}</span>
+      <div class="brk">${dist.map((x, i) => `<div class="r" style="grid-template-columns:minmax(0,1fr) 54px 76px"><span class="brk-n" title="${esc(x.label)}"><span class="cdot" style="background:${colorDe(x, i)}"></span>${esc(x.label)}</span>
         <span class="right num"><b>${fmtPct(x.pct, 1)}</b></span><span class="right num small">${fmtEUR(x.val, 0)}</span></div>`).join('')}</div></div>`
       : '<div class="empty">Añade los productos de cada cuenta (ISIN, fondo, ETF…) para ver la distribución.</div>'}</div>`;
 }

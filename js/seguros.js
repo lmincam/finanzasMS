@@ -19,7 +19,7 @@ const seguroVehiculo = v => { const ss = S.seguros.filter(s => s.vehiculo_id ===
 
 function renderSeguros() {
   const el = $('#tab-seguros');
-  if (!S.v4) { el.innerHTML = `<div class="section-head"><h2>🛡️ Seguros</h2></div>${bannerV4()}`; return; }
+  if (!S.v4) { el.innerHTML = `<div class="section-head"><h2>Seguros</h2></div>${bannerV4()}`; return; }
   const act = S.seguros.filter(s => s.activo !== false), inact = S.seguros.filter(s => s.activo === false);
   const infos = act.map(s => ({ s, x: seguroInfo(s) }));
   const total = sum(infos, o => o.x.prima);
@@ -40,15 +40,15 @@ function renderSeguros() {
     <div class="kpis" ${!S.seguros.length ? 'hidden' : ''}>
       ${kpi('Pólizas activas', fmtNum(act.length, 0), inact.length ? `${inact.length} dada(s) de baja` : '', 'navy')}
       ${kpi('Coste anual total', fmtEUR(total), `Equivale a ${fmtEUR(total / 12)}/mes`, 'warn')}
-      ${kpi('Próximo vencimiento', prox.length ? fmtDate(prox[0].x.venc) : '—', prox.length ? `${esc(prox[0].s.nombre)} · en ${prox[0].x.dias} días` : '')}
-      ${kpi('Renovaciones en 45 días', fmtNum(vencenPronto.length, 0), vencenPronto.length ? 'Buen momento para comparar precios' : 'Nada urgente', vencenPronto.length ? 'warn' : 'pos')}
+      ${prox.length ? kpi('Próximo vencimiento', fmtDate(prox[0].x.venc), `${esc(prox[0].s.nombre)} · en ${prox[0].x.dias} días`) : kpi('Coste mensual', fmtEUR(total / 12, 0), 'Prorrateado')}
+      ${vencenPronto.length ? kpi('Renovaciones en 45 días', fmtNum(vencenPronto.length, 0), 'Buen momento para comparar precios', 'warn') : ''}
     </div>
     ${vencenPronto.length ? `<div class="banner amber">📅 Vencen pronto: ${vencenPronto.map(o => `<b>${esc(o.s.nombre)}</b> (${fmtDate(o.x.venc)}${o.s.renovacion_auto === false ? ', <u>no se renueva sola</u>' : ''})`).join(' · ')}. Pide otros presupuestos antes de que renueve.</div>` : ''}
     ${act.length ? `<div class="grid-2">
       <div class="card"><div class="card-head"><h3>Recibos previstos</h3><span class="sub">Próximos 12 meses según forma de pago</span></div><div class="chart-box sm"><canvas id="ch-seg-rec"></canvas></div></div>
       <div class="card"><div class="card-head"><h3>Coste anual por tipo</h3></div><div class="chart-box sm"><canvas id="ch-seg-tipo"></canvas></div></div>
     </div>` : ''}
-    ${porTipo.map(g => `<div class="sub-title">${TIPO_SEGURO[g.t]} · ${fmtEUR(sum(g.items, o => o.x.prima), 0)}/año</div>
+    ${porTipo.map(g => `<div class="sub-title grp-title"><span>${TIPO_SEGURO[g.t]}</span><span class="muted">${fmtEUR(sum(g.items, o => o.x.prima), 0)}/año</span></div>
       <div class="grid-2e" style="margin-bottom:16px">${g.items.map(({ s, x }) => tarjetaSeguro(s, x)).join('')}</div>`).join('')}
     ${inact.length ? `<details class="card"><summary>Pólizas dadas de baja (${inact.length})</summary><div class="grid-2e" style="margin-top:10px">${inact.map(s => tarjetaSeguro(s, seguroInfo(s))).join('')}</div></details>` : ''}`;
 
@@ -65,12 +65,12 @@ function tarjetaSeguro(s, x) {
   return `<div class="card" style="margin-bottom:0;${s.activo === false ? 'opacity:.6' : ''}">
     <div class="asset-head"><div class="asset-ico">${(TIPO_SEGURO[s.tipo] || '📄').split(' ')[0]}</div><div style="flex:1"><h3>${esc(s.nombre)}</h3>
       <div class="small muted">${[s.aseguradora, s.poliza ? 'Póliza ' + s.poliza : '', veh ? veh.nombre : '', inm ? inm.nombre : '', s.asegurado].filter(Boolean).map(esc).join(' · ')}</div></div>
-      <button class="mini" data-action="seg-edit" data-id="${s.id}">✎</button><button class="mini" data-action="seg-del" data-id="${s.id}">🗑</button></div>
+      <button class="mini" data-action="seg-edit" data-id="${s.id}" title="Editar">✎</button><button class="mini" data-action="seg-del" data-id="${s.id}" title="Eliminar">🗑</button></div>
     <div class="metrics">
-      ${metric('Prima anual', fmtEUR(x.prima))}${metric(`Recibo ${s.forma_pago || 'anual'}`, fmtEUR(x.recibo))}
+      ${metric('Prima anual', fmtEUR(x.prima))}${Math.abs(x.recibo - x.prima) > 0.5 ? metric(`Recibo ${s.forma_pago || 'anual'}`, fmtEUR(x.recibo)) : ''}
       ${metric('Vencimiento', x.venc ? `${fmtDate(x.venc)}${x.dias !== null && x.dias >= 0 ? ` <span class="small ${urg ? 'warn-t' : 'muted'}">(${x.dias} d)</span>` : ''}` : '—', urg ? 'warn-t' : '')}
       ${metric('Renovación', s.renovacion_auto === false ? 'Manual' : 'Automática')}
-      ${s.capital_asegurado ? metric('Capital asegurado', fmtEUR(s.capital_asegurado, 0)) : ''}${s.franquicia ? metric('Franquicia', fmtEUR(s.franquicia, 0)) : ''}
+      ${s.capital_asegurado ? metric(s.tipo === 'hogar' ? 'Continente' : 'Capital asegurado', fmtEUR(s.capital_asegurado, 0)) : ''}${s.tipo === 'hogar' && s.capital_contenido ? metric('Contenido', fmtEUR(s.capital_contenido, 0)) : ''}${s.franquicia ? metric('Franquicia', fmtEUR(s.franquicia, 0)) : ''}
     </div>
     ${s.coberturas ? `<div class="small" style="margin-top:10px;white-space:pre-wrap"><b>Coberturas:</b> ${esc(s.coberturas)}</div>` : ''}
     ${s.telefono_asistencia || cta ? `<div class="small muted" style="margin-top:6px">${s.telefono_asistencia ? `📞 Asistencia: <a href="tel:${esc(s.telefono_asistencia.replace(/\s/g, ''))}">${esc(s.telefono_asistencia)}</a>` : ''}${cta ? ` · Cargo en ${esc(cta.nombre)}` : ''}</div>` : ''}

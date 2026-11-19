@@ -14,6 +14,24 @@ const FIELDS_CUENTA = [
   { name: 'orden', label: 'Orden', type: 'int' }, { name: 'activa', label: 'Cuenta activa', type: 'checkbox', def: true }
 ];
 
+/** Entradas y salidas del mes en curso (de nómina) de una cuenta, sin contar movimientos internos de la propia cuenta. */
+function movMesCuenta(id) {
+  const ym = mesActual(); let ent = 0, sal = 0;
+  for (const m of S.movimientos) { if (m.cuenta_id !== id || cicloDe(m.fecha) !== ym) continue; const v = num(m.importe); if (v >= 0) ent += v; else sal -= v; }
+  return { ent: round2(ent), sal: round2(sal) };
+}
+function abrirMenuCuenta(id) {
+  const c = cuentaById(id); if (!c) return; const inv = c.tipo === 'inversion';
+  const op = (a, ic, t, st = '') => `<button class="mv-op" data-op="${a}" ${st}><span>${ic}</span>${t}</button>`;
+  const md = modal(`<h3 style="margin-bottom:10px">${esc(c.nombre)}</h3><div class="mv-ops">
+    ${inv ? op('cuenta-valor', '📈', 'Actualizar valor') : op('cuenta-conciliar', '🏦', 'Conciliar con el saldo del banco')}
+    ${op('mov-filtrar-cuenta', '🔎', 'Ver sus movimientos')}
+    ${op('cuenta-edit', '✎', 'Editar')}${op('cuenta-del', '🗑', 'Eliminar', 'style="color:var(--red)"')}</div>`);
+  md.el.addEventListener('click', e => { const b = e.target.closest('[data-op]'); if (!b) return; md.close();
+    if (b.dataset.op === 'mov-filtrar-cuenta') { S.movFilter.cuenta = id; S.movLimit = 150; renderCuentas(); const l = $('.mv-head'); if (l) l.scrollIntoView({ behavior: 'smooth' }); return; }
+    Actions[b.dataset.op]({ dataset: { id } }); });
+}
+Actions['cuenta-menu'] = el => abrirMenuCuenta(el.dataset.id);
 function renderCuentas() {
   const el = $('#tab-cuentas');
   const P = Calc.patrimonio();
@@ -27,17 +45,14 @@ function renderCuentas() {
     const plus = val - saldo;
     return `<div class="acc-card ${c.activa === false ? 'off' : ''}" style="--acc:${esc(c.color || '#1e3a5f')}">
       <div class="acc-top"><div><div class="acc-name">${esc(c.nombre)}</div><div class="acc-sub">${esc(c.entidad || '')}${c.entidad ? ' · ' : ''}${TIPO_CUENTA[c.tipo] || c.tipo}</div></div>
-        ${c.activa === false ? '<span class="badge">Inactiva</span>' : ''}</div>
+        ${c.activa === false ? '<span class="badge">Inactiva</span>' : ''}<button class="mv-more" data-action="cuenta-menu" data-id="${c.id}" aria-label="Opciones de la cuenta">⋯</button></div>
       <div class="acc-val ${val < 0 ? 'neg' : ''}">${fmtEUR(val)}</div>
       ${tieneVM ? `<div class="acc-meta">Aportado neto: ${fmtEUR(saldo)} · <b class="${plus >= 0 ? 'pos' : 'neg'}">${signed(plus)}</b> ${saldo ? `(${fmtPct(plus / saldo)})` : ''}</div><div class="acc-meta">Valor de mercado a ${fmtDate(c.fecha_valor_mercado)} + aportaciones posteriores</div>`
         : ''}
       ${resumenAnualidades(c)}
       ${(k => k ? `<div class="acc-meta">${Math.abs(num(k.dif)) < 0.01 ? '<span class="pos">🏦 ✅ Cuadra con el banco</span>' : `<span class="warn-t">🏦 ⚠ Descuadre ${signed(num(k.dif))}</span>`} a ${fmtDate(k.fecha)}</div>` : '')(conciliacionDe(c.id))}
-      <div class="acc-actions">
-        ${inv ? `<button class="btn sm" data-action="cuenta-valor" data-id="${c.id}">Actualizar valor</button>` : `<button class="btn sm" data-action="cuenta-conciliar" data-id="${c.id}">Conciliar saldo</button>`}
-        <button class="mini" data-action="cuenta-edit" data-id="${c.id}" title="Editar">✎</button>
-        <button class="mini" data-action="cuenta-del" data-id="${c.id}" title="Eliminar">🗑</button>
-      </div></div>`;
+      ${(mm => mm.ent || mm.sal ? `<div class="acc-mes"><span>Este mes</span><b class="pos">+${fmtEUR(mm.ent, 0)}</b><b class="neg">−${fmtEUR(mm.sal, 0)}</b></div>` : '')(movMesCuenta(c.id))}
+      </div>`;
   }).join('');
 
   el.innerHTML = `
@@ -52,8 +67,7 @@ function renderCuentas() {
     <div class="card" id="import-card" hidden></div>
 
     <div class="card">
-      <div class="card-head mv-head"><h3>Movimientos</h3><div class="btn-row">${chipPendientes()}
-        <button class="btn sm" data-action="mov-regla" title="Imputa al mes siguiente los ingresos de los últimos días laborables del mes">⏭ Regla de nómina</button></div></div>
+      <div class="card-head mv-head"><h3>Movimientos</h3><div class="btn-row">${chipPendientes()}</div></div>
       <div class="mov-filters">
         <div class="mf-mes"><button class="btn ghost" data-action="mf-mes-shift" data-d="-1" aria-label="Mes anterior" ${S.movFilter.mes ? '' : 'disabled'}>‹</button><button type="button" class="mpick" data-action="mf-mes-pick">${S.movFilter.mes ? ymLabel(S.movFilter.mes) : 'Todos los meses'}</button><button class="btn ghost" data-action="mf-mes-shift" data-d="1" aria-label="Mes siguiente" ${S.movFilter.mes ? '' : 'disabled'}>›</button></div>
         <select id="mf-cuenta">${accOpts(S.movFilter.cuenta, { empty: 'Todas las cuentas', soloActivas: false })}</select>
@@ -65,10 +79,15 @@ function renderCuentas() {
   renderImport();
   renderMovList();
 }
+/** Pata de entrada de una transferencia cuya salida también está registrada (se enseña solo la salida: "A → B"). */
+function esEntradaDeTransferencia(m) {
+  if (m.tipo !== 'transferencia' || num(m.importe) <= 0 || !m.cuenta_contraria_id) return false;
+  return S.movimientos.some(o => o.tipo === 'transferencia' && o.fecha === m.fecha && o.cuenta_id === m.cuenta_contraria_id && Math.abs(num(o.importe) + num(m.importe)) < 0.005);
+}
 function filteredMovs() {
   const f = S.movFilter, q = normText(f.q);
   return S.movimientos.filter(m => (!f.mes || ymOf(m.fecha) === f.mes) && (!f.cuenta || m.cuenta_id === f.cuenta) && (!f.tipo || m.tipo === f.tipo) &&
-    (!q || normText(`${m.concepto} ${m.notas || ''}`).includes(q)))
+    (!q || normText(`${m.concepto} ${m.notas || ''}`).includes(q)) && !(!f.cuenta && esEntradaDeTransferencia(m)))
     .sort((a, b) => a.fecha < b.fecha ? 1 : a.fecha > b.fecha ? -1 : String(b.created_at).localeCompare(String(a.created_at)));
 }
 function renderMovList() {
@@ -79,8 +98,8 @@ function renderMovList() {
   // Agrupados por día, con el neto del día (sin transferencias internas)
   const grupos = []; for (const m of shown) { const g = grupos[grupos.length - 1]; if (g && g.f === m.fecha) g.ms.push(m); else grupos.push({ f: m.fecha, ms: [m] }); }
   box.innerHTML = `<div class="mv-sum"><span>${list.length} movimientos</span><span class="pos">+${fmtEUR(ing)}</span><span class="neg">−${fmtEUR(gas)}</span></div>` +
-    (shown.length ? grupos.map(g => { const neto = sum(g.ms.filter(m => m.tipo !== 'transferencia'), 'importe');
-      return `<div class="mv-day"><span>${DIAS[weekday(g.f)]} ${fmtDate(g.f).slice(0, 5)}</span>${neto ? `<span class="${neto >= 0 ? 'pos' : 'neg'}">${signed(neto)}</span>` : ''}</div>${g.ms.map(movRow).join('')}`; }).join('')
+    (shown.length ? grupos.map(g => { const nt = g.ms.filter(m => m.tipo !== 'transferencia'), neto = sum(nt, 'importe');
+      return `<div class="mv-day"><span>${DIAS[weekday(g.f)]} ${fmtDate(g.f).slice(0, 5)}</span>${neto && nt.length > 1 ? `<span class="${neto >= 0 ? 'pos' : 'neg'}">${signed(neto)}</span>` : ''}</div>${g.ms.map(movRow).join('')}`; }).join('')
       : '<div class="empty">No hay movimientos con estos filtros</div>') +
     (list.length > shown.length ? `<div style="text-align:center;padding:12px"><button class="btn sm" data-action="mov-more">Mostrar más (${list.length - shown.length})</button></div>` : '');
 }
@@ -88,7 +107,8 @@ function renderMovList() {
 function movRow(m) {
   const cta = cuentaById(m.cuenta_id), imp = num(m.importe), isT = m.tipo === 'transferencia';
   const c = catById(m.categoria_id), r = c ? rootOf(c) : null, color = isT ? '#94a3b8' : (c && c.color) || (r && r.color) || '#cbd5e1';
-  const sub = isT ? `${imp < 0 ? '→' : '←'} ${esc((cuentaById(m.cuenta_contraria_id) || {}).nombre || '?')}` : esc(catName(m.categoria_id) || 'Sin categoría');
+  const otra = esc((cuentaById(m.cuenta_contraria_id) || {}).nombre || '?'), esta = esc(cta ? cta.nombre : '?');
+  const sub = isT ? (imp < 0 ? `${esta} → ${otra}` : `${otra} → ${esta}`) : esc(catName(m.categoria_id) || 'Sin categoría');
   const tags = [];
   if (S.v6 && m.reembolso_de) {
     const o = S.movimientos.find(x => x.id === m.reembolso_de);
@@ -104,9 +124,9 @@ function movRow(m) {
   return `<div class="mv" data-action="mov-edit" data-id="${m.id}" role="button" tabindex="0">
     ${iconoMovimiento(m)}
     <div class="mv-main"><div class="mv-con">${esc(m.concepto || '—')}</div>
-      <div class="mv-sub">${sub} · ${esc(cta ? cta.nombre : '?')}${tags.length ? ' ' + tags.join(' ') : ''}</div></div>
+      <div class="mv-sub">${sub}${isT ? '' : ` · ${esta}`}${tags.length ? ' ' + tags.join(' ') : ''}</div></div>
     <button class="mv-more" data-action="mov-menu" data-id="${m.id}" aria-label="Más acciones">⋯</button>
-    <div class="mv-amt ${isT ? 'muted' : imp >= 0 ? 'pos' : 'neg'}">${signed(imp)}</div>
+    <div class="mv-amt ${isT ? 'muted' : imp >= 0 ? 'pos' : 'neg'}">${isT && !S.movFilter.cuenta ? fmtEUR(Math.abs(imp)) : signed(imp)}</div>
   </div>`;
 }
 /** Menú de acciones de un movimiento (en lugar de muchos botones pequeños en cada fila). */

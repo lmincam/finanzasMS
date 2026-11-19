@@ -22,7 +22,7 @@ function renderAjustes() {
         <div class="form-grid" style="margin-top:12px">
           <div><label>La nómina llega en los últimos (días laborables)</label><input type="number" id="cfg-dias" min="1" max="15" value="${esc(S.ajustes.nomina_dias)}"></div>
           <div><label>Importe mínimo de la nómina (€)</label><input id="cfg-umbral" inputmode="decimal" value="${esc(numInput(S.ajustes.nomina_umbral))}"></div>
-          <div class="full actions"><button class="btn primary" data-action="cfg-save-regla" ${S.connected ? '' : 'disabled'}>Guardar</button></div>
+          <div class="full actions"><button class="btn ghost" data-action="mov-regla" title="Imputa al mes siguiente los ingresos de los últimos días laborables del mes">Aplicar a los movimientos</button><button class="btn primary" data-action="cfg-save-regla" ${S.connected ? '' : 'disabled'}>Guardar</button></div>
         </div></div>
       <div class="card"><div class="card-head"><h3>🔔 Alertas</h3></div>
         <div class="form-grid">

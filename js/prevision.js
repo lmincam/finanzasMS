@@ -181,6 +181,7 @@ function gastoMensualMedio() {
 /* =====================================================================
    SECCIÓN EN LA PESTAÑA "PREVISIÓN Y METAS"
    ===================================================================== */
+const fraseNombre = t => { t = String(t || '').trim(); return t && t === t.toUpperCase() && /[A-ZÁÉÍÓÚÑ]{3}/.test(t) ? t.charAt(0) + t.slice(1).toLowerCase() : t; };
 function renderPrevisionSection() {
   if (!S.v52) return `<div class="card"><div class="card-head"><h3>🔮 Previsión de tesorería</h3></div><div class="banner amber">Ejecuta <code>sql/esquema_completo.sql</code> en Supabase para activar la previsión y las metas.</div></div>`;
   const P = calcularPrevision(), M = P.meses, col = P.colchon;
@@ -189,9 +190,9 @@ function renderPrevisionSection() {
   const ign = prevIgnorados(), usadosK = new Set(P.usados.map(r => r.key));
   const tensos = M.filter(m => m.minMes < (col || 0));
   return `
-    <div class="section-head"><div><h2>Previsión</h2></div>
+    <div class="section-head"><div><h2>Previsión de tesorería</h2><div class="sub">Cómo evolucionará el dinero disponible en los próximos meses</div></div>
       <div class="btn-row"><div class="seg">${[3, 6, 12].map(h => `<button data-action="prev-h" data-h="${h}" class="${S.prevH === h ? 'active' : ''}">${h} meses</button>`).join('')}</div>
-        <label class="chk" style="margin:0"><input type="checkbox" id="prev-metas" ${S.prevMetas ? 'checked' : ''}> Incluir aportación a metas</label></div></div>
+        <label class="chk" style="margin:0"><input type="checkbox" id="prev-metas" ${S.prevMetas ? 'checked' : ''}> Contar aportaciones a metas</label></div></div>
     <div class="kpis">
       ${kpi('Disponible hoy', fmtEUR(P.saldoInicial), 'Corriente + efectivo', 'navy')}
       ${(ing => kpi('Ingresos previstos', fmtEUR(ing) + '/mes', ing > 0 ? 'Nómina, recurrentes y partidas previstas' : '<a href="#" data-action="pp-new">Añade tu nómina como partida prevista</a>', 'pos', !(ing > 0)))(sum(M.slice(1), 'ingresos') / Math.max(1, M.length - 1))}
@@ -208,18 +209,18 @@ function renderPrevisionSection() {
         <div class="top-list">${proximos.length ? proximos.map(x => `<div class="it"><div class="c"><b>${fmtDateShort(x.fecha)}</b> ${esc(x.concepto)}<div class="small muted">${esc(x.origen)}${x.variable ? ' · importe variable' : ''}</div></div><div class="num ${x.importe >= 0 ? 'pos' : 'neg'}">${signed(x.importe)}</div></div>`).join('') : '<div class="empty">Nada previsto. Importa unos meses de movimientos o añade partidas previstas.</div>'}</div></div>
     </div>
     <div class="card"><div class="card-head"><h3>Detalle por mes</h3><span class="sub">Pulsa un mes para ver sus partidas</span></div>
-      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Mes</th><th class="right">Ingresos</th><th class="right">Gastos fijos</th><th class="right">Variable est.</th><th class="right">Ahorro / metas</th><th class="right">Saldo final</th></tr></thead><tbody>
+      <div class="tbl-wrap tbl-scroll"><table class="tbl tbl-nowrap"><thead><tr><th>Mes</th><th class="right">Ingresos</th><th class="right">Gastos fijos</th><th class="right">Variable</th><th class="right">Metas</th><th class="right">Saldo final</th></tr></thead><tbody>
       ${M.map((m, i) => `<tr style="cursor:pointer" data-action="prev-mes" data-i="${i}"><td>${ymLabel(m.ym, true)}${i === 0 ? ' <span class="small muted">(resto)</span>' : ''} ▸</td><td class="right num pos">${fmtEUR(m.ingresos, 0)}</td><td class="right num neg">${fmtEUR(m.fijos, 0)}</td><td class="right num neg">${fmtEUR(m.variable, 0)}</td><td class="right num">${fmtEUR(m.ahorro, 0)}</td><td class="right num ${nivel(m.saldoFinal)}"><b>${fmtEUR(m.saldoFinal, 0)}</b></td></tr>
         <tr id="prev-det-${i}" hidden><td colspan="6"><div class="small">${m.items.length ? m.items.map(x => `${fmtDateShort(x.fecha)} · ${esc(x.concepto)} · <b class="${x.importe >= 0 ? 'pos' : 'neg'}">${signed(x.importe)}</b> <span class="muted">(${esc(x.origen)})</span>`).join('<br>') : 'Sin partidas'}${m.variable ? `<br>Gasto variable estimado · <b class="neg">−${fmtEUR(m.variable)}</b>` : ''}${m.metas ? `<br>Apartar para metas · <b>−${fmtEUR(m.metas)}</b>` : ''}</div></td></tr>`).join('')}
       </tbody></table></div></div>
     <div class="grid-2e">
-      <div class="card"><div class="card-head"><h3>🔁 Recurrentes detectados</h3><span class="sub">De tu historial (últimos 12 meses)</span></div>
-        ${P.detectados.length || ign.size ? detectarRecurrentes().map(r => `<div class="cat-row" style="${ign.has(r.key) ? 'opacity:.45' : ''}"><span class="cname"><b>${esc(r.nombre)}</b> <span class="small muted">${FREQ_LABEL[r.freq]} · día ${r.dia} · ${r.veces} veces${r.variable ? ' · varía' : ''}${!usadosK.has(r.key) && !ign.has(r.key) ? ' · ya contado en préstamos/seguros/partidas' : ''}</span></span>
+      <div class="card"><div class="card-head"><h3>Recurrentes detectados</h3><span class="sub">De tu historial (últimos 12 meses)</span></div>
+        ${P.detectados.length || ign.size ? detectarRecurrentes().map(r => `<div class="cat-row rec-row" style="${ign.has(r.key) ? 'opacity:.45' : ''}">${iconoMovimiento({ concepto: r.nombre, importe: r.tipo === 'ingreso' ? 1 : -1 })}<span class="cname"><b>${esc(fraseNombre(r.nombre))}</b><span class="small muted">${FREQ_LABEL[r.freq]} · día ${r.dia} · ${r.veces} veces${r.variable ? ' · varía' : ''}${!usadosK.has(r.key) && !ign.has(r.key) ? ' · ya contado en préstamos/seguros/partidas' : ''}</span></span>
           <span class="num ${r.tipo === 'ingreso' ? 'pos' : 'neg'}">${r.tipo === 'ingreso' ? '+' : '−'}${fmtEUR(r.importe)}</span>
           <button class="mini" data-action="prev-ign" data-k="${esc(r.key)}" title="${ign.has(r.key) ? 'Volver a tener en cuenta' : 'No tener en cuenta'}">${ign.has(r.key) ? '↺' : '✕'}</button></div>`).join('')
           : '<div class="empty">Aún no hay suficiente historial: con 3 meses de movimientos importados empezaré a detectar nóminas, recibos y suscripciones.</div>'}</div>
-      <div class="card"><div class="card-head"><h3>📌 Partidas previstas</h3><button class="btn sm" data-action="pp-new">+ Partida</button></div>
-        ${S.partidas_previstas.length ? S.partidas_previstas.map(p => `<div class="cat-row" style="${p.activa === false ? 'opacity:.5' : ''}"><span class="cname"><b>${esc(p.concepto)}</b> <span class="small muted">${FREQ_LABEL[num(p.frecuencia_meses)] || `Cada ${p.frecuencia_meses} meses`} · desde ${fmtDate(p.fecha_inicio)}${p.fecha_fin ? ' hasta ' + fmtDate(p.fecha_fin) : ''}</span></span>
+      <div class="card"><div class="card-head"><h3>Partidas previstas</h3><button class="btn sm" data-action="pp-new">+ Partida</button></div>
+        ${S.partidas_previstas.length ? S.partidas_previstas.map(p => `<div class="cat-row rec-row" style="${p.activa === false ? 'opacity:.5' : ''}"><span class="cname"><b>${esc(p.concepto)}</b><span class="small muted">${FREQ_LABEL[num(p.frecuencia_meses)] || `Cada ${p.frecuencia_meses} meses`} · desde ${fmtDate(p.fecha_inicio)}${p.fecha_fin ? ' hasta ' + fmtDate(p.fecha_fin) : ''}</span></span>
           <span class="num ${p.tipo === 'ingreso' ? 'pos' : 'neg'}">${p.tipo === 'ingreso' ? '+' : '−'}${fmtEUR(p.importe)}</span>
           <button class="mini" data-action="pp-edit" data-id="${p.id}">✎</button><button class="mini" data-action="pp-del" data-id="${p.id}">🗑</button></div>`).join('') : '<div class="empty">Sin partidas previstas.</div>'}</div>
     </div>`;

@@ -13,30 +13,19 @@ function renderAuditoria() {
   const find = (yy, qq) => snaps.find(s => s.anio === yy && s.trimestre === qq);
   const anios = [...new Set(snaps.map(s => s.anio))];
   el.innerHTML = `
+    <div class="section-head"><div><h2>Evolución del patrimonio</h2><div class="sub">Se guarda sola cada mes; las fotos trimestrales son opcionales</div></div></div>
+    ${renderMensualCard()}
     <div class="grid-2">
-      <div class="card"><div class="card-head"><h3>📸 Foto patrimonial actual</h3><span class="sub">${fmtDate(t)}</span></div>
-        <div class="metrics">
-          ${metric('Liquidez', fmtEUR(P.liquidez, 0))}${metric('Inversiones', fmtEUR(P.inversiones, 0))}${metric('Inmuebles', fmtEUR(P.inmuebles, 0))}
-          ${metric('Vehículos', fmtEUR(P.vehiculos, 0))}${metric('Deudas', '−' + fmtEUR(P.deudas, 0), 'neg')}${metric('PATRIMONIO NETO', fmtEUR(P.neto, 0), 'pos')}
-        </div>
-        <div class="form-grid" style="margin-top:14px">
-          <div><label>Año</label><input type="number" id="snap-anio" value="${y}"></div>
-          <div><label>Trimestre</label><select id="snap-q">${[1, 2, 3, 4].map(n => `<option value="${n}" ${n === q ? 'selected' : ''}>Q${n} (${['ene–mar', 'abr–jun', 'jul–sep', 'oct–dic'][n - 1]})</option>`).join('')}</select></div>
-          <div class="full"><label>Notas del trimestre</label><input id="snap-notas" placeholder="Ej: revalorización piso, aportación extra…"></div>
-          <div class="full actions"><button class="btn success" data-action="snap-save">Guardar foto del trimestre</button></div>
-        </div>
-      </div>
-      <div class="card"><div class="card-head"><h3>Evolución anual</h3><span class="sub">Último snapshot de cada año</span></div>
+  <div class="card"><div class="card-head"><h3>Fotos trimestrales</h3></div>
+      ${snaps.length ? '<div class="chart-box"><canvas id="ch-snap"></canvas></div>' : '<div class="empty">Guarda tu primera foto trimestral (abajo) para ver la evolución.</div>'}</div>
+  <div class="card"><div class="card-head"><h3>Evolución anual</h3><span class="sub">Última foto de cada año</span></div>
         ${anios.length ? `<table class="tbl"><thead><tr><th>Año</th><th class="right">Neto cierre</th><th class="right">Δ vs año anterior</th></tr></thead><tbody>
           ${anios.map((a, i) => { const last = snaps.filter(s => s.anio === a).pop(); const prev = i ? snaps.filter(s => s.anio === anios[i - 1]).pop() : null; const dlt = prev ? num(last.patrimonio_neto) - num(prev.patrimonio_neto) : null;
             return `<tr><td>${a} <span class="small muted">(Q${last.trimestre})</span></td><td class="right num"><b>${fmtEUR(last.patrimonio_neto, 0)}</b></td><td class="right num ${dlt === null ? 'muted' : dlt >= 0 ? 'pos' : 'neg'}">${dlt === null ? '—' : signed(dlt) + (num(prev.patrimonio_neto) ? ` (${fmtPct(dlt / Math.abs(num(prev.patrimonio_neto)))})` : '')}</td></tr>`; }).join('')}</tbody></table>`
-        : '<div class="empty">Aún no hay snapshots guardados.</div>'}
+        : '<div class="empty">Aún no hay fotos trimestrales guardadas.</div>'}
       </div>
     </div>
-    ${renderMensualCard()}
-    <div class="card"><div class="card-head"><h3>Evolución trimestral del patrimonio</h3></div>
-      ${snaps.length ? '<div class="chart-box"><canvas id="ch-snap"></canvas></div>' : '<div class="empty">Guarda tu primera foto trimestral para ver la evolución.</div>'}</div>
-    ${snaps.length ? `<div class="card"><div class="card-head"><h3>Histórico de snapshots</h3></div><div class="tbl-wrap"><table class="tbl"><thead><tr>
+    ${snaps.length ? `<div class="card"><div class="card-head"><h3>Histórico de fotos trimestrales</h3></div><div class="tbl-wrap"><table class="tbl"><thead><tr>
       <th>Periodo</th><th>Fecha</th><th class="right">Liquidez</th><th class="right">Inversiones</th><th class="right">Inmuebles</th><th class="right">Vehículos</th><th class="right">Deudas</th><th class="right">Neto</th><th class="right">Δ trimestral</th><th class="right">Δ interanual</th><th></th></tr></thead><tbody>
       ${snaps.slice().reverse().map(s => {
         const idx = snaps.indexOf(s), prev = idx > 0 ? snaps[idx - 1] : null, yoy = find(s.anio - 1, s.trimestre);
@@ -46,7 +35,19 @@ function renderAuditoria() {
           <td class="right num neg">−${fmtEUR(s.deudas, 0)}</td><td class="right num"><b>${fmtEUR(s.patrimonio_neto, 0)}</b></td>
           <td class="right num ${dq === null ? 'muted' : dq >= 0 ? 'pos' : 'neg'}">${dq === null ? '—' : signed(dq)}</td><td class="right num ${dy === null ? 'muted' : dy >= 0 ? 'pos' : 'neg'}">${dy === null ? '—' : signed(dy)}</td>
           <td><button class="mini" data-action="snap-del" data-id="${s.id}">🗑</button></td></tr>`;
-      }).join('')}</tbody></table></div></div>` : ''}`;
+      }).join('')}</tbody></table></div></div>` : ''}
+    <details class="card snap-form"><summary><b>Guardar foto del trimestre</b> <span class="small muted">· patrimonio a ${fmtDate(t)}: ${fmtEUR(P.neto, 0)}</span></summary>
+      <div style="margin-top:12px"><div class="metrics">
+          ${metric('Liquidez', fmtEUR(P.liquidez, 0))}${metric('Inversiones', fmtEUR(P.inversiones, 0))}${metric('Inmuebles', fmtEUR(P.inmuebles, 0))}
+          ${metric('Vehículos', fmtEUR(P.vehiculos, 0))}${metric('Deudas', '−' + fmtEUR(P.deudas, 0), 'neg')}${metric('Patrimonio neto', fmtEUR(P.neto, 0), 'pos')}
+        </div>
+        <div class="form-grid" style="margin-top:14px">
+          <div><label>Año</label><input type="number" id="snap-anio" value="${y}"></div>
+          <div><label>Trimestre</label><select id="snap-q">${[1, 2, 3, 4].map(n => `<option value="${n}" ${n === q ? 'selected' : ''}>Q${n} (${['ene–mar', 'abr–jun', 'jul–sep', 'oct–dic'][n - 1]})</option>`).join('')}</select></div>
+          <div class="full"><label>Notas del trimestre</label><input id="snap-notas" placeholder="Ej: revalorización piso, aportación extra…"></div>
+          <div class="full actions"><button class="btn success" data-action="snap-save">Guardar foto del trimestre</button></div>
+        </div>
+      </div></details>`;
   if (snaps.length) mkChart('ch-snap', {
     type: 'bar',
     data: {
@@ -106,7 +107,7 @@ function renderMensualCard() {
   const anio = ms.filter(m => m.anio_mes.startsWith(todayISO().slice(0, 4))), primero = anio[0], ultimo = ms[ms.length - 1];
   const prevDic = ms.filter(m => m.anio_mes < todayISO().slice(0, 4)).pop();
   const ytd = prevDic ? num(ultimo.patrimonio_neto) - num(prevDic.patrimonio_neto) : (primero ? num(ultimo.patrimonio_neto) - num(primero.patrimonio_neto) : null);
-  return `<div class="card"><div class="card-head"><h3>📅 Evolución mensual del patrimonio</h3><span class="sub">Automática: se actualiza cada vez que abres la app · ${ms.length} mes(es)</span></div>
+  return `<div class="card"><div class="card-head"><h3>Evolución mensual</h3><span class="sub">Automática: se actualiza cada vez que abres la app · ${ms.length} mes(es)</span></div>
     <div class="metrics" style="margin-bottom:12px">
       ${metric('Patrimonio neto actual', fmtEUR(ultimo.patrimonio_neto, 0))}
       ${metric('Variación último mes', rows[0] && rows[0].d !== null ? signed(rows[0].d) : '—', rows[0] && rows[0].d >= 0 ? 'pos' : 'neg')}
