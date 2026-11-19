@@ -66,7 +66,7 @@ function renderCuentas() {
       <div class="card-head mv-head"><h3>Movimientos</h3><div class="btn-row">${chipPendientes()}
         <button class="btn sm" data-action="mov-regla" title="Imputa al mes siguiente los ingresos de los últimos días laborables del mes">⏭ Regla de nómina</button></div></div>
       <div class="mov-filters">
-        <div class="mf-mes"><button class="btn ghost" data-action="mf-mes-shift" data-d="-1" aria-label="Mes anterior" ${S.movFilter.mes ? '' : 'disabled'}>‹</button><button type="button" class="mpick" data-action="mf-mes-pick">${S.movFilter.mes ? ymLabel(S.movFilter.mes) + (mesNominaActivo() ? (r => `<small class="mf-rango">${fmtDate(r[0]).slice(0, 5)} – ${fmtDate(r[1]).slice(0, 5)}</small>`)(rangoMesMov(S.movFilter.mes)) : '') : 'Todos los meses'}</button><button class="btn ghost" data-action="mf-mes-shift" data-d="1" aria-label="Mes siguiente" ${S.movFilter.mes ? '' : 'disabled'}>›</button></div>
+        <div class="mf-mes"><button class="btn ghost" data-action="mf-mes-shift" data-d="-1" aria-label="Mes anterior" ${S.movFilter.mes ? '' : 'disabled'}>‹</button><button type="button" class="mpick" data-action="mf-mes-pick">${S.movFilter.mes ? ymLabel(S.movFilter.mes) + (mesNominaActivo() ? (r => `<small class="mf-rango">${r[1] ? `${fmtDate(r[0]).slice(0, 5)} – ${fmtDate(r[1]).slice(0, 5)}` : `desde el ${fmtDate(r[0]).slice(0, 5)}`}</small>`)(rangoMesMov(S.movFilter.mes)) : '') : 'Todos los meses'}</button><button class="btn ghost" data-action="mf-mes-shift" data-d="1" aria-label="Mes siguiente" ${S.movFilter.mes ? '' : 'disabled'}>›</button></div>
         <select id="mf-cuenta">${accOpts(S.movFilter.cuenta, { empty: 'Todas las cuentas', soloActivas: false })}</select>
         <select id="mf-tipo"><option value="">Todos los tipos</option>${Object.entries(TIPO_MOV).map(([k, l]) => `<option value="${k}" ${S.movFilter.tipo === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
         <input class="q" id="mf-q" type="search" placeholder="Buscar concepto…" value="${esc(S.movFilter.q)}">
@@ -78,15 +78,18 @@ function renderCuentas() {
 }
 function filteredMovs() {
   const f = S.movFilter, q = normText(f.q);
-  // Con un mes elegido se muestra su mes de nómina (de la nómina al día antes de la siguiente), en orden: primero la nómina y después lo que se va gastando
-  const asc = !!f.mes, rango = f.mes ? rangoMesMov(f.mes) : null;
-  return S.movimientos.filter(m => (!rango || (m.fecha >= rango[0] && m.fecha <= rango[1])) && (!f.cuenta || m.cuenta_id === f.cuenta) && (!f.tipo || m.tipo === f.tipo) &&
+  // Con un mes elegido se muestra su mes de nómina (de la nómina al día antes de la siguiente). Orden: lo más reciente arriba (o al revés con el botón ⇅)
+  const asc = S.movOrden === 'asc', rango = f.mes ? rangoMesMov(f.mes) : null;
+  return S.movimientos.filter(m => (!rango || (m.fecha >= rango[0] && (!rango[1] || m.fecha <= rango[1]))) && (!f.cuenta || m.cuenta_id === f.cuenta) && (!f.tipo || m.tipo === f.tipo) &&
     (!q || normText(`${m.concepto} ${m.notas || ''}`).includes(q)))
     .sort((a, b) => (a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : (a.tipo === 'ingreso') !== (b.tipo === 'ingreso') ? (a.tipo === 'ingreso' ? -1 : 1) : String(a.created_at).localeCompare(String(b.created_at))) * (asc ? 1 : -1));
 }
-/** Primer y último día del mes de nómina ym (si el mes de nómina está desactivado, el mes natural). */
+/** Primer y último día del mes de nómina ym. Si la nómina que lo cierra aún no ha llegado, no tiene último día (null):
+    no se adivina el día de cobro; todo lo anterior a la próxima nómina cuenta en este mes. */
 function rangoMesMov(ym) {
-  const ini = inicioCiclo(ym), fin = addDias(inicioCiclo(addMonths(ym, 1)), -1);
+  if (!mesNominaActivo()) { const [y, m] = ym.split('-').map(Number); return [ym + '-01', `${ym}-${pad(daysInMonth(y, m))}`]; }
+  const C = ciclosNomina(), sig = addMonths(ym, 1), ini = inicioCiclo(ym);
+  const fin = C.inicio[sig] ? addDias(C.inicio[sig], -1) : (sig <= mesActual() ? addDias(inicioCiclo(sig), -1) : null);
   return [ini, fin];
 }
 function renderMovList() {
@@ -96,7 +99,7 @@ function renderMovList() {
   const shown = list.slice(0, S.movLimit);
   // Agrupados por día, con el neto del día (sin transferencias internas)
   const grupos = []; for (const m of shown) { const g = grupos[grupos.length - 1]; if (g && g.f === m.fecha) g.ms.push(m); else grupos.push({ f: m.fecha, ms: [m] }); }
-  box.innerHTML = `<div class="mv-sum"><span>${list.length} movimientos</span><span class="pos">+${fmtEUR(ing)}</span><span class="neg">−${fmtEUR(gas)}</span></div>` +
+  box.innerHTML = `<div class="mv-sum"><span>${list.length} movimientos</span><span class="pos">+${fmtEUR(ing)}</span><span class="neg">−${fmtEUR(gas)}</span><button class="mf-orden" data-action="mf-orden" title="Cambiar el orden por fecha">${S.movOrden === 'asc' ? '↑ Más antiguos primero' : '↓ Más recientes primero'}</button></div>` +
     (shown.length ? grupos.map(g => { const neto = sum(g.ms.filter(m => m.tipo !== 'transferencia'), 'importe');
       return `<div class="mv-day"><span>${DIAS[weekday(g.f)]} ${fmtDate(g.f).slice(0, 5)}</span>${neto ? `<span class="${neto >= 0 ? 'pos' : 'neg'}">${signed(neto)}</span>` : ''}</div>${g.ms.map(movRow).join('')}`; }).join('')
       : '<div class="empty">No hay movimientos con estos filtros</div>') +
@@ -306,6 +309,7 @@ Object.assign(Actions, {
     }, 'Regla de nómina aplicada ✓', 'Aplicando…');
     render();
   },
+  'mf-orden': () => { S.movOrden = S.movOrden === 'asc' ? 'desc' : 'asc'; try { localStorage.setItem('pf_mov_orden', S.movOrden); } catch (e) {} renderMovList(); },
   'mov-allmonths': () => { S.movFilter.mes = ''; S.movLimit = 150; renderCuentas(); },
   'mf-mes-pick': () => selectorMes({ valor: S.movFilter.mes, titulo: 'Movimientos de…', todos: true, onPick: ym => { S.movFilter.mes = ym; S.movLimit = 150; renderCuentas(); } }),
   'mf-mes-shift': el => { if (!S.movFilter.mes) return; S.movFilter.mes = addMonths(S.movFilter.mes, +el.dataset.d); S.movLimit = 150; renderCuentas(); },
@@ -319,4 +323,4 @@ Object.assign(Changes, {
 });
 
 // Al cargar, Movimientos abre en el mes de nómina en curso (no en el mes natural)
-AfterLoad.push(() => { if (!S._mfIni) { S._mfIni = true; if (S.movFilter.mes === ymOf(todayISO())) S.movFilter.mes = mesActual(); } });
+AfterLoad.push(() => { if (!S._mfIni) { S._mfIni = true; try { S.movOrden = localStorage.getItem('pf_mov_orden') || 'desc'; } catch (e) {} if (S.movFilter.mes === ymOf(todayISO())) S.movFilter.mes = mesActual(); } });
