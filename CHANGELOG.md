@@ -1,5 +1,9 @@
 # Historial de versiones
 
+## 5.23.2 — 19/11/2026 · Un solo estilo y cuentas compactas
+- Los indicadores de todas las pantallas usan el estilo de Inicio: marca de color arriba y etiqueta en versalitas.
+- Movimientos: tarjetas de cuenta más pequeñas y sin botones; al pulsar una cuenta se abre su menú (conciliar saldo, ver sus movimientos, editar, eliminar).
+
 ## 5.23.1 — 19/11/2026 · Inicio y Movimientos como antes
 - Inicio y Movimientos recuperan el diseño de la 5.22.2 (banner de cierre, tarjetas de cuenta con Conciliar/✎/🗑, regla de nómina en Movimientos, céntimos). El resto de pantallas mantiene la revisión visual de la 5.23.0.
 

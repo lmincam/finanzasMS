@@ -4,7 +4,7 @@
 def test_gasto_tras_conciliar_resta(app):
     a = app
     a.ir('cuentas')
-    a.page.click('[data-action="cuenta-conciliar"][data-id="c"]'); a.page.fill('.modal [name="saldo"]', '150'); a.page.click('.modal [type=submit]'); a.page.wait_for_timeout(250)
+    a.page.click('.acc-card[data-id="c"]'); a.page.click('.modal [data-op="cuenta-conciliar"]'); a.page.fill('.modal [name="saldo"]', '150'); a.page.click('.modal [type=submit]'); a.page.wait_for_timeout(250)
     a.page.click('.hdr-add'); a.page.fill('#q-imp', '12,50'); a.page.fill('#q-concepto', 'Panadería'); a.page.click('#q-form [type=submit]'); a.page.wait_for_timeout(250)
     assert a.ev("Calc.saldo(cuentaById('c'))") == 137.5
 

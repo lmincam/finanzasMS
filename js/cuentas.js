@@ -14,6 +14,21 @@ const FIELDS_CUENTA = [
   { name: 'orden', label: 'Orden', type: 'int' }, { name: 'activa', label: 'Cuenta activa', type: 'checkbox', def: true }
 ];
 
+function abrirMenuCuenta(id) {
+  const c = cuentaById(id); if (!c) return; const inv = c.tipo === 'inversion';
+  const saldo = Calc.valor(c), k = conciliacionDe(c.id);
+  const op = (a, ic, t, st = '') => `<button class="mv-op" data-op="${a}" ${st}><span>${ic}</span>${t}</button>`;
+  const md = modal(`<h3 style="margin-bottom:2px">${esc(c.nombre)}</h3>
+    <div class="small muted" style="margin-bottom:12px">${esc(c.entidad || '')}${c.entidad ? ' · ' : ''}${TIPO_CUENTA[c.tipo] || c.tipo} · <b class="${saldo < 0 ? 'neg' : ''}">${fmtEUR(saldo)}</b>${k ? ` · ${Math.abs(num(k.dif)) < 0.01 ? 'cuadra con el banco' : 'descuadre ' + signed(num(k.dif))} a ${fmtDate(k.fecha)}` : ''}</div>
+    <div class="mv-ops">
+    ${inv ? op('cuenta-valor', '📈', 'Actualizar valor') : op('cuenta-conciliar', '🏦', 'Conciliar saldo con el banco')}
+    ${op('mov-filtrar-cuenta', '🔎', 'Ver sus movimientos')}
+    ${op('cuenta-edit', '✎', 'Editar')}${op('cuenta-del', '🗑', 'Eliminar', 'style="color:var(--red)"')}</div>`);
+  md.el.addEventListener('click', e => { const b = e.target.closest('[data-op]'); if (!b) return; md.close();
+    if (b.dataset.op === 'mov-filtrar-cuenta') { S.movFilter.cuenta = id; S.movLimit = 150; renderCuentas(); const l = $('.mv-head'); if (l) l.scrollIntoView({ behavior: 'smooth' }); return; }
+    Actions[b.dataset.op]({ dataset: { id } }); });
+}
+Actions['cuenta-menu'] = el => abrirMenuCuenta(el.dataset.id);
 function renderCuentas() {
   const el = $('#tab-cuentas');
   const P = Calc.patrimonio();
@@ -25,7 +40,7 @@ function renderCuentas() {
     const saldo = Calc.saldo(c), val = Calc.valor(c), inv = c.tipo === 'inversion';
     const tieneVM = inv && c.valor_mercado !== null && c.valor_mercado !== undefined;
     const plus = val - saldo;
-    return `<div class="acc-card ${c.activa === false ? 'off' : ''}" style="--acc:${esc(c.color || '#1e3a5f')}">
+    return `<div class="acc-card clickable ${c.activa === false ? 'off' : ''}" style="--acc:${esc(c.color || '#1e3a5f')}" data-action="cuenta-menu" data-id="${c.id}" role="button" tabindex="0" title="Conciliar, ver movimientos, editar…">
       <div class="acc-top"><div><div class="acc-name">${esc(c.nombre)}</div><div class="acc-sub">${esc(c.entidad || '')}${c.entidad ? ' · ' : ''}${TIPO_CUENTA[c.tipo] || c.tipo}</div></div>
         ${c.activa === false ? '<span class="badge">Inactiva</span>' : ''}</div>
       <div class="acc-val ${val < 0 ? 'neg' : ''}">${fmtEUR(val)}</div>
@@ -33,11 +48,7 @@ function renderCuentas() {
         : ''}
       ${resumenAnualidades(c)}
       ${(k => k ? `<div class="acc-meta">${Math.abs(num(k.dif)) < 0.01 ? '<span class="pos">🏦 ✅ Cuadra con el banco</span>' : `<span class="warn-t">🏦 ⚠ Descuadre ${signed(num(k.dif))}</span>`} a ${fmtDate(k.fecha)}</div>` : '')(conciliacionDe(c.id))}
-      <div class="acc-actions">
-        ${inv ? `<button class="btn sm" data-action="cuenta-valor" data-id="${c.id}">Actualizar valor</button>` : `<button class="btn sm" data-action="cuenta-conciliar" data-id="${c.id}">Conciliar saldo</button>`}
-        <button class="mini" data-action="cuenta-edit" data-id="${c.id}" title="Editar">✎</button>
-        <button class="mini" data-action="cuenta-del" data-id="${c.id}" title="Eliminar">🗑</button>
-      </div></div>`;
+      <span class="acc-go" aria-hidden="true">›</span></div>`;
   }).join('');
 
   el.innerHTML = `
