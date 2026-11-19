@@ -7,7 +7,7 @@
    ===================================================================== */
 
 /** Versión de la app. Al publicar una versión nueva, súbela aquí Y en los ?v= de index.html. */
-const APP_VERSION = '5.23.6';
+const APP_VERSION = '5.23.7';
 
 /* Opción A: pega aquí tu Project URL y tu clave anon/publishable.
    Opción B (recomendada si el repositorio de GitHub es público):

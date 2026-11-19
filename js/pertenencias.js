@@ -98,10 +98,9 @@ function tarjetaCasa(c) {
 }
 function filaPert(p) {
   const x = pertInfo(p);
-  const gar = x.garantia ? (x.gDias < 0 ? '<span class="badge">sin garantía</span>' : x.gDias <= 60 ? `<span class="badge amber">garantía hasta ${fmtDate(x.garantia)}</span>` : `<span class="badge green">garantía hasta ${fmtDate(x.garantia)}</span>`) : '';
   return `<div class="pert-row" data-action="pert-edit" data-id="${p.id}" role="button" tabindex="0">
     <div class="pert-c"><div class="pert-t">${esc(p.nombre)}${num(p.cantidad) > 1 ? ` <span class="muted">×${num(p.cantidad)}</span>` : ''}</div>
-      <div class="small muted">${[p.marca_modelo ? esc(p.marca_modelo) : '', p.fecha_compra ? `comprado ${fmtDate(p.fecha_compra)}` : ''].filter(Boolean).join(' · ')} ${gar}</div></div>
+      <div class="small muted">${[p.marca_modelo ? esc(p.marca_modelo) : '', p.fecha_compra ? `comprado ${fmtDate(p.fecha_compra)}` : ''].filter(Boolean).join(' · ')}</div></div>
     <div class="pert-v"><b class="num">${fmtEUR(x.repo, 0)}</b><small>venta ${x.manual ? '' : '≈ '}${fmtEUR(x.venta, 0)}</small></div>
   </div>`;
 }
@@ -125,7 +124,9 @@ Object.assign(Actions, {
     onSubmit: v => saveEntity('pertenencias', null, { ...v, inmueble_id: v.inmueble_id || null }) }),
   'pert-edit': el => {
     const p = S.pertenencias.find(x => x.id === el.dataset.id);
-    const md = openForm({ title: 'Editar pertenencia', fields: FIELDS_PERT(), values: p, onSubmit: v => saveEntity('pertenencias', p.id, { ...v, inmueble_id: v.inmueble_id || null }) });
+    const x = pertInfo(p);
+    const intro = x.garantia ? `<div class="pert-gar ${x.gDias < 0 ? 'off' : x.gDias <= 60 ? 'warn' : 'ok'}">🛡️ ${x.gDias < 0 ? `Sin garantía desde el ${fmtDate(x.garantia)}` : `En garantía hasta el ${fmtDate(x.garantia)}${x.gDias <= 60 ? ` · quedan ${x.gDias} días` : ''}`}</div>` : '';
+    const md = openForm({ title: 'Editar pertenencia', fields: FIELDS_PERT(), values: p, intro, onSubmit: v => saveEntity('pertenencias', p.id, { ...v, inmueble_id: v.inmueble_id || null }) });
     const acts = md.el.querySelector('.actions');
     acts.insertAdjacentHTML('afterbegin', '<button type="button" class="btn danger" data-del style="margin-right:auto">Eliminar</button>');
     acts.querySelector('[data-del]').addEventListener('click', async () => { if (!(await confirmDlg(`¿Eliminar <b>${esc(p.nombre)}</b>?`, 'Eliminar'))) return; md.close();

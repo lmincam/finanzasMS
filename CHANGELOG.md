@@ -1,5 +1,9 @@
 # Historial de versiones
 
+## 5.23.7 — 19/11/2026 · Pertenencias y formularios
+- Pertenencias: la garantía ya no aparece en cada fila; se ve al abrir la pertenencia.
+- Ningún formulario ni ventana se puede desplazar de lado en el móvil.
+
 ## 5.23.6 — 19/11/2026 · Presupuestos primero
 - Presupuestos es la primera pestaña de Planificar, por delante de Previsión y metas.
 - En las subcategorías el importe va junto al lápiz, sin dejar el hueco del +.

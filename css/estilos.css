@@ -1034,3 +1034,15 @@ body:not(.clasico) .kpi{min-width:0}
   .cat-r .cr-acts .mini{width:27px!important;min-width:27px!important;height:30px!important}
 }
 .cat-r.lvl1 .cr-acts{min-width:0!important}
+.pert-gar{margin:8px 0 12px;padding:9px 12px;border-radius:10px;font-size:13.5px;border:1px solid var(--line);background:var(--card2)}
+.pert-gar.ok{background:var(--green-soft)}.pert-gar.warn{background:var(--amber-soft)}
+/* Formularios y ventanas: sin desplazamiento horizontal (en ninguno) */
+.modal,.modal-back{overflow-x:hidden!important;overscroll-behavior:contain;touch-action:pan-y}
+.modal *{max-width:100%}
+.modal .form-grid{min-width:0;max-width:100%}
+.modal .form-grid>*{min-width:0}
+.modal input,.modal select,.modal textarea{max-width:100%;box-sizing:border-box}
+.modal .tbl-wrap,.modal .tbl-scroll{touch-action:pan-x pan-y}
+.modal .tbl-wrap *{max-width:none}
+html,body{overflow-x:hidden}
+.modal input[type="date"],.modal input[type="month"]{-webkit-appearance:none;appearance:none;min-width:0;width:100%;display:block}
