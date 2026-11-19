@@ -19,12 +19,14 @@ function abrirMenuCuenta(id) {
   const saldo = Calc.valor(c), k = conciliacionDe(c.id);
   const op = (a, ic, t, st = '') => `<button class="mv-op" data-op="${a}" ${st}><span>${ic}</span>${t}</button>`;
   const md = modal(`<h3 style="margin-bottom:2px">${esc(c.nombre)}</h3>
-    <div class="small muted" style="margin-bottom:12px">${esc(c.entidad || '')}${c.entidad ? ' · ' : ''}${TIPO_CUENTA[c.tipo] || c.tipo} · <b class="${saldo < 0 ? 'neg' : ''}">${fmtEUR(saldo)}</b>${k ? ` · ${Math.abs(num(k.dif)) < 0.01 ? 'cuadra con el banco' : 'descuadre ' + signed(num(k.dif))} a ${fmtDate(k.fecha)}` : ''}</div>
+    <div class="small muted" style="margin-bottom:12px">${esc(c.entidad || '')}${c.entidad ? ' · ' : ''}${TIPO_CUENTA[c.tipo] || c.tipo} · <b class="${saldo < 0 ? 'neg' : ''}">${fmtEUR(saldo)}</b></div>
+    ${k ? `<div class="acc-det ${Math.abs(num(k.dif)) < 0.01 ? 'ok' : 'warn'}">🏦 ${Math.abs(num(k.dif)) < 0.01 ? '✅ Cuadra con el banco' : `⚠ Descuadre de ${signed(num(k.dif))} con el banco`} <span class="muted">· ${fmtDate(k.fecha)}</span></div>` : ''}
+    ${resumenAnualidades(c)}
     <div class="mv-ops">
     ${inv ? op('cuenta-valor', '📈', 'Actualizar valor') : op('cuenta-conciliar', '🏦', 'Conciliar saldo con el banco')}
     ${op('mov-filtrar-cuenta', '🔎', 'Ver sus movimientos')}
     ${op('cuenta-edit', '✎', 'Editar')}${op('cuenta-del', '🗑', 'Eliminar', 'style="color:var(--red)"')}</div>`);
-  md.el.addEventListener('click', e => { const b = e.target.closest('[data-op]'); if (!b) return; md.close();
+  md.el.addEventListener('click', e => { if (e.target.closest('[data-action="anual-ver"]')) { md.close(); return; } const b = e.target.closest('[data-op]'); if (!b) return; md.close();
     if (b.dataset.op === 'mov-filtrar-cuenta') { S.movFilter.cuenta = id; S.movLimit = 150; renderCuentas(); const l = $('.mv-head'); if (l) l.scrollIntoView({ behavior: 'smooth' }); return; }
     Actions[b.dataset.op]({ dataset: { id } }); });
 }
@@ -46,13 +48,11 @@ function renderCuentas() {
       <div class="acc-val ${val < 0 ? 'neg' : ''}">${fmtEUR(val)}</div>
       ${tieneVM ? `<div class="acc-meta">Aportado neto: ${fmtEUR(saldo)} · <b class="${plus >= 0 ? 'pos' : 'neg'}">${signed(plus)}</b> ${saldo ? `(${fmtPct(plus / saldo)})` : ''}</div><div class="acc-meta">Valor de mercado a ${fmtDate(c.fecha_valor_mercado)} + aportaciones posteriores</div>`
         : ''}
-      ${resumenAnualidades(c)}
-      ${(k => k ? `<div class="acc-meta">${Math.abs(num(k.dif)) < 0.01 ? '<span class="pos">🏦 ✅ Cuadra con el banco</span>' : `<span class="warn-t">🏦 ⚠ Descuadre ${signed(num(k.dif))}</span>`} a ${fmtDate(k.fecha)}</div>` : '')(conciliacionDe(c.id))}
       <span class="acc-go" aria-hidden="true">›</span></div>`;
   }).join('');
 
   el.innerHTML = `
-    <div class="section-head"><div><h2>Cuentas</h2><div class="small muted">Liquidez ${fmtEUR(P.liquidez)}${partidasAnuales().length && !cuentaAnualidades() ? ` · <a href="#" data-action="anual-ver">elige tu cuenta de anualidades</a>` : ''}</div></div>
+    <div class="section-head"><div><h2>Cuentas</h2><div class="acc-total"><span>Liquidez total</span> <b>${fmtEUR(P.liquidez)}</b>${partidasAnuales().length && !cuentaAnualidades() ? ` · <a href="#" data-action="anual-ver">elige tu cuenta de anualidades</a>` : ''}</div></div>
       <div class="acc-btns">
         <button class="btn" data-action="cuenta-new">+ Cuenta</button>
         <button class="btn" data-action="quick-open" data-tipo="gasto">+ Movimiento</button>

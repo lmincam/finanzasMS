@@ -978,18 +978,26 @@ body:not(.clasico) details.inv-more>summary b,body:not(.clasico) details.snap-fo
 body:not(.clasico) .kpi{min-width:0}
 @media (max-width:760px){ body:not(.clasico) .kpis{grid-template-columns:repeat(2,minmax(0,1fr))} body:not(.clasico) .kpi .v,body:not(.clasico) .kpi .val{font-size:clamp(18px,5.6vw,24px);overflow-wrap:anywhere} }
 
-/* Movimientos: tarjetas de cuenta compactas; al pulsarlas se abre su menú (conciliar, ver movimientos, editar…) */
-.acc-liq .acc-card{position:relative;padding:11px 34px 11px 14px;gap:2px;border-top-width:3px;align-self:start}
-.acc-liq{align-items:start}
-.acc-liq .acc-name{font-size:14px}
-.acc-liq .acc-sub{font-size:12px}
-.acc-liq .acc-val{font-size:19px;margin-top:2px}
-.acc-liq .acc-meta{font-size:12px}
+/* Movimientos: tarjetas de cuenta para ver todo de un vistazo; al pulsarlas se abre su detalle */
+.acc-liq{align-items:stretch}
+.acc-liq .acc-card{position:relative;padding:16px 40px 16px 18px;gap:3px;border-top-width:4px;min-height:0}
+.acc-liq .acc-name{font-size:16.5px;font-weight:650}
+.acc-liq .acc-sub{font-size:13.5px;color:var(--muted)}
+.acc-liq .acc-val{font-size:30px;font-weight:750;letter-spacing:-.01em;margin-top:8px;line-height:1.1}
 .acc-card.clickable{cursor:pointer;transition:box-shadow .15s,transform .15s}
 .acc-card.clickable:hover{box-shadow:0 6px 18px rgba(15,31,58,.10);transform:translateY(-1px)}
 .acc-card.clickable:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
-.acc-go{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:20px;color:var(--muted2);line-height:1}
-@media (max-width:640px){ .acc-liq .acc-card{padding:10px 28px 10px 12px} .acc-liq .acc-val{font-size:17px} .acc-go{right:8px} }
+.acc-go{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:24px;color:var(--muted2);line-height:1}
+.acc-total{font-size:14px;color:var(--muted);margin-top:2px}.acc-total b{font-size:17px;color:var(--txt);font-variant-numeric:tabular-nums;margin-left:4px}
+.acc-det{padding:10px 12px;border-radius:10px;font-size:14px;margin-bottom:10px;background:var(--card2);border:1px solid var(--line)}
+.acc-det.ok{background:var(--green-soft)}.acc-det.warn{background:var(--amber-soft)}
+.modal .acc-anual{margin-bottom:10px;width:100%}
+@media (max-width:640px){
+  .acc-liq .acc-card{padding:13px 26px 13px 13px}
+  .acc-liq .acc-name{font-size:15px}.acc-liq .acc-sub{font-size:12.5px}
+  .acc-liq .acc-val{font-size:clamp(19px,6vw,24px);margin-top:6px}
+  .acc-go{right:8px;font-size:20px}
+}
 /* Resto de pantallas: indicadores con el mismo aire que Inicio (marca de color arriba, etiqueta en versalitas) */
 .kpis .kpi{position:relative;border-left:0;border-radius:16px;padding:16px 18px;box-shadow:0 1px 2px rgba(15,23,42,.05);border:1px solid var(--line)}
 .kpis .kpi .l{font-size:11.5px;letter-spacing:.06em}

@@ -1,5 +1,9 @@
 # Historial de versiones
 
+## 5.23.3 — 19/11/2026 · Cuentas de un vistazo
+- Tarjetas de cuenta con letra más grande y el saldo bien destacado; liquidez total en la cabecera.
+- «Cuadra con el banco» y el resumen de anualidades pasan al detalle que se abre al pulsar cada cuenta.
+
 ## 5.23.2 — 19/11/2026 · Un solo estilo y cuentas compactas
 - Los indicadores de todas las pantallas usan el estilo de Inicio: marca de color arriba y etiqueta en versalitas.
 - Movimientos: tarjetas de cuenta más pequeñas y sin botones; al pulsar una cuenta se abre su menú (conciliar saldo, ver sus movimientos, editar, eliminar).
