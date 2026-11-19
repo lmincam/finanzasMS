@@ -1,5 +1,10 @@
 # Historial de versiones
 
+## 5.24.1 — 19/11/2026 · Movimientos por mes de nómina
+- Movimientos muestra el mes de nómina elegido completo: desde el día en que entra la nómina hasta el día antes de la siguiente (por ejemplo, del 27/10 al 26/11), con las fechas bajo el nombre del mes.
+- Con un mes elegido, el orden es cronológico: primero la nómina y después los gastos. Con «Todos los meses», lo más reciente primero.
+- Al abrir la app, Movimientos arranca en el mes de nómina en curso.
+
 ## 5.24.0 — 19/11/2026 · ¿Dónde va vuestro dinero?
 - Inicio: la tarjeta del gráfico circular muestra el 100 % de lo ingresado en el periodo. A la izquierda, los gastos por categoría; a la derecha, lo aportado a cada cuenta de ahorro e inversión, lo apartado para anualidades y lo que queda en cuenta.
 - Debajo de cada gráfico, su lista con el % de los ingresos: a la izquierda con el % delante; a la derecha con el % al final.

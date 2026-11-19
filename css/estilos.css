@@ -1064,3 +1064,4 @@ html,body{overflow-x:clip}
 .dv-col{min-width:0}
 .dv-chart canvas{max-width:100%}
 @media (max-width:640px){ .dv-full{display:none} }
+.mpick .mf-rango{display:block;font-size:11px;font-weight:500;color:var(--muted);line-height:1.1}
