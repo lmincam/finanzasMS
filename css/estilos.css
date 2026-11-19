@@ -1044,5 +1044,5 @@ body:not(.clasico) .kpi{min-width:0}
 .modal input,.modal select,.modal textarea{max-width:100%;box-sizing:border-box}
 .modal .tbl-wrap,.modal .tbl-scroll{touch-action:pan-x pan-y}
 .modal .tbl-wrap *{max-width:none}
-html,body{overflow-x:hidden}
+html,body{overflow-x:clip}
 .modal input[type="date"],.modal input[type="month"]{-webkit-appearance:none;appearance:none;min-width:0;width:100%;display:block}

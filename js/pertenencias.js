@@ -62,7 +62,7 @@ function renderPertenencias() {
   const el = $('#tab-pertenencias');
   if (!pertOk()) {
     el.innerHTML = `<div class="section-head"><h2>Pertenencias</h2></div>
-      <div class="banner amber">Ejecuta el SQL actualizado (<code>sql/esquema_completo.sql</code>, bloque 15) para activar el inventario de pertenencias.</div>`;
+      <div class="banner amber"><span>Ejecuta el SQL actualizado (<code>sql/esquema_completo.sql</code>, bloque 15) para activar el inventario de pertenencias.</span></div>`;
     return;
   }
   const T = pertTotales(), P = Calc.patrimonio();
@@ -82,10 +82,10 @@ function tarjetaCasa(c) {
   const cob = c.id !== 'sin' ? coberturaHogar(c.id) : null;
   let seguro = '';
   if (cob && T.n) {
-    if (!cob.seg.length) seguro = `<div class="banner amber">Sin seguro de hogar vinculado a esta vivienda. <button class="btn sm" data-action="tab" data-tab="seguros">Ir a Seguros</button></div>`;
-    else if (cob.sinDato) seguro = `<div class="banner blue">Indica el <b>capital de contenido</b> de tu seguro de hogar (✎ en Seguros) para comprobar si cubre ${fmtEUR(cob.repo, 0)}.</div>`;
-    else if (cob.falta > 0) seguro = `<div class="banner red">El contenido asegurado (${fmtEUR(cob.cont, 0)}) no cubre lo que costaría reponerlo todo (${fmtEUR(cob.repo, 0)}): faltan <b>${fmtEUR(cob.falta, 0)}</b>. En un siniestro te pagarían en proporción.</div>`;
-    else seguro = `<div class="banner green">El seguro de hogar cubre el contenido: ${fmtEUR(cob.cont, 0)} asegurados para ${fmtEUR(cob.repo, 0)} de reposición.</div>`;
+    if (!cob.seg.length) seguro = `<div class="banner amber"><span>Sin seguro de hogar vinculado a esta vivienda. <button class="btn sm" data-action="tab" data-tab="seguros">Ir a Seguros</button></span></div>`;
+    else if (cob.sinDato) seguro = `<div class="banner blue"><span>Indica el <b>capital de contenido</b> de tu seguro de hogar (✎ en Seguros) para comprobar si cubre ${fmtEUR(cob.repo, 0)}.</span></div>`;
+    else if (cob.falta > 0) seguro = `<div class="banner red"><span>El contenido asegurado (${fmtEUR(cob.cont, 0)}) no cubre lo que costaría reponerlo todo (${fmtEUR(cob.repo, 0)}): faltan <b>${fmtEUR(cob.falta, 0)}</b>. En un siniestro te pagarían en proporción.</span></div>`;
+    else seguro = `<div class="banner green"><span>El seguro de hogar cubre el contenido: ${fmtEUR(cob.cont, 0)} asegurados para ${fmtEUR(cob.repo, 0)} de reposición.</span></div>`;
   }
   const porCat = Object.keys(CAT_PERT).map(k => [k, T.lista.filter(p => (CAT_PERT[p.categoria] ? p.categoria : 'otros') === k)]).filter(([, l]) => l.length);
   return `<div class="card">

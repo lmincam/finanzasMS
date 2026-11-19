@@ -1,5 +1,9 @@
 # Historial de versiones
 
+## 5.23.8 — 19/11/2026 · Barra «Patrimonio › Apartado» en su sitio
+- Corregido: en los apartados de Patrimonio la barra para volver quedaba encima del contenido y tapaba el título (efecto secundario del bloqueo de desplazamiento lateral de la 5.23.7).
+- Pertenencias: el aviso del seguro de hogar se lee de corrido.
+
 ## 5.23.7 — 19/11/2026 · Pertenencias y formularios
 - Pertenencias: la garantía ya no aparece en cada fila; se ve al abrir la pertenencia.
 - Ningún formulario ni ventana se puede desplazar de lado en el móvil.
