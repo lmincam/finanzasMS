@@ -40,7 +40,9 @@ jobs:
       - name: Instalar herramientas de prueba
         run: |
           pip install pytest==9.* playwright==1.63.0
-          python -m playwright install --with-deps chromium
+          # Los servidores de Ubuntu fallan a veces: reintentar y, si no hay manera, instalar solo el navegador
+          for i in 1 2 3; do python -m playwright install --with-deps chromium && ok=1 && break; echo "Reintento $i"; sleep 20; done
+          [ -n "$ok" ] || python -m playwright install chromium
           sudo apt-get install -y postgresql-client >/dev/null
       - name: Ejecutar pruebas
         run: python -m pytest tests -q
