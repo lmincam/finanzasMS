@@ -113,6 +113,7 @@ async function loadAll() {
     if (regla && regla.valor) { S.ajustes.nomina_dias = num(regla.valor.dias) || 5; S.ajustes.nomina_umbral = num(regla.valor.umbral); S.ajustes.mes_nomina = regla.valor.mes_nomina !== false; }
     if (!S._periodoIni) { S._periodoIni = true; const mA = mesActual(); S.period.ref = mA; S.period.to = mA; S.period.from = addMonths(mA, -2); }
     S.ajustesRows = res[7];
+    colorearCategorias();
     const alertas = res[7].find(r => r.clave === 'alertas');
     if (alertas && alertas.valor) { S.ajustes.extra_umbral = num(alertas.valor.extra_umbral) || 300; S.ajustes.fondo_meses = num(alertas.valor.fondo_meses) || 6; }
     S.connected = true; S.loaded = true;
@@ -133,7 +134,7 @@ async function loadAll() {
     if (S.tab !== 'ajustes') S.tab = 'ajustes';
   } finally { loading(false); render(); }
 }
-async function reloadTable(t) { S[t] = await DB.all(t); }
+async function reloadTable(t) { S[t] = await DB.all(t); if (t === 'categorias') colorearCategorias(); }
 async function reloadTables(...ts) { await Promise.all(ts.map(reloadTable)); }
 async function saveEntity(table, id, vals) {
   if (id) await DB.update(table, id, vals); else await DB.insert(table, [vals]);

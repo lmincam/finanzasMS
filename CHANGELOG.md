@@ -1,5 +1,9 @@
 # Historial de versiones
 
+## 5.23.4 — 19/11/2026 · Colores de categorías automáticos
+- Cada categoría principal tiene su propio color, asignado por la app y sin repetir; sus subcategorías, el mismo color más claro. Los verdes quedan reservados a los ingresos. Ya no se elige el color al editar.
+- Presupuestos: botones de editar (lápiz) y eliminar (papelera) a la vista, y + para añadir subcategoría, en lugar del menú ⋯.
+
 ## 5.23.3 — 19/11/2026 · Cuentas de un vistazo
 - Tarjetas de cuenta con letra más grande y el saldo bien destacado; liquidez total en la cabecera.
 - «Cuadra con el banco» y el resumen de anualidades pasan al detalle que se abre al pulsar cada cuenta.

@@ -197,11 +197,16 @@ def test_pertenencias(app):
     assert a.ev("pertTotales().n") == 5
 
 
+COLORES = ['#16a34a', '#15803d', '#22c55e', '#65a30d', '#059669', '#047857', '#4d7c0f', '#10b981', '#166534', '#84cc16', '#3f6212', '#34d399']
+
+
 def test_presupuestos_menu_categoria(app):
     a = app
     a.ir('categorias')
     assert a.page.locator('#tab-categorias .cat-r').count() >= 5
-    assert a.page.locator('#tab-categorias .cat-r .mini').count() == 0                # sin la fila de botones
-    a.page.click('.cat-r [data-action="cat-menu"]'); a.page.wait_for_timeout(150)
-    a.page.click('.modal [data-op="cat-edit"]'); a.page.wait_for_timeout(150)
+    assert a.page.locator('#tab-categorias .cat-r [data-action="cat-del"]').count() == a.page.locator('#tab-categorias .cat-r').count()
+    a.page.click('.cat-r [data-action="cat-edit"] >> nth=0'); a.page.wait_for_timeout(150)
     assert a.page.locator('.modal [name="nombre"]').count() == 1
+    assert a.page.locator('.modal [name="color"]').count() == 0                       # el color lo pone la app
+    cols = a.ev("S.categorias.filter(c => c.tipo === 'gasto' && !c.parent_id).map(c => c.color)")
+    assert len(set(cols)) == len(cols) and not any(c in COLORES for c in cols)
