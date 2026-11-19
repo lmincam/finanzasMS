@@ -1,5 +1,10 @@
 # Historial de versiones
 
+## 5.22.1 — 19/11/2026
+- Inicio: "Mayores gastos" ya no cuenta los gastos fijos (hipoteca, recibos…).
+- Previsión: la **nómina** se detecta sola aunque el banco ponga un concepto distinto cada mes (y sin contar las pagas extra en el importe previsto). Si aun así los ingresos previstos salen a 0, la tarjeta enlaza a "+ Partida" para añadirla a mano.
+- Previsión: el aviso de saldo negativo o bajo está bien maquetado (título, meses en etiquetas con su saldo y la recomendación).
+
 ## 5.22.0 — 19/11/2026 · Pertenencias
 - Nuevo apartado **Pertenencias** en Patrimonio: inventario de lo que hay en cada vivienda (tecnología, electrodomésticos, cocina, muebles, bebé, deporte, herramientas, joyas…). **No suma al patrimonio neto**; se muestra aparte como "Con pertenencias".
 - Cada objeto tiene **valor de reposición** (lo que costaría comprarlo nuevo; para el seguro) y **valor de venta estimado**, que se deprecia solo según la categoría (o el que pongas tú).

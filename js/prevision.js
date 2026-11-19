@@ -20,11 +20,35 @@ const prevIgnorados = () => new Set((((S.ajustesRows || []).find(r => r.clave ==
 const median2 = a => { if (!a.length) return 0; const s = [...a].sort((x, y) => x - y), m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
 
 /** Detecta ingresos y gastos que se repiten con una periodicidad y un importe estables. */
+/**
+ * Nómina(s): el banco suele poner un concepto distinto cada mes ("NÓMINA OCTUBRE", referencias…),
+ * así que se agrupan todos los cobros de nómina (los mismos que usa el mes de nómina) en una sola partida.
+ * Importe: mediana de los últimos meses sin contar los de paga extra.
+ */
+function detectarNomina(ops, desde, hoy) {
+  const umbral = Math.max(300, num(S.ajustes.nomina_umbral));
+  const movs = S.movimientos.filter(m => m.tipo === 'ingreso' && num(m.importe) > 0 && ops.has(m.cuenta_id) && ymOf(m.fecha) >= desde && m.fecha <= hoy
+    && !m.reembolso_de && (num(m.importe) >= umbral || /nomina|sueldo|salario/.test(normText(`${catName(m.categoria_id) || ''} ${m.concepto || ''}`))));
+  if (!movs.length) return null;
+  const mesPaga = m => +m.fecha.slice(8, 10) >= 20 ? addMonths(ymOf(m.fecha), 1) : ymOf(m.fecha);   // cobro a final de mes = mes siguiente
+  const porMes = new Map(); movs.forEach(m => { const k = mesPaga(m); porMes.set(k, (porMes.get(k) || 0) + num(m.importe)); });
+  const meses = [...porMes.keys()].sort(); if (meses.length < 2) return null;
+  const imps = meses.map(k => porMes.get(k)), med = median2(imps);
+  const normales = imps.filter(v => v <= med * 1.4 && v >= med * 0.6);           // fuera pagas extra y meses incompletos
+  const recientes = normales.slice(-4);
+  const ult = [...movs].sort((x, y) => x.fecha < y.fecha ? 1 : -1)[0];
+  if (monthsDiff(meses[meses.length - 1] + '-01', addMonths(ymOf(hoy), 1) + '-01') > 2) return null;   // ya no se cobra
+  return { key: 'ingreso|nomina', tipo: 'ingreso', categoria_id: ult.categoria_id, patron: 'nomina', movs, freq: 1, ultimo: ymOf(ult.fecha),
+    dia: Math.round(median2(movs.map(m => +m.fecha.slice(8, 10)))), importe: round2(recientes.reduce((x, y) => x + y, 0) / (recientes.length || 1)),
+    veces: meses.length, cv: 0, nombre: movs.length > meses.length * 1.5 ? 'Nóminas' : 'Nómina', variable: false };
+}
 function detectarRecurrentes() {
   const hoy = todayISO(), ymH = ymOf(hoy), desde = addMonths(ymH, -13);
   const ops = new Set(cuentasOperativas().map(c => c.id));
   const grupos = new Map();
+  const nomina = detectarNomina(ops, desde, hoy), enNomina = new Set(nomina ? nomina.movs.map(m => m.id) : []);
   for (const m of S.movimientos) {
+    if (enNomina.has(m.id)) continue;
     if ((m.tipo !== 'gasto' && m.tipo !== 'ingreso') || !ops.has(m.cuenta_id) || ymOf(m.fecha) < desde || m.fecha > hoy) continue;
     if (m.reembolso_de || (m.tipo === 'gasto' && num(m.importe) > 0)) continue; // devoluciones y reembolsos no son recurrentes
     const pat = normPatron(proponerPatron(m.notas, m.concepto)) || normConcept(m.concepto);
@@ -56,6 +80,7 @@ function detectarRecurrentes() {
     out.push({ ...g, freq, ultimo, dia: +ultMov.fecha.slice(8, 10), importe: round2(recientes.reduce((a, b) => a + b, 0) / recientes.length),
       veces: meses.length, cv, nombre: ultMov.concepto || g.patron, variable: cv > 0.12 });
   }
+  if (nomina) out.push(nomina);
   return out.sort((a, b) => b.importe - a.importe);
 }
 
@@ -169,11 +194,14 @@ function renderPrevisionSection() {
         <label class="chk" style="margin:0"><input type="checkbox" id="prev-metas" ${S.prevMetas ? 'checked' : ''}> Incluir aportación a metas</label></div></div>
     <div class="kpis">
       ${kpi('Disponible hoy', fmtEUR(P.saldoInicial), 'Corriente + efectivo', 'navy')}
-      ${kpi('Ingresos previstos', fmtEUR(sum(M.slice(1), 'ingresos') / Math.max(1, M.length - 1)) + '/mes', 'Recurrentes y partidas previstas', 'pos')}
+      ${(ing => kpi('Ingresos previstos', fmtEUR(ing) + '/mes', ing > 0 ? 'Nómina, recurrentes y partidas previstas' : '<a href="#" data-action="pp-new">Añade tu nómina como partida prevista</a>', 'pos', !(ing > 0)))(sum(M.slice(1), 'ingresos') / Math.max(1, M.length - 1))}
       ${kpi('Gastos fijos previstos', fmtEUR(sum(M.slice(1), 'fijos') / Math.max(1, M.length - 1)) + '/mes', `+ ${fmtEUR(P.variableMes, 0)}/mes de gasto variable estimado`, 'neg')}
       ${kpi(`Saldo previsto en ${ymLabel(M[M.length - 1].ym, true)}`, `<span class="${nivel(M[M.length - 1].saldoFinal)}">${fmtEUR(M[M.length - 1].saldoFinal, 0)}</span>`, `Punto más bajo: <b class="${nivel(P.minimo.saldo)}">${fmtEUR(P.minimo.saldo, 0)}</b> en ${ymLabel(P.minimo.ym, true)}`)}
     </div>
-    ${tensos.length ? `<div class="banner ${tensos.some(m => m.minMes < 0) ? 'red' : 'amber'}">⚠ ${tensos.some(m => m.minMes < 0) ? 'En algún momento la cuenta quedaría en negativo' : `Meses con el saldo por debajo de 1 mes de gastos (${fmtEUR(col, 0)})`}: ${tensos.map(m => `<b>${ymLabel(m.ym, true)}</b> (${fmtEUR(m.minMes, 0)})`).join(', ')}. Revisa los cargos de esos meses o adelanta saldo desde el fondo de emergencia.</div>` : ''}
+    ${tensos.length ? (neg => `<div class="banner ${neg ? 'red' : 'amber'} prev-alerta"><span class="pa-ic">⚠</span><div class="pa-c">
+      <b>${neg ? 'En algún momento la cuenta quedaría en negativo' : `Meses con el saldo por debajo de 1 mes de gastos (${fmtEUR(col, 0)})`}</b>
+      <div class="pa-meses">${tensos.map(m => `<span class="${m.minMes < 0 ? 'neg' : ''}">${ymLabel(m.ym, true)} · <b>${fmtEUR(m.minMes, 0)}</b></span>`).join('')}</div>
+      <small>Revisa los cargos de esos meses o adelanta saldo desde el fondo de emergencia.</small></div></div>`)(tensos.some(m => m.minMes < 0)) : ''}
     <div class="grid-2">
       <div class="card"><div class="card-head"><h3>Saldo previsto mes a mes</h3></div><div class="chart-box"><canvas id="ch-prev"></canvas></div></div>
       <div class="card"><div class="card-head"><h3>Próximos 30 días</h3></div>

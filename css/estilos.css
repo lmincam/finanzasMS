@@ -866,3 +866,12 @@ button.mpick{font:inherit;font-weight:600}
 .pz-pert .pz-v{color:var(--muted)}
 .pz-pert .pz-ico{background:var(--card2);color:var(--slate)}
 .pz-ampl{cursor:pointer;color:var(--muted)}.pz-ampl b{color:var(--slate)}.pz-ampl:hover{text-decoration:underline}
+/* Previsión: aviso de saldo bajo bien maquetado */
+.prev-alerta{display:flex;align-items:flex-start;gap:12px}
+.prev-alerta .pa-ic{font-size:18px;line-height:1.2;flex:none}
+.prev-alerta .pa-c{display:flex;flex-direction:column;gap:8px;min-width:0;flex:1}
+.prev-alerta .pa-c>b{font-size:14px}
+.pa-meses{display:flex;flex-wrap:wrap;gap:6px}
+.pa-meses span{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12.5px;color:var(--txt);white-space:nowrap}
+.pa-meses span.neg b{color:var(--red)}
+.prev-alerta small{font-size:12.5px;opacity:.9}

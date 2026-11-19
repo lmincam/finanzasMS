@@ -50,7 +50,9 @@ function renderDashboard() {
   let donut = [...byRoot.entries()].map(([k, v]) => ({ k, v, c: catById(k) })).filter(x => x.v > 0).sort((a, b) => b.v - a.v);
   if (donut.length > 9) { const rest = donut.slice(8); donut = donut.slice(0, 8).concat([{ k: '_otros', v: sum(rest, 'v'), c: { nombre: 'Resto', color: '#cbd5e1' } }]); }
 
-  const topGastos = [...gastosMov].sort((a, b) => num(a.importe) - num(b.importe)).slice(0, 8);
+  // Sin gastos fijos (hipoteca, recibos…): interesan los gastos en los que puedes decidir
+  const _fijo = new Map(), esFijo = c => { if (!c) return false; if (!_fijo.has(c)) _fijo.set(c, esGastoFijo(c, months[months.length - 1])); return _fijo.get(c); };
+  const topGastos = [...gastosMov].filter(m => !esFijo(m.categoria_id)).sort((a, b) => num(a.importe) - num(b.importe)).slice(0, 8);
   const rows = budgetRows(gastosMov, nM, months);
   const totBud = sum(rows.filter(r => r.lvl === 0 && !r.anual), 'bud'), totSpent = sum(rows.filter(r => r.lvl === 0 && !r.anual), 'spent');
 
@@ -98,7 +100,7 @@ function renderDashboard() {
     <div class="dash-bottom">
     ${renderBudgetCard(rows, nM, totBud, totSpent)}
 
-    <div class="card top-card"><div class="card-head"><h3>Mayores gastos</h3></div>
+    <div class="card top-card"><div class="card-head"><h3>Mayores gastos</h3><span class="sub">Sin gastos fijos</span></div>
       <div class="top-list">${topGastos.length ? topGastos.slice(0, 5).map(m => `<div class="it" data-action="mov-edit" data-id="${m.id}" style="cursor:pointer">${iconoMovimiento(m)}<div class="c"><b>${esc(m.concepto || '—')}</b><div class="small muted">${fmtDate(m.fecha)} · ${esc(catName(m.categoria_id) || 'Sin categoría')}</div></div><div class="num neg">${fmtEUR(num(m.importe))}</div></div>`).join('') : '<div class="empty">—</div>'}</div></div>
     </div>
 `;

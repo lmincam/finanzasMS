@@ -79,3 +79,15 @@ def test_inmueble_se_actualiza_con_el_ine(app):
     assert i['precio_m2_base'] == 2500                    # la referencia no cambia
     # Reformado (+8 %) y planta alta con ascensor (+3 %)
     assert abs(i['valor_mercado'] - round(90 * round(esperado, 2) * 1.11, 2)) < 0.02
+
+
+def test_prevision_detecta_nomina(app):
+    """La nómina se detecta aunque el concepto cambie cada mes, y la paga extra no altera el importe previsto."""
+    a = app
+    a.ev("""(() => { S.movimientos = S.movimientos.filter(m => m.tipo !== 'ingreso'); const ms = [['2026-06-27', 2400, 'NOMINA JUNIO REF 1182'], ['2026-06-27', 2400, 'PAGA EXTRA JUNIO NOMINA'], ['2026-07-28', 2410, 'TRANSF NOMINA JULIO REF 2211'],
+        ['2026-08-27', 2400, 'NOMINA AGOSTO 3301'], ['2026-09-26', 2420, 'NOMINA SEPT 4410'], ['2026-10-28', 2415, 'NOMINA OCTUBRE 5521']];
+      ms.forEach(([f, i, c], k) => S.movimientos.push({ id: 'nm' + k, cuenta_id: 'a', tipo: 'ingreso', fecha: f, mes_imputacion: f.slice(0, 7) + '-01', importe: i, concepto: c })); })()""")
+    rs = a.ev("detectarRecurrentes().filter(r => r.key === 'ingreso|nomina')")
+    assert len(rs) == 1
+    assert 2400 <= rs[0]['importe'] <= 2420 and rs[0]['freq'] == 1
+    assert a.ev("calcularPrevision().meses.slice(1).every(m => m.ingresos >= 2400)")

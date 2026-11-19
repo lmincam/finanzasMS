@@ -94,3 +94,12 @@ def test_carruseles(app):
     orden = {'red': 0, 'amber': 1, 'blue': 2, 'green': 3}
     assert niveles and [orden[n] for n in niveles] == sorted(orden[n] for n in niveles)
     assert a.page.locator('#tab-patrimonio [data-crs]').count() == 0
+
+
+def test_mayores_gastos_sin_fijos(app):
+    a = app
+    a.ir('dashboard')
+    hip = a.ev("S.movimientos.filter(m => m.tipo === 'gasto' && esGastoFijo(m.categoria_id, mesActual())).map(m => m.id)")
+    assert hip, 'el stub debería tener algún gasto fijo (cuota de la hipoteca)'
+    ids = a.ev("[...document.querySelectorAll('.top-list .it')].map(x => x.dataset.id)")
+    assert ids and not set(ids) & set(hip)
