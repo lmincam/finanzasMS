@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.23.5 — 19/11/2026 · Presupuestos en el móvil
+- Los botones +, editar y eliminar ya no se montan sobre el importe de la categoría.
+
 ## 5.23.4 — 19/11/2026 · Colores de categorías automáticos
 - Cada categoría principal tiene su propio color, asignado por la app y sin repetir; sus subcategorías, el mismo color más claro. Los verdes quedan reservados a los ingresos. Ya no se elige el color al editar.
 - Presupuestos: botones de editar (lápiz) y eliminar (papelera) a la vista, y + para añadir subcategoría, en lugar del menú ⋯.

@@ -1024,3 +1024,12 @@ body:not(.clasico) .kpi{min-width:0}
   .cat-r .cr-acts{gap:2px}
   .cat-r .cr-acts .mini{width:26px;height:28px}
 }
+/* Presupuestos: los botones nunca se montan sobre el importe */
+.cat-r{grid-template-columns:12px minmax(0,1fr) auto auto!important}
+.cat-r .cr-acts{min-width:98px;justify-content:flex-end}
+.cat-r .cr-acts .mini{width:30px!important;min-width:30px!important;height:30px!important;flex:none}
+@media (max-width:640px){
+  .cat-r{grid-template-columns:10px minmax(0,1fr) auto auto!important}
+  .cat-r .cr-acts{min-width:84px}
+  .cat-r .cr-acts .mini{width:27px!important;min-width:27px!important;height:30px!important}
+}
