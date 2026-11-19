@@ -1,5 +1,11 @@
 # Historial de versiones
 
+## 5.26.0 — 20/11/2026 · Notas con resumen por IA
+- Nueva pestaña Planificar › Notas: notas de texto libre (título opcional), de la más nueva a la más antigua, con buscador, autor y fecha. Al pulsar una se lee entera y se puede editar o eliminar.
+- Cada nota lleva un resumen breve hecho por IA. Lo genera la tarea de GitHub «Resumen de notas» (cada 10 minutos, `scripts/notas.mjs`); si cambias el texto, se vuelve a resumir. Mientras llega se ve el principio de la nota.
+- **Base de datos:** ejecutar `sql/esquema_completo.sql` (bloque 16, tabla `notas`).
+- **GitHub:** añadir el secreto `ANTHROPIC_API_KEY` (Settings → Secrets and variables → Actions). Sin él, las notas funcionan pero sin resumen.
+
 ## 5.25.2 — 19/11/2026 · + centrado dentro del círculo
 - Ordenador: el símbolo + queda exactamente en el centro del círculo verde (heredaba el relleno de las pestañas).
 

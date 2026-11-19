@@ -840,13 +840,38 @@ notify pgrst, 'reload schema';
 
 
 -- #####################################################################
+--  BLOQUE 16 · Notas (v5.26.0)
+-- #####################################################################
+-- Notas de texto libre en Planificar › Notas. El resumen lo escribe una IA (tarea "Resumen de notas" de GitHub):
+-- resumen_de guarda una huella del texto resumido; si cambias la nota, se vuelve a resumir.
+create table if not exists public.notas (
+  id           uuid primary key default gen_random_uuid(),
+  titulo       text,
+  texto        text not null,
+  resumen      text,
+  resumen_de   text,
+  autor        text,
+  created_at   timestamptz default now(),
+  updated_at   timestamptz default now()
+);
+create index if not exists notas_created_idx on public.notas(created_at desc);
+alter table public.notas enable row level security;
+drop policy if exists acceso_personal on public.notas;
+create policy acceso_personal on public.notas for all to authenticated
+  using (public.es_permitido()) with check (public.es_permitido());
+revoke all on public.notas from anon;
+grant select, insert, update, delete on public.notas to authenticated;
+notify pgrst, 'reload schema';
+
+
+-- #####################################################################
 --  COMPROBACIÓN FINAL (solo lectura)
 -- #####################################################################
 select 'Tabla ' || t as elemento,
        case when to_regclass('public.' || t) is not null then '✅ OK' else '❌ FALTA' end as estado
 from unnest(array['cuentas','categorias','movimientos','inmuebles','vehiculos','deudas','snapshots','ajustes',
                   'valoraciones','precios_m2','amortizaciones','amortizaciones_plan','aportaciones_periodicas',
-                  'posiciones','seguros','reglas_categoria','patrimonio_mensual','partidas_previstas','metas','precios','historial','mantenimientos','pertenencias']) as t
+                  'posiciones','seguros','reglas_categoria','patrimonio_mensual','partidas_previstas','metas','precios','historial','mantenimientos','pertenencias','notas']) as t
 union all
 select 'Columna ' || tb || '.' || col,
        case when exists (select 1 from information_schema.columns

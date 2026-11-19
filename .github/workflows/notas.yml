@@ -1,0 +1,36 @@
+# Resumen con IA de las notas (Planificar › Notas).
+# Secretos (Settings → Secrets and variables → Actions):
+#   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY  (los mismos que usa "Precios diarios")
+#   ANTHROPIC_API_KEY                        (console.anthropic.com → API Keys)
+# Sin ANTHROPIC_API_KEY termina bien sin hacer nada (no manda correos de fallo).
+name: Resumen de notas
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'   # cada 10 minutos (GitHub puede retrasarlo unos minutos)
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: notas
+  cancel-in-progress: false
+
+jobs:
+  resumir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Resumir notas nuevas o cambiadas
+        run: node scripts/notas.mjs
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

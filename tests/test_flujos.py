@@ -234,3 +234,18 @@ def test_foto_de_perfil(app, tmp_path):
     assert a.page.locator('#user-chip img').count() == 1                  # la foto sale en el círculo de arriba
     assert a.page.locator('#tabs [data-sec="ajustes"]').count() == 0      # Ajustes ya no está en la barra
     assert a.page.locator('#tabs .nav-plus').count() == 1                 # + en medio de la barra
+
+
+def test_notas(app):
+    a = app
+    a.ir('notas')
+    assert 'Notas' in a.texto('#tab-notas')
+    for t in ('Primera nota\nCambiar de tarifa de luz', 'Segunda nota\nRevisar seguro del coche en enero'):
+        a.page.click('[data-action="nota-new"]'); a.page.fill('.modal [name="texto"]', t)
+        a.page.click('.modal [type="submit"]'); a.page.wait_for_timeout(300)
+    tit = a.page.locator('.nota-card .nota-tit').all_inner_texts()
+    assert tit[:2] == ['Segunda nota', 'Primera nota']                    # de la más nueva a la más antigua
+    assert 'Resumen en camino' in a.texto('#tab-notas')
+    # con resumen al día se muestra el de la IA
+    a.ev("(() => { const n = S.notas[0]; n.resumen = 'Resumen de prueba'; n.resumen_de = huellaNota(n.texto); renderNotas(); })()")
+    assert 'Resumen de prueba' in a.texto('#tab-notas')

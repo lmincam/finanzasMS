@@ -34,7 +34,7 @@ const CLASE_ACTIVO = { renta_variable: 'Renta variable', renta_fija: 'Renta fija
 const PALETTE = ['#1e3a8a', '#0891b2', '#16a34a', '#ca8a04', '#dc2626', '#7c3aed', '#db2777', '#ea580c', '#0d9488', '#64748b'];
 const TABS = [
   ['dashboard', 'Resumen'], ['cuentas', 'Cuentas y movimientos'], ['planificacion', 'Previsión y metas'], ['patrimonio', 'Patrimonio'],
-  ['inversiones', 'Inversiones'], ['inmuebles', 'Inmuebles'], ['vehiculos', 'Vehículos'], ['pertenencias', 'Pertenencias'], ['deudas', 'Deudas'], ['seguros', 'Seguros'],
+  ['inversiones', 'Inversiones'], ['inmuebles', 'Inmuebles'], ['vehiculos', 'Vehículos'], ['pertenencias', 'Pertenencias'], ['notas', 'Notas'], ['deudas', 'Deudas'], ['seguros', 'Seguros'],
   ['futuro', 'Proyección'], ['auditoria', 'Evolución'],
   ['categorias', 'Presupuestos'], ['ajustes', 'Ajustes']
 ];
@@ -44,7 +44,7 @@ const SECCIONES = [
   { k: 'movimientos', l: 'Movimientos', i: 'arrows', tabs: ['cuentas'] },
   // Patrimonio: se entra por el resumen y desde sus recuadros a cada apartado (sin sub-pestañas)
   { k: 'patrimonio', l: 'Patrimonio', i: 'wallet', tabs: ['patrimonio', 'inversiones', 'inmuebles', 'vehiculos', 'pertenencias', 'deudas', 'auditoria'], resumen: 'patrimonio' },
-  { k: 'planificar', l: 'Planificar', i: 'target', tabs: ['categorias', 'planificacion', 'futuro', 'seguros'] },
+  { k: 'planificar', l: 'Planificar', i: 'target', tabs: ['categorias', 'planificacion', 'futuro', 'seguros', 'notas'] },
   { k: 'ajustes', l: 'Ajustes', i: 'sliders', tabs: ['ajustes'] }
 ];
 const seccionDe = tab => SECCIONES.find(s => s.tabs.includes(tab)) || SECCIONES[0];
