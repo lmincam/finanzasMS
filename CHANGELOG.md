@@ -1,5 +1,10 @@
 # Historial de versiones
 
+## 5.22.2 — 19/11/2026 · Presupuestos más limpio
+- Cada categoría con sus subcategorías en un bloque; el nombre a la izquierda con sus etiquetas debajo (cuota préstamo, fijo…), el importe alineado a la derecha y un único botón ⋯ (editar, añadir subcategoría, eliminar) en lugar de tres botones.
+- Total del presupuesto destacado en la cabecera; la nota de anualidades en su propia línea.
+- Reglas: cabecera corta y "Categorizar con las reglas" en una franja aparte cuando hay movimientos sin categoría.
+
 ## 5.22.1 — 19/11/2026
 - Inicio: "Mayores gastos" ya no cuenta los gastos fijos (hipoteca, recibos…).
 - Previsión: la **nómina** se detecta sola aunque el banco ponga un concepto distinto cada mes (y sin contar las pagas extra en el importe previsto). Si aun así los ingresos previstos salen a 0, la tarjeta enlaza a "+ Partida" para añadirla a mano.

@@ -194,3 +194,13 @@ def test_pertenencias(app):
     a.page.fill('.modal [name="nombre"]', 'Apple Watch'); a.page.fill('.modal [name="cantidad"]', '2'); a.page.fill('.modal [name="precio_compra"]', '900')
     a.page.click('.modal [type=submit]'); a.page.wait_for_timeout(300)
     assert a.ev("pertTotales().n") == 5
+
+
+def test_presupuestos_menu_categoria(app):
+    a = app
+    a.ir('categorias')
+    assert a.page.locator('#tab-categorias .cat-r').count() >= 5
+    assert a.page.locator('#tab-categorias .cat-r .mini').count() == 0                # sin la fila de botones
+    a.page.click('.cat-r [data-action="cat-menu"]'); a.page.wait_for_timeout(150)
+    a.page.click('.modal [data-op="cat-edit"]'); a.page.wait_for_timeout(150)
+    assert a.page.locator('.modal [name="nombre"]').count() == 1

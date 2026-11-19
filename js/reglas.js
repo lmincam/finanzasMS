@@ -164,14 +164,15 @@ function renderReglasCard() {
   const predef = REGLAS_PREDEFINIDAS.map(([p, ruta]) => ({ p, ruta, cat: resolverRuta(ruta) }));
   const sinCat = S.movimientos.filter(m => (m.tipo === 'gasto' || m.tipo === 'ingreso') && !m.categoria_id).length;
   return `<div class="card"><div class="card-head"><div><h3>🤖 Reglas de categorización</h3>
-      <div class="small muted">${S.reglas_categoria.length} reglas tuyas · ${predef.filter(x => x.cat).length} predefinidas activas. Si el concepto del banco contiene la palabra clave, se asigna la categoría.</div></div>
-      <div class="btn-row"><button class="btn sm" data-action="regla-new">+ Regla</button>${sinCat ? `<button class="btn sm primary" data-action="reglas-aplicar">Aplicar a ${sinCat} movimiento(s) sin categoría</button>` : ''}</div></div>
+      <div class="small muted">${S.reglas_categoria.length} tuyas · ${predef.filter(x => x.cat).length} predefinidas</div></div>
+      <button class="btn sm" data-action="regla-new">+ Regla</button></div>
+    ${sinCat ? `<div class="reg-aplicar"><span>${sinCat} movimiento(s) sin categoría</span><button class="btn sm primary" data-action="reglas-aplicar">Categorizar con las reglas</button></div>` : ''}
     <input id="reg-q" type="search" placeholder="Buscar palabra clave o categoría…" value="${esc(S.reglasQ || '')}" style="margin-bottom:10px">
     <div id="reglas-list">${reglas.length ? `<div class="tbl-wrap" style="max-height:420px;overflow:auto"><table class="tbl"><thead><tr><th>Si contiene…</th><th>→ Categoría</th><th class="right">Usos</th><th></th></tr></thead><tbody>
       ${reglas.map(r => `<tr style="${r.activa === false ? 'opacity:.5' : ''}"><td><code>${esc(r.patron)}</code> ${r.origen === 'aprendida' ? '<span class="badge green">aprendida</span>' : '<span class="badge">manual</span>'}</td>
         <td class="small">${destinoRegla(r)}</td><td class="right small">${num(r.usos)}${r.ultima_vez ? `<div class="muted">${fmtDate(r.ultima_vez)}</div>` : ''}</td>
         <td><button class="mini" data-action="regla-edit" data-id="${r.id}">✎</button><button class="mini" data-action="regla-del" data-id="${r.id}">🗑</button></td></tr>`).join('')}</tbody></table></div>`
-      : '<div class="empty">Aún no hay reglas tuyas. Se crearán solas cuando categorices en el importador lo que la app no sepa.</div>'}</div>
+      : '<div class="empty">Aún no hay reglas tuyas: se crean solas cuando categorizas al importar.</div>'}</div>
     <details style="margin-top:10px"><summary>Reglas predefinidas (${predef.length})</summary>
       <p class="small muted">Comercios habituales en España. Tus reglas tienen prioridad: si una no te encaja, crea una regla tuya con la misma palabra clave.</p>
       <div class="small" style="columns:2;column-gap:24px">${predef.map(x => `<div style="break-inside:avoid;padding:2px 0"><code>${esc(x.p)}</code> → ${x.cat ? esc(catName(x.cat.id)) : `<span class="muted">${esc(x.ruta)} (no existe)</span>`}</div>`).join('')}</div>

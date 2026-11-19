@@ -12,23 +12,46 @@ function renderCategorias() {
     const roots = S.categorias.filter(c => c.tipo === tipo && !c.parent_id).sort(byOrden);
     const total = sum(roots, r => budgetOf(r));
     const anualesMes = round2(sum(S.categorias.filter(c => c.tipo === tipo && presAnual(c)), c => presAnual(c) / 12));
-    const row = (c, lvl) => `<div class="cat-row lvl${lvl}"><span class="cdot" style="background:${esc(c.color || (lvl ? '#cbd5e1' : '#94a3b8'))}"></span><span class="cname">${esc(c.nombre)}${c.naturaleza === 'amortizacion' ? ' <span class="badge green" title="Cuenta como ahorro, no como gasto">capital</span>' : ''}${S.deudas.some(d => categoriaCuota(d) === c.id) ? ' <span class="badge blue" title="Se separa en intereses (gasto) y capital (ahorro)">cuota préstamo</span>' : ''}</span>
-${tipo === 'gasto' ? badgeFijo(c) : ''}
-      <span class="cbud">${presAnual(c) ? `${fmtEUR(presAnual(c))}/año <span class="muted small">(${fmtEUR(presAnual(c) / 12)}/mes)</span>` : num(c.presupuesto_mensual) ? fmtEUR(c.presupuesto_mensual) + '/mes' : (lvl === 0 && budgetOf(c) ? `<span class="muted">Σ ${fmtEUR(budgetOf(c))}</span>` : '')}</span>
-      ${lvl === 0 ? `<button class="mini" data-action="cat-new" data-tipo="${tipo}" data-parent="${c.id}" title="Añadir subcategoría">+ sub</button>` : ''}
-      <button class="mini" data-action="cat-edit" data-id="${c.id}">✎</button><button class="mini" data-action="cat-del" data-id="${c.id}">🗑</button></div>`;
+    const row = (c, lvl) => {
+      const tags = [c.naturaleza === 'amortizacion' ? '<span class="badge green" title="Cuenta como ahorro, no como gasto">capital</span>' : '',
+        S.deudas.some(d => categoriaCuota(d) === c.id) ? '<span class="badge blue" title="Se separa en intereses (gasto) y capital (ahorro)">cuota préstamo</span>' : '',
+        tipo === 'gasto' ? badgeFijo(c).trim() : ''].filter(Boolean).join('');
+      const pa = presAnual(c), pm = num(c.presupuesto_mensual), suma = lvl === 0 && !pa && !pm ? budgetOf(c) : 0;
+      const imp = pa ? `<b>${fmtEUR(pa, 0)}</b><small>/año · ${fmtEUR(pa / 12, 0)}/mes</small>`
+        : pm ? `<b>${fmtEUR(pm, 0)}</b><small>/mes</small>`
+        : suma ? `<b>${fmtEUR(suma, 0)}</b><small>/mes · suma</small>` : '<small class="muted">—</small>';
+      return `<div class="cat-r lvl${lvl}">
+        <span class="cdot" style="background:${esc(c.color || (lvl ? '#cbd5e1' : '#94a3b8'))}"></span>
+        <div class="cr-main"><div class="cr-name">${esc(c.nombre)}</div>${tags ? `<div class="cr-tags">${tags}</div>` : ''}</div>
+        <div class="cr-amt">${imp}</div>
+        <button class="mv-more" data-action="cat-menu" data-id="${c.id}" data-tipo="${tipo}" data-lvl="${lvl}" aria-label="Opciones de ${esc(c.nombre)}">⋯</button></div>`;
+    };
     return `<div class="card"><div class="card-head"><div><h3>${tipo === 'gasto' ? '💸 Categorías de gasto' : '💰 Categorías de ingreso'}</h3>
-      <div class="small muted">${tipo === 'gasto' ? 'Presupuesto' : 'Previsión'} mensual total: <b>${fmtEUR(total)}</b>${tipo === 'gasto' && anualesMes ? ` · de ello <b>${fmtEUR(anualesMes)}</b>/mes son anualidades (<a href="#cuentas" data-action="tab" data-tab="cuentas">pásalos a ${esc((cuentaAnualidades() || { nombre: 'tu cuenta de anualidades' }).nombre)}</a>)` : ''}</div></div>
+      <div class="cat-tot"><b>${fmtEUR(total, 0)}</b> <span>${tipo === 'gasto' ? 'presupuesto' : 'previsión'} al mes</span></div>
+      ${tipo === 'gasto' && anualesMes ? `<div class="small muted">De ello ${fmtEUR(anualesMes, 0)}/mes son <a href="#" data-action="anual-ver">anualidades</a></div>` : ''}</div>
       <button class="btn sm" data-action="cat-new" data-tipo="${tipo}">+ Categoría</button></div>
-      ${roots.map(r => row(r, 0) + childrenOf(r.id).map(c => row(c, 1)).join('')).join('') || '<div class="empty">Sin categorías</div>'}</div>`;
+      <div class="cat-list">${roots.map(r => `<div class="cat-grp">${row(r, 0)}${childrenOf(r.id).map(c => row(c, 1)).join('')}</div>`).join('') || '<div class="empty">Sin categorías</div>'}</div></div>`;
   };
   el.innerHTML = `<div class="section-head"><div><h2>Presupuestos</h2></div></div>
     <div class="grid-2e">${col('gasto')}${col('ingreso')}</div>
     ${renderReglasCard()}`;
 }
+/** Menú ⋯ de una categoría: editar, añadir subcategoría, eliminar. */
+function abrirMenuCat(el) {
+  const c = catById(el.dataset.id); if (!c) return;
+  const op = (a, ic, t, extra = '') => `<button class="mv-op" data-op="${a}" ${extra}>${ic} ${t}</button>`;
+  const md = modal(`<h3 style="margin-bottom:10px">${esc(c.nombre)}</h3><div class="mv-ops">
+    ${op('cat-edit', '✎', 'Editar (presupuesto, color, fijo…)')}
+    ${el.dataset.lvl === '0' ? op('cat-new', '＋', 'Añadir subcategoría') : ''}
+    ${op('cat-del', '🗑', 'Eliminar', 'style="color:var(--red)"')}</div>`);
+  md.el.addEventListener('click', e => { const b = e.target.closest('[data-op]'); if (!b) return; md.close();
+    const fake = { dataset: { id: c.id, tipo: el.dataset.tipo, parent: c.id } };
+    Actions[b.dataset.op](fake); });
+}
+Actions['cat-menu'] = el => abrirMenuCat(el);
 /** Etiqueta de gasto fijo: marcada por ti (📌 fijo) o detectada por la app (fijo · auto). */
 function badgeFijo(c) {
-  if (c.gasto_fijo === true) return ' <span class="badge" title="Marcado por ti como gasto fijo">📌 fijo</span>';
+  if (c.gasto_fijo === true) return ' <span class="badge" title="Marcado por ti como gasto fijo">fijo</span>';
   if (c.gasto_fijo === false || presAnual(c) || catAnualDe(c.id)) return '';
   return esGastoFijo(c.id, mesActual()) ? ' <span class="badge" title="La app lo detecta como fijo: importe casi igual cada mes. Puedes cambiarlo al editar la categoría.">fijo · auto</span>' : '';
 }
