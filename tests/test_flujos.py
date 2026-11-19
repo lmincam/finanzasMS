@@ -120,8 +120,9 @@ def test_movimientos_solo_cuentas_y_lista(app):
     a.ev("S.categorias.find(c => c.nombre === 'Alimentación').presupuesto_anual = 600; S.ajustesRows.push({ clave: 'cuenta_anualidades', valor: { id: 'b' } })")
     a.ir('cuentas')
     assert a.page.locator('#tab-cuentas .anual-card').count() == 0
-    assert a.page.locator('.acc-card .acc-anual').count() == 1
-    a.page.click('.acc-anual'); a.page.wait_for_timeout(150)
+    a.page.click('.acc-card[data-id="b"]'); a.page.wait_for_timeout(150)
+    assert a.page.locator('.modal .acc-anual').count() == 1
+    a.page.click('.modal .acc-anual'); a.page.wait_for_timeout(200)
     assert a.page.locator('.modal .anual-card').count() == 1
 
 
