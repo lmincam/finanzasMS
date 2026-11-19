@@ -31,6 +31,30 @@ function abrirMenuCuenta(id) {
     Actions[b.dataset.op]({ dataset: { id } }); });
 }
 Actions['cuenta-menu'] = el => abrirMenuCuenta(el.dataset.id);
+/* ---------- Logo de la entidad de cada cuenta ---------- */
+const ENTIDADES = [[/unicaja/, 'unicaja.es'], [/myinvestor|my investor/, 'myinvestor.es'], [/trade ?republic/, 'traderepublic.com'], [/bbva/, 'bbva.es'],
+  [/santander/, 'bancosantander.es'], [/caixa ?bank|la caixa/, 'caixabank.es'], [/imagin/, 'imagin.com'], [/\bing\b/, 'ing.es'], [/openbank/, 'openbank.es'],
+  [/bankinter/, 'bankinter.com'], [/sabadell/, 'bancsabadell.com'], [/revolut/, 'revolut.com'], [/\bn26\b/, 'n26.com'], [/abanca/, 'abanca.com'],
+  [/kutxa/, 'kutxabank.es'], [/ibercaja/, 'ibercaja.es'], [/cajamar/, 'cajamar.es'], [/caja ?rural|ruralvia/, 'ruralvia.com'], [/evo/, 'evobanco.com'],
+  [/indexa/, 'indexacapital.com'], [/finizens/, 'finizens.com'], [/degiro/, 'degiro.es'], [/interactive brokers|\bibkr\b/, 'interactivebrokers.com'],
+  [/\bwise\b/, 'wise.com'], [/paypal/, 'paypal.com'], [/renta ?4/, 'r4.com'], [/selfbank|self bank/, 'selfbank.es'], [/inversis/, 'inversis.com'], [/mapfre/, 'mapfre.es']];
+// Si la cuenta no tiene entidad escrita, se deduce por su nombre (las de la familia)
+const ENTIDAD_POR_NOMBRE = [[/principal/, 'unicaja.es'], [/emergencia|anualidad/, 'myinvestor.es']];
+function webEntidad(c) {
+  const e = normText(c.entidad || ''), n = normText(c.nombre || '');
+  for (const [re, web] of ENTIDADES) if (e && re.test(e)) return web;
+  for (const [re, web] of ENTIDAD_POR_NOMBRE) if (re.test(n)) return web;
+  for (const [re, web] of ENTIDADES) if (re.test(n)) return web;
+  return null;
+}
+const HUCHA = '<svg viewBox="0 0 64 64" aria-hidden="true"><ellipse cx="31" cy="36" rx="21" ry="16" fill="#f9a8d4"/><path d="M17 26l-3-9 9 5z" fill="#f472b6"/><rect x="20" y="47" width="6" height="9" rx="2" fill="#f472b6"/><rect x="36" y="47" width="6" height="9" rx="2" fill="#f472b6"/><ellipse cx="52" cy="37" rx="6" ry="5" fill="#f472b6"/><circle cx="50.5" cy="36" r="1.2" fill="#9d174d"/><circle cx="53.5" cy="36" r="1.2" fill="#9d174d"/><circle cx="41" cy="30" r="2" fill="#831843"/><rect x="25" y="21" width="12" height="3" rx="1.5" fill="#be185d"/><circle cx="31" cy="12" r="6" fill="#facc15" stroke="#ca8a04" stroke-width="1.5"/><path d="M10 36c-4 0-5-4-2-5" stroke="#f472b6" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>';
+function logoCuenta(c) {
+  if (c.tipo === 'efectivo') return `<span class="acc-logo hucha">${HUCHA}</span>`;
+  const web = webEntidad(c), ini = esc(String(c.entidad || c.nombre || '?').trim().slice(0, 2));
+  return `<span class="acc-logo${web ? ' con-logo' : ''}" style="--acc:${esc(c.color || '#1e3a5f')}"><b>${ini}</b>${web ? `<img src="${urlLogo(web).replace('sz=64', 'sz=128')}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.remove('con-logo');this.remove()">` : ''}</span>`;
+}
+const nombreEntidad = c => c.entidad || ({ 'unicaja.es': 'Unicaja', 'myinvestor.es': 'MyInvestor' })[webEntidad(c)] || '';
+
 function renderCuentas() {
   const el = $('#tab-cuentas');
   const P = Calc.patrimonio();
@@ -43,7 +67,7 @@ function renderCuentas() {
     const tieneVM = inv && c.valor_mercado !== null && c.valor_mercado !== undefined;
     const plus = val - saldo;
     return `<div class="acc-card clickable ${c.activa === false ? 'off' : ''}" style="--acc:${esc(c.color || '#1e3a5f')}" data-action="cuenta-menu" data-id="${c.id}" role="button" tabindex="0" title="Conciliar, ver movimientos, editar…">
-      <div class="acc-top"><div><div class="acc-name">${esc(c.nombre)}</div><div class="acc-sub">${esc(c.entidad || '')}${c.entidad ? ' · ' : ''}${TIPO_CUENTA[c.tipo] || c.tipo}</div></div>
+      <div class="acc-top">${logoCuenta(c)}<div class="acc-id"><div class="acc-name">${esc(c.nombre)}</div><div class="acc-sub">${esc(nombreEntidad(c)) || `<span class="acc-tipo-m">${TIPO_CUENTA[c.tipo] || c.tipo}</span>`}<span class="acc-tipo">${nombreEntidad(c) ? ' · ' : ''}${TIPO_CUENTA[c.tipo] || c.tipo}</span></div></div>
         ${c.activa === false ? '<span class="badge">Inactiva</span>' : ''}</div>
       <div class="acc-val ${val < 0 ? 'neg' : ''}">${fmtEUR(val)}</div>
       ${tieneVM ? `<div class="acc-meta">Aportado neto: ${fmtEUR(saldo)} · <b class="${plus >= 0 ? 'pos' : 'neg'}">${signed(plus)}</b> ${saldo ? `(${fmtPct(plus / saldo)})` : ''}</div><div class="acc-meta">Valor de mercado a ${fmtDate(c.fecha_valor_mercado)} + aportaciones posteriores</div>`

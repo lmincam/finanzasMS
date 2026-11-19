@@ -1067,3 +1067,32 @@ html,body{overflow-x:clip}
 .mf-mes .mpick{flex-direction:column;gap:1px;height:auto;min-height:44px;padding:5px 10px;line-height:1.15}
 .mpick .mf-rango{display:block;font-size:11px;font-weight:500;color:var(--muted);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .mv-head .mf-orden{width:34px;padding:0;justify-content:center;font-size:16px;font-weight:700}
+/* Movimientos · cuentas con el logo de su entidad */
+.acc-liq .acc-card{border-top:0;border:1px solid var(--line);box-shadow:0 1px 2px rgba(15,23,42,.05),0 6px 16px -10px rgba(15,23,42,.18);border-radius:18px;padding:16px 40px 16px 16px;gap:0;background:linear-gradient(180deg,color-mix(in srgb,var(--acc,#1e3a5f) 5%,var(--card)) 0%,var(--card) 60%)}
+.acc-liq .acc-top{justify-content:flex-start;align-items:center;gap:12px}
+.acc-liq .acc-id{min-width:0}
+.acc-liq .acc-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acc-logo{flex:none;width:46px;height:46px;border-radius:13px;display:grid;place-items:center;background:var(--acc,#1e3a5f);color:#fff;font-size:15px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(15,23,42,.15)}
+.acc-logo b{font-weight:700;letter-spacing:.02em;text-transform:uppercase}
+.acc-logo.con-logo{background:#fff;border:1px solid var(--line)}
+.acc-logo.con-logo b{display:none}
+.acc-logo img{width:30px;height:30px;object-fit:contain;border-radius:6px}
+.acc-logo.hucha{background:#fdf2f8;border:1px solid #fbcfe8}
+.acc-logo.hucha svg{width:34px;height:34px}
+.acc-liq .acc-val{margin-top:14px;font-size:28px}
+[data-theme="dark"] .acc-logo.con-logo{background:#fff}
+[data-theme="dark"] .acc-logo.hucha{background:#3b1a2c;border-color:#7a2a54}
+[data-theme="dark"] .acc-liq .acc-card{background:var(--card)}
+@media (max-width:640px){
+  .acc-liq .acc-card{padding:12px 24px 12px 12px;border-radius:16px}
+  .acc-liq .acc-top{gap:9px}
+  .acc-logo{width:36px;height:36px;border-radius:10px;font-size:12px}
+  .acc-logo img{width:24px;height:24px}
+  .acc-logo.hucha svg{width:27px;height:27px}
+  .acc-liq .acc-val{margin-top:10px;font-size:clamp(19px,6vw,23px)}
+}
+@media (max-width:640px){
+  .acc-liq .acc-top{align-items:flex-start}
+  .acc-liq .acc-name{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:14px;line-height:1.2}
+  .acc-liq .acc-sub .acc-tipo{display:none}
+}

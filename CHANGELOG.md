@@ -1,5 +1,9 @@
 # Historial de versiones
 
+## 5.24.4 — 19/11/2026 · Cuentas con el logo de su banco
+- Cada cuenta muestra el logo de su entidad (Unicaja, MyInvestor, Trade Republic y los bancos habituales), deducido del campo «Entidad» o, si está vacío, del nombre de la cuenta. El efectivo lleva una hucha rosa.
+- Tarjetas rediseñadas: logo a la izquierda, nombre y entidad al lado y el saldo grande debajo.
+
 ## 5.24.3 — 19/11/2026 · Orden con una flecha
 - Movimientos: el orden por fecha se cambia con un botón de flecha (↓ más recientes primero, ↑ más antiguos primero), a la izquierda de «Regla de nómina».
 
