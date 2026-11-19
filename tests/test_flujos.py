@@ -245,7 +245,4 @@ def test_notas(app):
         a.page.click('.modal [type="submit"]'); a.page.wait_for_timeout(300)
     tit = a.page.locator('.nota-card .nota-tit').all_inner_texts()
     assert tit[:2] == ['Segunda nota', 'Primera nota']                    # de la más nueva a la más antigua
-    assert 'Resumen en camino' in a.texto('#tab-notas')
-    # con resumen al día se muestra el de la IA
-    a.ev("(() => { const n = S.notas[0]; n.resumen = 'Resumen de prueba'; n.resumen_de = huellaNota(n.texto); renderNotas(); })()")
-    assert 'Resumen de prueba' in a.texto('#tab-notas')
+    assert 'Revisar seguro del coche' in a.texto('#tab-notas')         # se ve el principio del texto

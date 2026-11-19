@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.26.1 — 20/11/2026 · Notas sin IA
+- Notas sin resumen por IA: cada tarjeta muestra el principio del texto. Se quita la tarea «Resumen de notas» y las columnas de resumen del bloque 16.
+
 ## 5.26.0 — 20/11/2026 · Notas con resumen por IA
 - Nueva pestaña Planificar › Notas: notas de texto libre (título opcional), de la más nueva a la más antigua, con buscador, autor y fecha. Al pulsar una se lee entera y se puede editar o eliminar.
 - Cada nota lleva un resumen breve hecho por IA. Lo genera la tarea de GitHub «Resumen de notas» (cada 10 minutos, `scripts/notas.mjs`); si cambias el texto, se vuelve a resumir. Mientras llega se ve el principio de la nota.

@@ -842,14 +842,11 @@ notify pgrst, 'reload schema';
 -- #####################################################################
 --  BLOQUE 16 · Notas (v5.26.0)
 -- #####################################################################
--- Notas de texto libre en Planificar › Notas. El resumen lo escribe una IA (tarea "Resumen de notas" de GitHub):
--- resumen_de guarda una huella del texto resumido; si cambias la nota, se vuelve a resumir.
+-- Notas de texto libre de la familia en Planificar › Notas (de la más nueva a la más antigua).
 create table if not exists public.notas (
   id           uuid primary key default gen_random_uuid(),
   titulo       text,
   texto        text not null,
-  resumen      text,
-  resumen_de   text,
   autor        text,
   created_at   timestamptz default now(),
   updated_at   timestamptz default now()
