@@ -171,3 +171,26 @@ def test_cuentas_liquidez_2x2(app):
     assert nombres[0] == 'Cuenta Principal' and nombres[1] == 'Efectivo' and nombres[2] == 'Fondo emergencia'
     assert nombres[3] == a.ev("S.cuentas.find(c => c.id === 'b').nombre")
     assert a.ev("getComputedStyle(document.querySelector('.acc-liq')).gridTemplateColumns.split(' ').length") == 2
+
+
+def test_pertenencias(app):
+    """No suman al neto; venta estimada con depreciación por categoría; aviso si el contenido del seguro no cubre la reposición."""
+    a = app
+    neto = a.ev("Calc.patrimonio().neto")
+    T = a.ev("pertTotales()")
+    assert T['n'] == 4 and T['repo'] == 2600 + 1599 + 450 + 700
+    assert a.ev("pertInfo(S.pertenencias.find(p => p.id === 'pe3')).venta") == 300         # valor de venta puesto a mano
+    assert a.ev("pertInfo(S.pertenencias.find(p => p.id === 'pe4')).venta") < 700 * 0.7     # se deprecia sola
+    assert a.ev("Calc.patrimonio().neto") == neto                                          # el neto no cambia
+    a.ir('pertenencias')
+    assert 'no cubre' in a.texto('#tab-pertenencias')
+    a.ir('patrimonio')
+    assert 'Con pertenencias' in a.texto('#tab-patrimonio')
+    a.ir('dashboard')
+    assert 'Contenido infraasegurado' in a.ev("document.querySelector('.crs-alertas').textContent")
+    # Alta nueva
+    a.ir('pertenencias')
+    a.page.click('[data-action="pert-new"]'); a.page.wait_for_timeout(150)
+    a.page.fill('.modal [name="nombre"]', 'Apple Watch'); a.page.fill('.modal [name="cantidad"]', '2'); a.page.fill('.modal [name="precio_compra"]', '900')
+    a.page.click('.modal [type=submit]'); a.page.wait_for_timeout(300)
+    assert a.ev("pertTotales().n") == 5

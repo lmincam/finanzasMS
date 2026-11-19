@@ -87,7 +87,8 @@ const FIELDS_SEG = [
   { name: 'prima_anual', label: 'Prima anual total (€)', type: 'number', required: true },
   { name: 'forma_pago', label: 'Forma de pago', type: 'select', options: Object.keys(FREQ_PAGO).map(k => ({ v: k, l: k[0].toUpperCase() + k.slice(1) })) },
   { name: 'fecha_inicio', label: 'Fecha de alta', type: 'date' }, { name: 'fecha_vencimiento', label: 'Fecha de vencimiento / renovación', type: 'date' },
-  { name: 'capital_asegurado', label: 'Capital asegurado (€)', type: 'number' }, { name: 'franquicia', label: 'Franquicia (€)', type: 'number' },
+  { name: 'capital_asegurado', label: 'Capital asegurado (€)', type: 'number', hint: 'En hogar: el del continente (la vivienda)' }, { name: 'franquicia', label: 'Franquicia (€)', type: 'number' },
+  { name: 'capital_contenido', label: 'Capital de contenido (€)', type: 'number', cls: 'v12', hint: 'Solo seguros de hogar: lo que cubre de muebles, aparatos y enseres' },
   { name: 'telefono_asistencia', label: 'Teléfono de asistencia', type: 'tel' },
   { name: 'cuenta_id', label: 'Cuenta de cargo', type: 'rawselect', html: v => accOpts(v, { empty: '— Sin indicar —' }) },
   { name: 'coberturas', label: 'Coberturas principales', type: 'textarea', full: true, ph: 'Todo riesgo con franquicia, asistencia en viaje, lunas…' },
@@ -100,8 +101,8 @@ const limpiarSeg = v => ({ ...v, vehiculo_id: v.vehiculo_id || null, inmueble_id
 Views.seguros = renderSeguros;
 
 Object.assign(Actions, {
-  'seg-new': () => openForm({ title: 'Nuevo seguro', fields: FIELDS_SEG, values: { tipo: 'vehiculo', forma_pago: 'anual', renovacion_auto: true, activo: true }, onSubmit: v => saveEntity('seguros', null, limpiarSeg(v)) }),
-  'seg-edit': el => { const s = S.seguros.find(x => x.id === el.dataset.id); openForm({ title: 'Editar seguro', fields: FIELDS_SEG, values: s, onSubmit: v => saveEntity('seguros', s.id, limpiarSeg(v)) }); },
+  'seg-new': () => openForm({ title: 'Nuevo seguro', fields: camposV4(FIELDS_SEG), values: { tipo: 'vehiculo', forma_pago: 'anual', renovacion_auto: true, activo: true }, onSubmit: v => saveEntity('seguros', null, limpiarSeg(v)) }),
+  'seg-edit': el => { const s = S.seguros.find(x => x.id === el.dataset.id); openForm({ title: 'Editar seguro', fields: camposV4(FIELDS_SEG), values: s, onSubmit: v => saveEntity('seguros', s.id, limpiarSeg(v)) }); },
   'seg-del': async el => {
     const s = S.seguros.find(x => x.id === el.dataset.id);
     if (!(await confirmDlg(`¿Eliminar <b>${esc(s.nombre)}</b>?<br><span class="small">Si solo la has dado de baja, mejor edítala y desmarca “Póliza en vigor” para conservar el histórico.</span>`, 'Eliminar'))) return;

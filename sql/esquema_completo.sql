@@ -721,7 +721,7 @@ declare t text;
 begin
   foreach t in array array['cuentas','categorias','movimientos','inmuebles','vehiculos','deudas','snapshots','ajustes',
                            'amortizaciones','amortizaciones_plan','aportaciones_periodicas','posiciones','seguros',
-                           'reglas_categoria','partidas_previstas','metas','usuarios_permitidos','precios_m2','mantenimientos'] loop
+                           'reglas_categoria','partidas_previstas','metas','usuarios_permitidos','precios_m2','mantenimientos','pertenencias'] loop
     if to_regclass('public.' || t) is not null then
       execute format('drop trigger if exists trg_historial on public.%I', t);
       execute format('create trigger trg_historial after insert or update or delete on public.%I for each row execute function public.registrar_historial()', t);
@@ -776,6 +776,40 @@ notify pgrst, 'reload schema';
 
 
 -- #####################################################################
+--  BLOQUE 15 · Pertenencias (inventario de cada vivienda) y contenido del seguro de hogar (v5.22.0)
+-- #####################################################################
+-- No suman al patrimonio neto: sirven para el seguro de hogar, las garantías y el "patrimonio con pertenencias".
+create table if not exists public.pertenencias (
+  id                uuid primary key default gen_random_uuid(),
+  nombre            text not null,
+  categoria         text default 'otros',
+  inmueble_id       uuid references public.inmuebles(id) on delete set null,
+  cantidad          int default 1,
+  marca_modelo      text,
+  fecha_compra      date,
+  precio_compra     numeric(12,2) default 0,
+  valor_reposicion  numeric(12,2),
+  valor_venta       numeric(12,2),
+  garantia_hasta    date,
+  notas             text,
+  created_at        timestamptz default now()
+);
+create index if not exists pertenencias_inmueble_idx on public.pertenencias(inmueble_id);
+alter table public.pertenencias enable row level security;
+drop policy if exists acceso_personal on public.pertenencias;
+create policy acceso_personal on public.pertenencias for all to authenticated
+  using (public.es_permitido()) with check (public.es_permitido());
+revoke all on public.pertenencias from anon;
+grant select, insert, update, delete on public.pertenencias to authenticated;
+drop trigger if exists trg_historial on public.pertenencias;
+create trigger trg_historial after insert or update or delete on public.pertenencias for each row execute function public.registrar_historial();
+
+-- Seguro de hogar: capital de contenido (el de continente es capital_asegurado)
+alter table public.seguros add column if not exists capital_contenido numeric(14,2);
+notify pgrst, 'reload schema';
+
+
+-- #####################################################################
 --  BLOQUE 5 · Seguridad: solo usuarios con sesión + espacio para copias
 -- #####################################################################
 -- Quita cualquier permiso del rol anónimo en las tablas de la app
@@ -812,7 +846,7 @@ select 'Tabla ' || t as elemento,
        case when to_regclass('public.' || t) is not null then '✅ OK' else '❌ FALTA' end as estado
 from unnest(array['cuentas','categorias','movimientos','inmuebles','vehiculos','deudas','snapshots','ajustes',
                   'valoraciones','precios_m2','amortizaciones','amortizaciones_plan','aportaciones_periodicas',
-                  'posiciones','seguros','reglas_categoria','patrimonio_mensual','partidas_previstas','metas','precios','historial','mantenimientos']) as t
+                  'posiciones','seguros','reglas_categoria','patrimonio_mensual','partidas_previstas','metas','precios','historial','mantenimientos','pertenencias']) as t
 union all
 select 'Columna ' || tb || '.' || col,
        case when exists (select 1 from information_schema.columns
@@ -825,7 +859,7 @@ from (values ('inmuebles','metros_construidos'), ('inmuebles','precio_m2_venta')
              ('cuentas','saldo_actualizado'), ('cuentas','valor_actualizado'),
              ('categorias','presupuesto_anual'), ('categorias','gasto_fijo'), ('deudas','base_interes'),
              ('posiciones','participaciones'), ('posiciones','fecha_participaciones'),
-             ('inmuebles','ccaa'), ('inmuebles','precio_m2_base')) as y(tb, col)
+             ('inmuebles','ccaa'), ('inmuebles','precio_m2_base'), ('seguros','capital_contenido')) as y(tb, col)
 union all
 select 'Usuarios con acceso: ' || coalesce((select string_agg(email, ', ' order by email) from public.usuarios_permitidos), 'ninguno'),
        case when exists (select 1 from public.usuarios_permitidos) then '✅ revisa que sean solo los vuestros' else '❌ VACÍA: añade vuestros emails' end

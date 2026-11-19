@@ -1,5 +1,12 @@
 # Historial de versiones
 
+## 5.22.0 — 19/11/2026 · Pertenencias
+- Nuevo apartado **Pertenencias** en Patrimonio: inventario de lo que hay en cada vivienda (tecnología, electrodomésticos, cocina, muebles, bebé, deporte, herramientas, joyas…). **No suma al patrimonio neto**; se muestra aparte como "Con pertenencias".
+- Cada objeto tiene **valor de reposición** (lo que costaría comprarlo nuevo; para el seguro) y **valor de venta estimado**, que se deprecia solo según la categoría (o el que pongas tú).
+- **Seguro de hogar**: nuevo campo "Capital de contenido". Para cada vivienda la app comprueba si cubre la reposición de lo que hay dentro y avisa en Inicio si te quedas corto.
+- **Garantías**: 3 años desde la compra por defecto (o la fecha que indiques); aviso en Inicio un mes antes de que venzan.
+- SQL: bloque 15 (tabla `pertenencias`, columna `seguros.capital_contenido`).
+
 ## 5.21.2 — 18/11/2026
 - Movimientos: las cuentas de liquidez en una cuadrícula de 2×2 — arriba la cuenta corriente y el efectivo, abajo el fondo de emergencia y la cuenta de anualidades (también en el móvil).
 

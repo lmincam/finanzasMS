@@ -851,3 +851,18 @@ button.mpick{font:inherit;font-weight:600}
   .acc-liq .acc-actions .btn{flex:1 1 100%;justify-content:center}
   .acc-liq .acc-anual{font-size:12px;flex-wrap:wrap;gap:2px 6px}
 }
+/* Pertenencias */
+.pert-cat{margin-top:14px}
+.pert-cat-h{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:var(--slate);margin-bottom:6px}
+.pert-cat-h .i{width:17px;height:17px;color:var(--ink)}
+.pert-cat-h b{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--txt)}
+.pert-list{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.pert-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer;background:var(--card)}
+.pert-row:last-child{border-bottom:0}.pert-row:hover{background:var(--card2)}
+.pert-c{flex:1;min-width:0}.pert-t{font-weight:600}
+.pert-c .badge{margin-left:4px;font-size:10.5px}
+.pert-v{text-align:right;display:flex;flex-direction:column;white-space:nowrap}
+.pert-v small{font-size:11.5px;color:var(--muted)}
+.pz-pert .pz-v{color:var(--muted)}
+.pz-pert .pz-ico{background:var(--card2);color:var(--slate)}
+.pz-ampl{cursor:pointer;color:var(--muted)}.pz-ampl b{color:var(--slate)}.pz-ampl:hover{text-decoration:underline}

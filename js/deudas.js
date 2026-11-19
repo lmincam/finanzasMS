@@ -41,7 +41,7 @@ async function guardarPendiente(d, v) {
     ? `La app calculaba ${fmtEUR(num(v.capital_pendiente) + cal.difAntes)} (desfase ${signed(cal.difAntes)}). Tu banco calcula los intereses por ${BASES_INTERES[cal.base].toLowerCase()}: ajustado, con eso el desfase habría sido ${signed(cal.dif)}.`
     : `La app calculaba un desfase de ${signed(cal.difAntes)} respecto al banco. Corregido.`, 'ok', 8000);
 }
-const camposV4 = fields => fields.filter(f => !((f.cls || '').includes('v4') && !S.v4) && !((f.cls || '').includes('v5') && !S.v5) && !((f.cls || '').includes('v9') && !S.v9) && !((f.cls || '').includes('v11') && !S.v11));
+const camposV4 = fields => fields.filter(f => !((f.cls || '').includes('v4') && !S.v4) && !((f.cls || '').includes('v5') && !S.v5) && !((f.cls || '').includes('v9') && !S.v9) && !((f.cls || '').includes('v11') && !S.v11) && !((f.cls || '').includes('v12') && !S.v12));
 const bannerV4 = () => S.v4 ? '' : '<div class="banner amber">Para usar esta función ejecuta <code>sql/03_migracion_v4.sql</code> en Supabase (solo añade tablas y campos, no toca tus datos).</div>';
 const FRECUENCIAS = [{ v: 0, l: 'Una sola vez' }, { v: 1, l: 'Cada mes' }, { v: 3, l: 'Cada trimestre' }, { v: 6, l: 'Cada semestre' }, { v: 12, l: 'Cada año' }];
 const frecLabel = n => (FRECUENCIAS.find(f => f.v === num(n)) || { l: `Cada ${n} meses` }).l;

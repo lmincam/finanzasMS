@@ -216,6 +216,13 @@ function buildAlertas(months, st, P, rows) {
       add(p.nivel === 'red' ? 'red' : 'amber', '🔧', `${v.nombre}: ${qué}`, `${cuando}. Apúntalo en Patrimonio → Vehículos cuando lo hagas.`, `mant-${p.m.id}`, 7);
     }
   }
+  // Pertenencias: seguro de hogar que no cubre el contenido y garantías a punto de vencer
+  if (typeof pertOk === 'function' && pertOk() && (S.pertenencias || []).length) {
+    for (const i of S.inmuebles) { const c = coberturaHogar(i.id);
+      if (c.seg.length && !c.sinDato && c.falta > 0) add('amber', '🏠', `Contenido infraasegurado: ${i.nombre}`, `Reponer lo que hay costaría ${fmtEUR(c.repo, 0)} y el seguro cubre ${fmtEUR(c.cont, 0)}. Revisa el capital de contenido de la póliza.`, `pert-seg-${i.id}`, 30); }
+    for (const p of S.pertenencias) { const x = pertInfo(p);
+      if (x.gDias !== null && x.gDias >= 0 && x.gDias <= 30) add('blue', '🧾', `Garantía a punto de vencer: ${p.nombre}`, `Termina el ${fmtDate(x.garantia)}. Si le pasa algo, es el momento de llevarlo.`, `pert-gar-${p.id}`, 30); }
+  }
   return A.sort((a, b) => ord[a.nivel] - ord[b.nivel]);
 }
 function renderAlertas(months, st, P, rows) {

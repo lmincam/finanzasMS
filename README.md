@@ -36,6 +36,7 @@ js/
   inmuebles.js        Pestaña Inmuebles (precio de venta actualizado con el INE cada trimestre)
   futuro.js           Proyección, independencia financiera e inflación
   deudas.js           Pestaña Deudas (vista general + detalle, simulador, amortizaciones)
+  pertenencias.js     Inventario de cada vivienda (no suma al neto) y comprobación del seguro de hogar
   seguros.js          Pestaña Seguros
   auditoria.js        Pestaña Auditoría trimestral
   categorias.js       Pestaña Categorías y presupuestos
