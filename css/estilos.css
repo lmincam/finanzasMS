@@ -966,6 +966,7 @@ button.mpick{font:inherit;font-weight:600}
   .per-bar .per-cal{flex:none;width:auto;margin-left:auto;height:36px}
   .per-bar{display:grid;grid-template-columns:1fr auto;align-items:start}
   .per-bar .per-modes{grid-column:1/-1}
+  .per-bar{grid-template-columns:minmax(0,1fr) auto}.per-bar>*{min-width:0;max-width:100%}
   .top-list .it .small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 }
 /* Tabla de presupuesto: columnas proporcionadas */
