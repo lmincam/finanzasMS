@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.24.3 — 19/11/2026 · Orden con una flecha
+- Movimientos: el orden por fecha se cambia con un botón de flecha (↓ más recientes primero, ↑ más antiguos primero), a la izquierda de «Regla de nómina».
+
 ## 5.24.2 — 19/11/2026 · Mes de nómina sin adivinar el día de cobro
 - El mes de nómina en curso no tiene fecha de fin hasta que llega la siguiente nómina: todo lo anterior a ese cobro cuenta en el mes («desde el 29/10»). Los meses ya cerrados muestran su rango real.
 - El periodo aparece debajo del nombre del mes, sin juntarse.

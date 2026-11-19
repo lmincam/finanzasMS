@@ -64,6 +64,7 @@ function renderCuentas() {
 
     <div class="card">
       <div class="card-head mv-head"><h3>Movimientos</h3><div class="btn-row">${chipPendientes()}
+        <button class="btn sm mf-orden" data-action="mf-orden" title="${S.movOrden === 'asc' ? 'Más antiguos primero · pulsa para ver los más recientes primero' : 'Más recientes primero · pulsa para ver los más antiguos primero'}" aria-label="${S.movOrden === 'asc' ? 'Orden: más antiguos primero' : 'Orden: más recientes primero'}">${S.movOrden === 'asc' ? '↑' : '↓'}</button>
         <button class="btn sm" data-action="mov-regla" title="Imputa al mes siguiente los ingresos de los últimos días laborables del mes">⏭ Regla de nómina</button></div></div>
       <div class="mov-filters">
         <div class="mf-mes"><button class="btn ghost" data-action="mf-mes-shift" data-d="-1" aria-label="Mes anterior" ${S.movFilter.mes ? '' : 'disabled'}>‹</button><button type="button" class="mpick" data-action="mf-mes-pick">${S.movFilter.mes ? ymLabel(S.movFilter.mes) + (mesNominaActivo() ? (r => `<small class="mf-rango">${r[1] ? `${fmtDate(r[0]).slice(0, 5)} – ${fmtDate(r[1]).slice(0, 5)}` : `desde el ${fmtDate(r[0]).slice(0, 5)}`}</small>`)(rangoMesMov(S.movFilter.mes)) : '') : 'Todos los meses'}</button><button class="btn ghost" data-action="mf-mes-shift" data-d="1" aria-label="Mes siguiente" ${S.movFilter.mes ? '' : 'disabled'}>›</button></div>
@@ -99,7 +100,7 @@ function renderMovList() {
   const shown = list.slice(0, S.movLimit);
   // Agrupados por día, con el neto del día (sin transferencias internas)
   const grupos = []; for (const m of shown) { const g = grupos[grupos.length - 1]; if (g && g.f === m.fecha) g.ms.push(m); else grupos.push({ f: m.fecha, ms: [m] }); }
-  box.innerHTML = `<div class="mv-sum"><span>${list.length} movimientos</span><span class="pos">+${fmtEUR(ing)}</span><span class="neg">−${fmtEUR(gas)}</span><button class="mf-orden" data-action="mf-orden" title="Cambiar el orden por fecha">${S.movOrden === 'asc' ? '↑ Más antiguos primero' : '↓ Más recientes primero'}</button></div>` +
+  box.innerHTML = `<div class="mv-sum"><span>${list.length} movimientos</span><span class="pos">+${fmtEUR(ing)}</span><span class="neg">−${fmtEUR(gas)}</span></div>` +
     (shown.length ? grupos.map(g => { const neto = sum(g.ms.filter(m => m.tipo !== 'transferencia'), 'importe');
       return `<div class="mv-day"><span>${DIAS[weekday(g.f)]} ${fmtDate(g.f).slice(0, 5)}</span>${neto ? `<span class="${neto >= 0 ? 'pos' : 'neg'}">${signed(neto)}</span>` : ''}</div>${g.ms.map(movRow).join('')}`; }).join('')
       : '<div class="empty">No hay movimientos con estos filtros</div>') +
@@ -309,7 +310,7 @@ Object.assign(Actions, {
     }, 'Regla de nómina aplicada ✓', 'Aplicando…');
     render();
   },
-  'mf-orden': () => { S.movOrden = S.movOrden === 'asc' ? 'desc' : 'asc'; try { localStorage.setItem('pf_mov_orden', S.movOrden); } catch (e) {} renderMovList(); },
+  'mf-orden': () => { S.movOrden = S.movOrden === 'asc' ? 'desc' : 'asc'; try { localStorage.setItem('pf_mov_orden', S.movOrden); } catch (e) {} renderCuentas(); },
   'mov-allmonths': () => { S.movFilter.mes = ''; S.movLimit = 150; renderCuentas(); },
   'mf-mes-pick': () => selectorMes({ valor: S.movFilter.mes, titulo: 'Movimientos de…', todos: true, onPick: ym => { S.movFilter.mes = ym; S.movLimit = 150; renderCuentas(); } }),
   'mf-mes-shift': el => { if (!S.movFilter.mes) return; S.movFilter.mes = addMonths(S.movFilter.mes, +el.dataset.d); S.movLimit = 150; renderCuentas(); },
