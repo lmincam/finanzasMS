@@ -120,12 +120,12 @@ function bannerCierre() {
   if (!ym) {
     const prev = addMonths(mesActual(), -1), c = cierres()[prev];
     return c && c.cerrado && diasEntre(c.cerrado.slice(0, 10), todayISO()) <= 7
-      ? `<div class="cz-line ok"><span class="cz-dot"></span><span>${ymLabel(prev)} cerrado</span><button class="btn sm ghost" data-action="cierre-open" data-ym="${prev}">Ver resumen</button></div>` : '';
+      ? `<div class="banner blue cz-banner">✅ ${ymLabel(prev)} cerrado. <button class="btn sm" data-action="cierre-open" data-ym="${prev}">Ver resumen</button></div>` : '';
   }
   const P = pasosCierre(ym), hechos = cierres()[ym] && cierres()[ym].pasos || {};
   const n = P.filter(p => p.ok || hechos[p.k]).length;
-  return `<div class="cz-line"><span class="cz-dot"></span><span>Cierre de <b>${ymLabel(ym)}</b> pendiente · ${n} de ${P.length} pasos</span>
-    <button class="btn sm" data-action="cierre-open" data-ym="${ym}">${n ? 'Continuar' : 'Empezar'} cierre</button></div>`;
+  return `<div class="banner amber cz-banner">📋 <span>Ha empezado ${ymLabel(mesActual())}: toca <b>cerrar ${ymLabel(ym)}</b> (${n} de ${P.length} pasos hechos, unos 5 minutos).</span>
+    <button class="btn sm primary" data-action="cierre-open" data-ym="${ym}">Empezar cierre</button></div>`;
 }
 
 /* ---------- Vista del cierre ---------- */

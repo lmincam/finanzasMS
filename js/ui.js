@@ -102,7 +102,7 @@ const subOpts = sel => Object.entries(SUBTIPO).map(([k, l]) => `<option value="$
 /** Indicador: título, dato grande y, si hay detalle, un ⓘ que lo muestra (visible = true lo deja a la vista). */
 const KPI_TXT = new Map(); let _kpiN = 0;
 /** En los indicadores, importes sin céntimos (3.200,00 € → 3.200 €; 906,51 € → 907 €). */
-const sinCent = v => String(v).replace(/(\d{1,3}(?:\.\d{3})*),(\d{2})(?=\s?€)/g, (m, a, b) => fmtNum(Math.round(parseFloat(a.replace(/\./g, '') + '.' + b)), 0));
+const sinCent = v => (S.tab === 'dashboard' || S.tab === 'cuentas') ? v : String(v).replace(/(\d{1,3}(?:\.\d{3})*),(\d{2})(?=\s?€)/g, (m, a, b) => fmtNum(Math.round(parseFloat(a.replace(/\./g, '') + '.' + b)), 0));
 const kpi = (l, v, s = '', cls = '', visible = false) => {
   v = sinCent(v);
   let info = '';

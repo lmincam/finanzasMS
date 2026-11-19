@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.23.1 — 19/11/2026 · Inicio y Movimientos como antes
+- Inicio y Movimientos recuperan el diseño de la 5.22.2 (banner de cierre, tarjetas de cuenta con Conciliar/✎/🗑, regla de nómina en Movimientos, céntimos). El resto de pantallas mantiene la revisión visual de la 5.23.0.
+
 ## 5.23.0 — 19/11/2026 · Revisión visual completa
 - Sistema visual común: tarjetas de cifras con el mismo borde, sombra y etiquetas en minúscula; importes grandes sin céntimos; cabeceras de tabla alineadas con sus columnas; un solo azul para las acciones principales.
 - Escritorio: botón «+ Añadir» en la cabecera (el + flotante queda solo en el móvil). Migas de pan «Patrimonio › Sección» para volver.

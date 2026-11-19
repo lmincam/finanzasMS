@@ -82,8 +82,8 @@ function renderAnioEnCurso(P) {
         <div class="l">Ingresos del año</div><div class="v">${fmtEUR(st.ingresos, 0)}</div><span class="kpi-arrow" aria-hidden="true">›</span></div>
       <div class="kpi navy">
         <div class="l">Aumento de patrimonio <button class="info-btn" data-action="kpi-info" data-k="anio" title="¿De dónde sale este dato?">ⓘ</button> <button class="mini" data-action="ytd-base" title="Indicar el patrimonio neto a 1 de enero">✎</button></div>
-        ${base ? `<div class="v ${aumento >= 0 ? 'pos' : 'neg'}">${signed(aumento, 0)}</div>`
-        : `<div class="v">≈ ${signed(flujos, 0)}</div><div class="s">Estimado · ✎ para afinarlo</div>`}
+        ${base ? `<div class="v ${aumento >= 0 ? 'pos' : 'neg'}">${signed(aumento)}</div>`
+        : `<div class="v">≈ ${signed(flujos)}</div><div class="s">Estimado · pulsa ✎ e indica tu patrimonio a 1 de enero</div>`}
       </div>
     </div>`;
 }
