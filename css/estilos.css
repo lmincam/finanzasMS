@@ -1033,3 +1033,4 @@ body:not(.clasico) .kpi{min-width:0}
   .cat-r .cr-acts{min-width:84px}
   .cat-r .cr-acts .mini{width:27px!important;min-width:27px!important;height:30px!important}
 }
+.cat-r.lvl1 .cr-acts{min-width:0!important}

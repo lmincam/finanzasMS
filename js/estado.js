@@ -44,7 +44,7 @@ const SECCIONES = [
   { k: 'movimientos', l: 'Movimientos', i: 'arrows', tabs: ['cuentas'] },
   // Patrimonio: se entra por el resumen y desde sus recuadros a cada apartado (sin sub-pestañas)
   { k: 'patrimonio', l: 'Patrimonio', i: 'wallet', tabs: ['patrimonio', 'inversiones', 'inmuebles', 'vehiculos', 'pertenencias', 'deudas', 'auditoria'], resumen: 'patrimonio' },
-  { k: 'planificar', l: 'Planificar', i: 'target', tabs: ['planificacion', 'categorias', 'futuro', 'seguros'] },
+  { k: 'planificar', l: 'Planificar', i: 'target', tabs: ['categorias', 'planificacion', 'futuro', 'seguros'] },
   { k: 'ajustes', l: 'Ajustes', i: 'sliders', tabs: ['ajustes'] }
 ];
 const seccionDe = tab => SECCIONES.find(s => s.tabs.includes(tab)) || SECCIONES[0];

@@ -1,5 +1,9 @@
 # Historial de versiones
 
+## 5.23.6 — 19/11/2026 · Presupuestos primero
+- Presupuestos es la primera pestaña de Planificar, por delante de Previsión y metas.
+- En las subcategorías el importe va junto al lápiz, sin dejar el hueco del +.
+
 ## 5.23.5 — 19/11/2026 · Presupuestos en el móvil
 - Los botones +, editar y eliminar ya no se montan sobre el importe de la categoría.
 
