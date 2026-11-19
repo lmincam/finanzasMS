@@ -1021,3 +1021,5 @@ details.snap-form>summary{cursor:pointer}
 .inv-hero .l{text-transform:none;letter-spacing:0;font-size:13px}
 @media (max-width:760px){ .dist-wrap .chart-box.sm{height:170px} }
 details.inv-more>summary b,details.snap-form>summary b{color:var(--txt)}
+.kpi{min-width:0}
+@media (max-width:760px){ .kpis{grid-template-columns:repeat(2,minmax(0,1fr))} .kpi .v,.kpi .val{font-size:clamp(18px,5.6vw,24px);overflow-wrap:anywhere} }
