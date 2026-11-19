@@ -93,7 +93,7 @@ function renderDashboard() {
 
     <div class="grid-2 dash-charts">
       <div class="card"><div class="card-head"><h3>Ingresos vs. gastos</h3></div><div class="chart-box"><canvas id="ch-ig"></canvas></div></div>
-      <div class="card"><div class="card-head"><h3>¿Dónde se ha gastado?</h3></div>
+      <div class="card"><div class="card-head"><h3>¿Dónde se ha gastado?</h3>${st.ingresos > 0 ? `<span class="sub">% sobre los ingresos del periodo (${fmtEUR(st.ingresos, 0)})</span>` : ''}</div>
         ${donut.length ? '<div class="chart-box"><canvas id="ch-cat"></canvas></div>' : '<div class="empty">Sin gastos en el periodo</div>'}</div>
     </div>
 
@@ -120,8 +120,9 @@ function renderDashboard() {
   });
   if (donut.length) mkChart('ch-cat', {
     type: 'doughnut',
-    data: { labels: donut.map(d => d.k === '_none' ? 'Sin categoría' : d.c ? d.c.nombre : '—'), datasets: [{ data: donut.map(d => round2(d.v)), backgroundColor: donut.map((d, i) => (d.c && d.c.color) || PALETTE[i % PALETTE.length]), borderWidth: 2, borderColor: Tema.hueco() }] },
-    options: { responsive: true, maintainAspectRatio: false, cutout: '62%', plugins: { legend: { position: window.innerWidth < 700 ? 'bottom' : 'right' } } }
+    data: { labels: donut.map(d => (d.k === '_none' ? 'Sin categoría' : d.c ? d.c.nombre : '—') + (st.ingresos > 0 ? ` · ${fmtPct(d.v / st.ingresos, 0)}` : '')), datasets: [{ data: donut.map(d => round2(d.v)), backgroundColor: donut.map((d, i) => (d.c && d.c.color) || PALETTE[i % PALETTE.length]), borderWidth: 2, borderColor: Tema.hueco() }] },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '62%', plugins: { legend: { position: window.innerWidth < 700 ? 'bottom' : 'right' },
+      tooltip: { callbacks: { label: ctx => ` ${String(ctx.label).split(' · ')[0]}: ${fmtEUR(ctx.parsed)}${st.ingresos > 0 ? ` · ${fmtPct(ctx.parsed / st.ingresos, 1)} de los ingresos` : ''}` } } } }
   });
 }
 function budgetRows(gastosMov, nM, months) {

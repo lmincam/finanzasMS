@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.23.9 — 19/11/2026 · Gastos en % de los ingresos
+- Inicio: el gráfico circular de gastos indica junto a cada categoría qué % de los ingresos del periodo elegido se ha llevado.
+
 ## 5.23.8 — 19/11/2026 · Barra «Patrimonio › Apartado» en su sitio
 - Corregido: en los apartados de Patrimonio la barra para volver quedaba encima del contenido y tapaba el título (efecto secundario del bloqueo de desplazamiento lateral de la 5.23.7).
 - Pertenencias: el aviso del seguro de hogar se lee de corrido.
