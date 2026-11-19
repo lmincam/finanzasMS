@@ -1121,3 +1121,5 @@ html,body{overflow-x:clip}
   .tabs .nav-r{justify-content:flex-start}
   .tabs .nav-plus{margin:0 18px}
 }
+.tabs .nav-plus{padding:0!important;border:0!important;line-height:0}
+.tabs .nav-plus svg,.bn-plus svg{display:block;margin:0}

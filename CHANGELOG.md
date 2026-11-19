@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.25.2 — 19/11/2026 · + centrado dentro del círculo
+- Ordenador: el símbolo + queda exactamente en el centro del círculo verde (heredaba el relleno de las pestañas).
+
 ## 5.25.1 — 19/11/2026 · + centrado
 - Ordenador: el botón + queda exactamente en el centro de la barra de secciones.
 
