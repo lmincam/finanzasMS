@@ -13,7 +13,11 @@ function renderTabs() {
   const sec = seccionDe(S.tab); S.ultimaSub[sec.k] = S.tab;
   const nombre = k => (TABS.find(t => t[0] === k) || [k, k])[1];
   const btnSec = (x, cls) => `<button class="${cls} ${x.k === sec.k ? 'active' : ''}" data-action="sec" data-sec="${x.k}" aria-label="${x.l}">${icono(x.i)}<span>${x.l}</span></button>`;
-  $('#tabs').innerHTML = SECCIONES.map(x => btnSec(x, 'nav-sec')).join('');
+  // Ordenador: igual que en el móvil — Ajustes se abre desde el círculo del usuario y el + va en medio de la barra
+  const visibles = SECCIONES.filter(x => x.k !== 'ajustes');
+  $('#tabs').innerHTML = visibles.slice(0, 2).map(x => btnSec(x, 'nav-sec')).join('')
+    + `<button class="nav-plus" data-action="quick-open" data-tipo="gasto" aria-label="Registrar movimiento" title="Registrar un movimiento">${icono('plus')}</button>`
+    + visibles.slice(2).map(x => btnSec(x, 'nav-sec')).join('');
   const bn = $('#bottomnav');
   if (bn) bn.innerHTML = SECCIONES.slice(0, 2).map(x => btnSec(x, 'bn-item')).join('')
     + `<button class="bn-plus" data-action="quick-open" data-tipo="gasto" aria-label="Registrar movimiento">${icono('plus')}</button>`

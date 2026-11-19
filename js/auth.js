@@ -106,7 +106,7 @@ function iniciarSesion(session, forzar = false) {
   if (Auth.started && !forzar) return;
   Auth.started = true;
   ocultarLogin(); bloquearApp(false);
-  const u = $('#user-chip'); if (u) u.textContent = Auth.user.email ? Auth.user.email[0].toUpperCase() : '·';
+  pintarChip();
   comprobarPermiso().then(ok => { if (ok) loadAll(); });
 }
 /** ¿Está este usuario en la lista de acceso? (si la lista aún no existe en la base de datos, se deja pasar como antes) */
@@ -160,7 +160,9 @@ function renderSesionCard() {
   const t = typeof Tema !== 'undefined' ? Tema.pref() : 'auto';
   const op = (k, l, i) => `<button class="seg-btn ${t === k ? 'active' : ''}" data-action="tema" data-v="${k}">${icono(i)}<span>${l}</span></button>`;
   return `<div class="card"><div class="card-head"><h3>👤 Tu cuenta</h3></div>
-    <div class="aj-user"><div class="aj-av">${esc((u && u.email ? u.email[0] : '·').toUpperCase())}</div><div><b>${esc(u ? u.email : '—')}</b><small>Sesión iniciada en este dispositivo</small></div></div>
+    <div class="aj-user"><label class="aj-av av-edit" title="Cambiar foto de perfil">${avatarHTML()}<span class="av-cam" aria-hidden="true">📷</span><input type="file" accept="image/*" id="av-file" hidden></label>
+      <div><b>${esc(u ? u.email : '—')}</b><small>Sesión iniciada en este dispositivo</small>
+      <div class="av-acts"><label class="link-btn" for="av-file">${miAvatar() ? 'Cambiar foto' : 'Subir foto de perfil'}</label>${miAvatar() ? '<button class="link-btn muted" data-action="av-quitar">Quitar</button>' : ''}</div></div></div>
     <div class="btn-row" style="margin:12px 0 16px"><button class="btn sm" data-action="auth-cambiar">Cambiar contraseña</button><button class="btn sm ghost" data-action="auth-logout">Cerrar sesión</button></div>
     <div class="sub-title" style="margin-top:0">Apariencia</div>
     <div class="seg">${op('auto', 'Automático', 'phone')}${op('light', 'Claro', 'eye')}${op('dark', 'Oscuro', 'moon')}</div></div>`;
@@ -189,3 +191,35 @@ Object.assign(Actions, {
       toast('Contraseña cambiada ✓', 'ok');
     } })
 });
+
+/* ---------- Foto de perfil (una por usuario, guardada en ajustes y compartida entre dispositivos) ---------- */
+const claveAvatar = () => 'avatar:' + String((Auth.user && Auth.user.email) || '').toLowerCase();
+const miAvatar = () => (((S.ajustesRows || []).find(r => r.clave === claveAvatar()) || {}).valor || {}).img || null;
+const inicialUsuario = () => esc(((Auth.user && Auth.user.email) ? Auth.user.email[0] : '·').toUpperCase());
+const avatarHTML = () => miAvatar() ? `<img src="${esc(miAvatar())}" alt="Foto de perfil">` : inicialUsuario();
+function pintarChip() { const u = $('#user-chip'); if (!u) return; u.innerHTML = avatarHTML(); u.classList.toggle('con-foto', !!miAvatar()); }
+AfterLoad.push(pintarChip);
+/** Reduce la foto a un cuadrado de 160 px (JPEG) para que ocupe poco. */
+function fotoCuadrada(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => { const im = new Image(); im.onload = () => {
+      const L = 160, c = document.createElement('canvas'); c.width = c.height = L; const k = Math.min(im.width, im.height);
+      c.getContext('2d').drawImage(im, (im.width - k) / 2, (im.height - k) / 2, k, k, 0, 0, L, L);
+      res(c.toDataURL('image/jpeg', 0.85)); }; im.onerror = () => rej(new Error('No se pudo leer la imagen')); im.src = r.result; };
+    r.onerror = () => rej(r.error); r.readAsDataURL(file);
+  });
+}
+async function guardarAvatar(img) {
+  const clave = claveAvatar(), valor = img ? { img } : {};
+  await DB.upsert('ajustes', { clave, valor, updated_at: new Date().toISOString() }, 'clave');
+  const row = (S.ajustesRows = S.ajustesRows || []).find(r => r.clave === clave);
+  if (row) row.valor = valor; else S.ajustesRows.push({ clave, valor });
+  pintarChip(); render();
+}
+document.addEventListener('change', async e => {
+  if (e.target.id !== 'av-file' || !e.target.files || !e.target.files[0]) return;
+  try { const img = await fotoCuadrada(e.target.files[0]); const r = await withSaving(null, () => guardarAvatar(img)); if (r !== FAIL) toast('Foto de perfil actualizada', 'ok'); }
+  catch (err) { toast(err.message || 'No se pudo guardar la foto', 'err'); }
+});
+Actions['av-quitar'] = async () => { const r = await withSaving(null, () => guardarAvatar(null)); if (r !== FAIL) toast('Foto quitada', 'ok'); };

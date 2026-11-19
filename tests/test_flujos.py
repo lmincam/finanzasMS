@@ -5,7 +5,7 @@ def test_gasto_tras_conciliar_resta(app):
     a = app
     a.ir('cuentas')
     a.page.click('.acc-card[data-id="c"]'); a.page.click('.modal [data-op="cuenta-conciliar"]'); a.page.fill('.modal [name="saldo"]', '150'); a.page.click('.modal [type=submit]'); a.page.wait_for_timeout(250)
-    a.page.click('.hdr-add'); a.page.fill('#q-imp', '12,50'); a.page.fill('#q-concepto', 'Panadería'); a.page.click('#q-form [type=submit]'); a.page.wait_for_timeout(250)
+    a.page.click('.nav-plus'); a.page.fill('#q-imp', '12,50'); a.page.fill('#q-concepto', 'Panadería'); a.page.click('#q-form [type=submit]'); a.page.wait_for_timeout(250)
     assert a.ev("Calc.saldo(cuentaById('c'))") == 137.5
 
 
@@ -222,3 +222,15 @@ def test_donde_va_el_dinero(app):
     assert der and der[-1].strip().endswith('%')                     # el % va al final
     r = a.ev("(() => { const st = periodStats(periodMonths()); const d = destinosAhorro(st); return [st.ingresos, st.gastosCaja + d.reduce((x, y) => x + y.v, 0)] })()")
     assert abs(r[0] - r[1]) < 0.01                                   # gastos + ahorro + lo que queda = 100 % de lo ingresado
+
+
+def test_foto_de_perfil(app, tmp_path):
+    import base64
+    a = app
+    png = tmp_path / 'yo.png'
+    png.write_bytes(base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP8z8DAwMDAxMDAwMDAAAANHQEDK+mmyAAAAABJRU5ErkJggg=='))
+    a.page.click('#user-chip'); a.page.wait_for_timeout(200)
+    a.page.set_input_files('#av-file', str(png)); a.page.wait_for_timeout(600)
+    assert a.page.locator('#user-chip img').count() == 1                  # la foto sale en el círculo de arriba
+    assert a.page.locator('#tabs [data-sec="ajustes"]').count() == 0      # Ajustes ya no está en la barra
+    assert a.page.locator('#tabs .nav-plus').count() == 1                 # + en medio de la barra

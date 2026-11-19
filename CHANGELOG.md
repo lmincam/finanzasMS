@@ -1,5 +1,9 @@
 # Historial de versiones
 
+## 5.25.0 — 19/11/2026 · Foto de perfil y barra del ordenador como la del móvil
+- Ordenador: Ajustes sale de la barra y se abre desde el círculo del usuario; el botón verde + para añadir movimientos va en medio de la barra (desaparece «+ Añadir» de la cabecera).
+- Foto de perfil: en Ajustes › Tu cuenta, cada usuario puede subir su foto (se recorta en cuadrado y se reduce); aparece en el círculo de arriba en todos sus dispositivos. También se puede quitar.
+
 ## 5.24.4 — 19/11/2026 · Cuentas con el logo de su banco
 - Cada cuenta muestra el logo de su entidad (Unicaja, MyInvestor, Trade Republic y los bancos habituales), deducido del campo «Entidad» o, si está vacío, del nombre de la cuenta. El efectivo lleva una hucha rosa.
 - Tarjetas rediseñadas: logo a la izquierda, nombre y entidad al lado y el saldo grande debajo.
