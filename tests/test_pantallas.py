@@ -66,7 +66,7 @@ def test_navegacion_movil(movil):
     a.page.click('.sub-back button[data-tab="patrimonio"]'); a.page.wait_for_timeout(200)
     assert a.ev('S.tab') == 'patrimonio'
     a.page.click('#bottomnav [data-action="sec"][data-sec="planificar"]'); a.page.wait_for_timeout(200)
-    assert [x.strip() for x in a.page.locator('#subtabs button').all_inner_texts()] == ['Previsión y metas', 'Presupuestos', 'Proyección', 'Seguros']
+    assert [x.strip() for x in a.page.locator('#subtabs button').all_inner_texts()] == ['Presupuestos', 'Previsión y metas', 'Proyección', 'Seguros']
 
 
 def test_modo_oscuro(abrir):
