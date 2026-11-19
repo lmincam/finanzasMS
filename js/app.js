@@ -15,9 +15,9 @@ function renderTabs() {
   const btnSec = (x, cls) => `<button class="${cls} ${x.k === sec.k ? 'active' : ''}" data-action="sec" data-sec="${x.k}" aria-label="${x.l}">${icono(x.i)}<span>${x.l}</span></button>`;
   // Ordenador: igual que en el móvil — Ajustes se abre desde el círculo del usuario y el + va en medio de la barra
   const visibles = SECCIONES.filter(x => x.k !== 'ajustes');
-  $('#tabs').innerHTML = visibles.slice(0, 2).map(x => btnSec(x, 'nav-sec')).join('')
+  $('#tabs').innerHTML = `<div class="nav-l">${visibles.slice(0, 2).map(x => btnSec(x, 'nav-sec')).join('')}</div>`
     + `<button class="nav-plus" data-action="quick-open" data-tipo="gasto" aria-label="Registrar movimiento" title="Registrar un movimiento">${icono('plus')}</button>`
-    + visibles.slice(2).map(x => btnSec(x, 'nav-sec')).join('');
+    + `<div class="nav-r">${visibles.slice(2).map(x => btnSec(x, 'nav-sec')).join('')}</div>`;
   const bn = $('#bottomnav');
   if (bn) bn.innerHTML = SECCIONES.slice(0, 2).map(x => btnSec(x, 'bn-item')).join('')
     + `<button class="bn-plus" data-action="quick-open" data-tipo="gasto" aria-label="Registrar movimiento">${icono('plus')}</button>`

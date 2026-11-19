@@ -1113,3 +1113,11 @@ html,body{overflow-x:clip}
 .link-btn{background:none;border:0;padding:0;font:inherit;font-size:13px;font-weight:600;color:var(--blue);cursor:pointer}
 .link-btn.muted{color:var(--muted)}
 .aj-av.av-edit{width:64px;height:64px;font-size:24px}
+/* El + exactamente en el centro de la barra: dos grupos iguales a cada lado */
+@media (min-width:761px){
+  .tabs{display:grid!important;grid-template-columns:1fr auto 1fr;align-items:stretch}
+  .tabs .nav-l,.tabs .nav-r{display:flex;gap:4px;min-width:0}
+  .tabs .nav-l{justify-content:flex-end}
+  .tabs .nav-r{justify-content:flex-start}
+  .tabs .nav-plus{margin:0 18px}
+}

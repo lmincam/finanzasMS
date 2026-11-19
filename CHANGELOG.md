@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.25.1 — 19/11/2026 · + centrado
+- Ordenador: el botón + queda exactamente en el centro de la barra de secciones.
+
 ## 5.25.0 — 19/11/2026 · Foto de perfil y barra del ordenador como la del móvil
 - Ordenador: Ajustes sale de la barra y se abre desde el círculo del usuario; el botón verde + para añadir movimientos va en medio de la barra (desaparece «+ Añadir» de la cabecera).
 - Foto de perfil: en Ajustes › Tu cuenta, cada usuario puede subir su foto (se recorta en cuadrado y se reduce); aparece en el círculo de arriba en todos sus dispositivos. También se puede quitar.
