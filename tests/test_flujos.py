@@ -210,3 +210,15 @@ def test_presupuestos_menu_categoria(app):
     assert a.page.locator('.modal [name="color"]').count() == 0                       # el color lo pone la app
     cols = a.ev("S.categorias.filter(c => c.tipo === 'gasto' && !c.parent_id).map(c => c.color)")
     assert len(set(cols)) == len(cols) and not any(c in COLORES for c in cols)
+
+
+def test_donde_va_el_dinero(app):
+    a = app
+    a.ir('dashboard')
+    assert 'Dónde va vuestro dinero' in a.texto('#tab-dashboard')
+    izq = a.page.locator('.dv-col:not(.dv-r) .dv-leg li').all_inner_texts()
+    assert izq and izq[0].strip()[0].isdigit()                       # el % va delante
+    der = a.page.locator('.dv-r .dv-leg li').all_inner_texts()
+    assert der and der[-1].strip().endswith('%')                     # el % va al final
+    r = a.ev("(() => { const st = periodStats(periodMonths()); const d = destinosAhorro(st); return [st.ingresos, st.gastosCaja + d.reduce((x, y) => x + y.v, 0)] })()")
+    assert abs(r[0] - r[1]) < 0.01                                   # gastos + ahorro + lo que queda = 100 % de lo ingresado

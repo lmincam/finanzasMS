@@ -1,5 +1,9 @@
 # Historial de versiones
 
+## 5.24.0 — 19/11/2026 · ¿Dónde va vuestro dinero?
+- Inicio: la tarjeta del gráfico circular muestra el 100 % de lo ingresado en el periodo. A la izquierda, los gastos por categoría; a la derecha, lo aportado a cada cuenta de ahorro e inversión, lo apartado para anualidades y lo que queda en cuenta.
+- Debajo de cada gráfico, su lista con el % de los ingresos: a la izquierda con el % delante; a la derecha con el % al final.
+
 ## 5.23.9 — 19/11/2026 · Gastos en % de los ingresos
 - Inicio: el gráfico circular de gastos indica junto a cada categoría qué % de los ingresos del periodo elegido se ha llevado.
 

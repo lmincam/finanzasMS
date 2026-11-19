@@ -49,6 +49,8 @@ function renderDashboard() {
   for (const m of gastosMov) { const r = rootOf(catById(m.categoria_id)); const k = r ? r.id : '_none'; byRoot.set(k, (byRoot.get(k) || 0) - num(m.importe)); }
   let donut = [...byRoot.entries()].map(([k, v]) => ({ k, v, c: catById(k) })).filter(x => x.v > 0).sort((a, b) => b.v - a.v);
   if (donut.length > 9) { const rest = donut.slice(8); donut = donut.slice(0, 8).concat([{ k: '_otros', v: sum(rest, 'v'), c: { nombre: 'Resto', color: '#cbd5e1' } }]); }
+  // Lo que no se gasta: a qué cuentas de ahorro / inversión ha ido, lo apartado para anualidades y lo que queda en la cuenta
+  const destinos = destinosAhorro(st);
 
   // Sin gastos fijos (hipoteca, recibos…): interesan los gastos en los que puedes decidir
   const _fijo = new Map(), esFijo = c => { if (!c) return false; if (!_fijo.has(c)) _fijo.set(c, esGastoFijo(c, months[months.length - 1])); return _fijo.get(c); };
@@ -93,8 +95,17 @@ function renderDashboard() {
 
     <div class="grid-2 dash-charts">
       <div class="card"><div class="card-head"><h3>Ingresos vs. gastos</h3></div><div class="chart-box"><canvas id="ch-ig"></canvas></div></div>
-      <div class="card"><div class="card-head"><h3>¿Dónde se ha gastado?</h3>${st.ingresos > 0 ? `<span class="sub">% sobre los ingresos del periodo (${fmtEUR(st.ingresos, 0)})</span>` : ''}</div>
-        ${donut.length ? '<div class="chart-box"><canvas id="ch-cat"></canvas></div>' : '<div class="empty">Sin gastos en el periodo</div>'}</div>
+      <div class="card dv-card"><div class="card-head"><h3>¿Dónde va vuestro dinero?</h3>${st.ingresos > 0 ? `<span class="sub">De ${fmtEUR(st.ingresos, 0)} ingresados</span>` : ''}</div>
+        ${donut.length || destinos.length ? `<div class="dv-grid">
+          <div class="dv-col"><div class="dv-t">Gastos${st.ingresos > 0 ? ` · ${fmtPct(sum(donut, 'v') / st.ingresos, 0)}` : ''}</div>
+            ${donut.length ? `<div class="chart-box dv-chart"><canvas id="ch-cat"></canvas></div>
+            <ul class="dv-leg">${donut.map((d, i) => `<li><span class="dv-p">${st.ingresos > 0 ? fmtPct(d.v / st.ingresos, 0) : fmtEUR(d.v, 0)}</span><span class="cdot" style="background:${esc(colorDonut(d, i))}"></span><span class="dv-n">${esc(nombreDonut(d))}</span></li>`).join('')}</ul>` : '<div class="empty">Sin gastos</div>'}</div>
+          <div class="dv-col dv-r"><div class="dv-t">Ahorro<span class="dv-full"> e inversión</span>${st.ingresos > 0 ? ` · ${fmtPct(sum(destinos.filter(x => !x.resto), 'v') / st.ingresos, 0)}` : ''}</div>
+            ${destinos.length ? `<div class="chart-box dv-chart"><canvas id="ch-dest"></canvas></div>
+            <ul class="dv-leg">${destinos.map(d => `<li><span class="dv-n">${esc(d.n)}</span><span class="cdot" style="background:${esc(d.c)}"></span><span class="dv-p">${st.ingresos > 0 ? fmtPct(d.v / st.ingresos, 0) : fmtEUR(d.v, 0)}</span></li>`).join('')}</ul>` : '<div class="empty">Nada apartado en el periodo</div>'}</div>
+        </div>
+        ${st.ingresos > 0 && st.ingresos - st.gastosCaja - sum(destinos.filter(x => !x.resto), 'v') < -1 ? `<div class="small muted dv-nota">Se ha gastado y apartado ${fmtEUR(-(st.ingresos - st.gastosCaja - sum(destinos.filter(x => !x.resto), 'v')), 0)} más de lo ingresado: sale del saldo que ya había.</div>` : ''}`
+        : '<div class="empty">Sin movimientos en el periodo</div>'}</div>
     </div>
 
     <div class="dash-bottom">
@@ -118,12 +129,12 @@ function renderDashboard() {
     },
     options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { y: { ...euroAxis, stacked: true }, x: { grid: { display: false }, stacked: true } } }
   });
-  if (donut.length) mkChart('ch-cat', {
-    type: 'doughnut',
-    data: { labels: donut.map(d => (d.k === '_none' ? 'Sin categoría' : d.c ? d.c.nombre : '—') + (st.ingresos > 0 ? ` · ${fmtPct(d.v / st.ingresos, 0)}` : '')), datasets: [{ data: donut.map(d => round2(d.v)), backgroundColor: donut.map((d, i) => (d.c && d.c.color) || PALETTE[i % PALETTE.length]), borderWidth: 2, borderColor: Tema.hueco() }] },
-    options: { responsive: true, maintainAspectRatio: false, cutout: '62%', plugins: { legend: { position: window.innerWidth < 700 ? 'bottom' : 'right' },
-      tooltip: { callbacks: { label: ctx => ` ${String(ctx.label).split(' · ')[0]}: ${fmtEUR(ctx.parsed)}${st.ingresos > 0 ? ` · ${fmtPct(ctx.parsed / st.ingresos, 1)} de los ingresos` : ''}` } } } }
-  });
+  const dona = (id, items, col) => mkChart(id, { type: 'doughnut',
+    data: { labels: items.map(d => d.n), datasets: [{ data: items.map(d => round2(d.v)), backgroundColor: items.map(col), borderWidth: 2, borderColor: Tema.hueco() }] },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '62%', plugins: { legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${fmtEUR(ctx.parsed)}${st.ingresos > 0 ? ` · ${fmtPct(ctx.parsed / st.ingresos, 1)} de los ingresos` : ''}` } } } } });
+  if (donut.length) dona('ch-cat', donut.map((d, i) => ({ ...d, n: nombreDonut(d), i })), d => colorDonut(d, d.i));
+  if (destinos.length) dona('ch-dest', destinos, d => d.c);
 }
 function budgetRows(gastosMov, nM, months) {
   const spentBy = {}, hasta = months[months.length - 1], anio = hasta.slice(0, 4);
@@ -218,3 +229,24 @@ Object.assign(Changes, {
 
 // El mes se elige pulsando el texto: en ordenador se abre el calendario nativo (en el móvil lo abre el propio input invisible)
 Object.assign(Actions, { 'mes-pick': el => selectorMes({ valor: el.dataset.v, titulo: el.dataset.id === 'p-from' ? 'Desde' : el.dataset.id === 'p-to' ? 'Hasta' : 'Elige el mes', onPick: ym => Changes[el.dataset.id]({ value: ym }) }) });
+
+/* ---------- «¿Dónde va vuestro dinero?» ---------- */
+const nombreDonut = d => d.k === '_none' ? 'Sin categoría' : d.c ? d.c.nombre : '—';
+const colorDonut = (d, i) => (d.c && d.c.color) || PALETTE[i % PALETTE.length];
+const COLORES_DESTINO = ['#7c3aed', '#0ea5e9', '#4f46e5', '#db2777', '#0369a1', '#a855f7', '#1d4ed8', '#c026d3'];
+/** Destino del dinero no gastado en el periodo: neto aportado a cada cuenta de ahorro / inversión, anualidades y lo que queda en cuenta. */
+function destinosAhorro(st) {
+  const ca = cuentaAnualidades(), por = new Map(), esAh = c => c && (c.tipo === 'ahorro' || c.tipo === 'inversion') && !(ca && c.id === ca.id);
+  for (const m of st.movs) {
+    if (m.tipo !== 'transferencia' || num(m.importe) <= 0) continue;
+    const dst = cuentaById(m.cuenta_id), org = cuentaById(m.cuenta_contraria_id), v = num(m.importe);
+    if (esAh(dst)) por.set(dst.id, (por.get(dst.id) || 0) + v);
+    if (esAh(org)) por.set(org.id, (por.get(org.id) || 0) - v);
+  }
+  const out = [...por.entries()].map(([id, v]) => ({ c: cuentaById(id), v })).filter(x => x.v > 0.5).sort((a, b) => b.v - a.v)
+    .map((x, i) => ({ n: x.c.nombre, v: x.v, c: x.c.color && !/^#(16a34a|22c55e|15803d)$/i.test(x.c.color) ? x.c.color : COLORES_DESTINO[i % COLORES_DESTINO.length] }));
+  if (st.aport.anualidades > 0.5) out.push({ n: 'Apartado para anualidades', v: st.aport.anualidades, c: '#f59e0b' });
+  const resto = st.ingresos - st.gastosCaja - sum(out, 'v');
+  if (resto > 0.5) out.push({ n: 'Queda en cuenta', v: resto, c: '#94a3b8', resto: true });
+  return out;
+}
