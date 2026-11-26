@@ -378,3 +378,12 @@ def test_tabla_amortizacion_compara_banco(app):
     inp.fill(str(fila['capital'])); inp.dispatch_event('change'); a.page.wait_for_timeout(300)
     assert a.ev(f"capBanco(S.deudas[0])['{k}']") is not None
     assert '✓' in a.texto('.ta-anio[open] .ta-tbl')
+
+
+def test_tabla_amortizacion_incluye_mes_en_curso(app):
+    a = app
+    r = a.ev("""(() => { const d = S.deudas[0], orig = ledgerDeuda, hoy = ymOf(todayISO());
+      window.ledgerDeuda = (x, ...k) => { const L = orig(x, ...k); return { ...L, pagos: L.pagos.filter(p => ymOf(p.fecha) < hoy) }; };
+      const yms = filasAmortizacion(d).map(f => f.ym); window.ledgerDeuda = orig;
+      return { hoy, tiene: yms.includes(hoy), unicos: new Set(yms).size === yms.length }; })()""")
+    assert r['tiene'] and r['unicos']

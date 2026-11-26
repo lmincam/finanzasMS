@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.29.2 — 26/11/2026 · Mes en curso en la tabla de amortización
+- La tabla ya no se salta el mes actual cuando su cargo aún no está registrado: aparece como «por cobrar» y se puede comparar con el banco.
+
 ## 5.29.1 — 26/11/2026 · Menos ruido en Deudas
 - Quitada la tarjeta «Cuotas desde el último dato del banco» (lo cubre la tabla de amortización). Se mantienen los avisos de cuadre; el botón para actualizar el pendiente pasa a la tabla.
 

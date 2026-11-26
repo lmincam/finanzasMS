@@ -159,8 +159,10 @@ function filasAmortizacion(d) {
   // 2) Real desde el dato del banco
   for (const p of L.pagos) rows.push({ n: p.extra ? null : nDe(ymOf(p.fecha)), ym: ymOf(p.fecha), fecha: p.fecha, cuota: p.extra ? null : (p.real ? null : p.importe), cobrado: p.real ? p.importe : null, interes: p.interes, capital: p.capital, pendiente: p.pendiente, tipo: p.extra ? 'extra' : p.real ? 'real' : 'estimada' });
   // 3) Previsto
-  const ult = rows.length ? rows[rows.length - 1].ym : ymOf(hoy);
-  for (const x of I.sched || []) if (x.ym > ult) rows.push({ n: nDe(x.ym), ym: x.ym, fecha: fechaEn(x.ym), cuota: x.cuota, cobrado: null, interes: x.interes, capital: x.capital, pendiente: x.pendiente, tipo: 'prevista' });
+  // Sin huecos: se proyecta desde la última fila (incluye el mes en curso aunque su cargo aún no esté registrado)
+  const last = rows[rows.length - 1], ymHoy = ymOf(hoy);
+  const desde = last ? addMonths(last.ym, 1) : addMonths(ymHoy, 1), P0 = last ? last.pendiente : I.pendienteHoy;
+  for (const x of amortizar(P0, r, I.cuota, desde) || []) rows.push({ n: nDe(x.ym), ym: x.ym, fecha: fechaEn(x.ym), cuota: x.cuota, cobrado: null, interes: x.interes, capital: x.capital, pendiente: x.pendiente, tipo: x.ym <= ymHoy ? 'curso' : 'prevista' });
   return rows;
 }
 function renderTablaBanco(d) {
@@ -168,7 +170,7 @@ function renderTablaBanco(d) {
   const rows = filasAmortizacion(d); if (!rows.length) return '';
   const B = capBanco(d), anioHoy = todayISO().slice(0, 4);
   const anios = [...new Set(rows.map(x => x.ym.slice(0, 4)))];
-  const etiqueta = { teorico: '<span class="badge" title="Cuadro francés teórico desde la primera cuota">teórica</span>', real: '<span class="badge green" title="Cargo registrado en tus movimientos">cobrada</span>', estimada: '<span class="badge amber" title="No hay cargo registrado: se supone la cuota habitual">sin cargo</span>', extra: '<span class="badge navy">amortización</span>', prevista: '<span class="badge" style="opacity:.7">prevista</span>' };
+  const etiqueta = { teorico: '<span class="badge" title="Cuadro francés teórico desde la primera cuota">teórica</span>', real: '<span class="badge green" title="Cargo registrado en tus movimientos">cobrada</span>', estimada: '<span class="badge amber" title="No hay cargo registrado: se supone la cuota habitual">sin cargo</span>', extra: '<span class="badge navy">amortización</span>', curso: '<span class="badge amber" title="Mes en curso: el cargo aún no está registrado en tus movimientos">por cobrar</span>', prevista: '<span class="badge" style="opacity:.7">prevista</span>' };
   const fila = x => { const k = x.ym + (x.tipo === 'extra' ? 'x' : ''), b = B[k], dif = b !== undefined && b !== null && b !== '' ? round2(num(b) - x.capital) : null;
     return `<tr class="ta-${x.tipo}"><td class="num">${x.n || ''}</td><td>${ymMedio(x.ym)}</td><td>${fmtDate(x.fecha).slice(0, 5)}</td>
       <td class="right num">${x.cobrado !== null ? `<b>${fmtEUR(x.cobrado)}</b>` : x.cuota !== null ? fmtEUR(x.cuota) : '—'}</td>
