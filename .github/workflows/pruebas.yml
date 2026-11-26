@@ -67,7 +67,7 @@ jobs:
           mkdir _site
           cp -r index.html manifest.json sw.js css js icons sql README.md CHANGELOG.md _site/
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
       - id: deploy
