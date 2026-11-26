@@ -1,5 +1,9 @@
 # Historial de versiones
 
+## 5.30.0 — 26/11/2026 · Intereses calculados como el banco
+- Préstamos con «Días reales / 360» (o /365): los intereses de cada recibo se calculan con los días entre vencimientos (p. ej. del 1 al 1), no entre fechas de cargo, y se redondean al céntimo cada mes, igual que el banco. Validado céntimo a céntimo con 15 recibos reales de Unicaja (TIN 1,875 %).
+- La previsión de cuotas futuras y el tramo teórico de la tabla usan el mismo método.
+
 ## 5.29.2 — 26/11/2026 · Mes en curso en la tabla de amortización
 - La tabla ya no se salta el mes actual cuando su cargo aún no está registrado: aparece como «por cobrar» y se puede comparar con el banco.
 

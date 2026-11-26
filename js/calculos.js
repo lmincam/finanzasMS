@@ -86,16 +86,29 @@ const Calc = {
 
 /* ---------- Préstamos: sistema francés ---------- */
 const cuotaFrancesa = (P, r, n) => n > 0 ? (r === 0 ? P / n : P * r / (1 - Math.pow(1 + r, -n))) : 0;
-function amortizar(P, r, cuota, startYm) {
+/** Cuadro francés. Con base 'act/360' o 'act/365' los intereses de cada recibo son pendiente × TIN × días reales
+    entre vencimientos / 360 (o 365), redondeados al céntimo como hacen los bancos; si no, TIN/12. */
+function amortizar(P, r, cuota, startYm, base, dia = 1) {
   const out = []; let p = P, ym = startYm;
+  const act = base === 'act/360' || base === 'act/365', B = base === 'act/365' ? 365 : 360;
   if (!(cuota > 0) || p <= 0.005) return out;
-  if (r > 0 && cuota <= p * r + 1e-9) return null; // la cuota no cubre intereses
+  if (r > 0 && cuota <= p * r * (act ? 31 * 12 / B : 1) + 1e-9) return null; // la cuota no cubre intereses
   while (p > 0.005 && out.length < 720) {
-    const int = p * r; const cap = Math.min(cuota - int, p);
-    p -= cap; out.push({ ym, cuota: cap + int, interes: int, capital: cap, pendiente: Math.max(0, p) });
+    const int = act ? round2(p * r * 12 * diasEntre(vencimiento(addMonths(ym, -1), dia), vencimiento(ym, dia)) / B) : p * r;
+    const cap = Math.min(cuota - int, p);
+    p -= cap; if (act) p = round2(p);
+    out.push({ ym, cuota: cap + int, interes: int, capital: cap, pendiente: Math.max(0, p) });
     ym = addMonths(ym, 1);
   }
   return out;
+}
+/** Fecha de vencimiento del recibo en el mes `ym` (el banco calcula intereses entre vencimientos, no entre fechas de cargo). */
+const vencimiento = (ym, dia) => { const [y, m] = ym.split('-').map(Number); return `${ym}-${pad(Math.min(dia, daysInMonth(y, m)))}`; };
+/** Día de vencimiento de los recibos de un préstamo: el más temprano de los últimos cargos (si cae en festivo el banco cobra después). */
+function diaRecibo(d, cargos) {
+  if (d.fecha_inicio && !(cargos && cargos.length)) return +d.fecha_inicio.slice(8, 10);
+  const xs = (cargos || []).slice(-12).map(m => +m.fecha.slice(8, 10));
+  return xs.length ? Math.min(...xs) : 1;
 }
 /* ---------- Cuotas reales y capital pendiente ----------
    El capital pendiente se calcula cuota a cuota a partir del último dato del banco, usando los cargos reales
@@ -128,6 +141,7 @@ function ledgerDeuda(d, base = d.base_interes || '30/360', hasta = todayISO()) {
   // Amortizaciones anticipadas registradas después del último dato del banco: también bajan el pendiente
   const extras = (S.amortizaciones || []).filter(a => a.deuda_id === d.id && a.fecha > f0 && a.fecha <= hasta).sort((a, b) => a.fecha < b.fecha ? -1 : 1);
   let ie = 0;
+  const act = base === 'act/360' || base === 'act/365', dVto = diaRecibo(d, todos);
   const diaHab = todos.length ? Math.round(median(todos.slice(-12).map(m => +m.fecha.slice(8, 10)))) : +((d.fecha_inicio || f0).slice(8, 10));
   const diaEn = ym => { const [y, mo] = ym.split('-').map(Number); return `${ym}-${pad(Math.min(diaHab, daysInMonth(y, mo)))}`; };
   // Desde cuándo corren los intereses de la primera cuota: la última cuota pagada antes del dato del banco
@@ -140,12 +154,17 @@ function ledgerDeuda(d, base = d.base_interes || '30/360', hasta = todayISO()) {
     if (reales.length) { fecha = reales[0].fecha; importe = -sum(reales, 'importe'); ids = reales.map(m => m.id); }
     else { fecha = diaEn(ym); real = false; importe = cuota; if (!(fecha > f0 && fecha <= hasta) || !cuota) continue; }
     // Intereses por tramos si en medio hubo una amortización anticipada
+    // Con días reales, el banco cuenta los días entre vencimientos del recibo (no entre fechas de cargo)
+    const vto = vencimiento(ym, dVto);
+    if (act && vto <= f0) continue; // ese recibo ya estaba descontado en el dato del banco
+    if (act) prev = prev > vencimiento(addMonths(ym, -1), dVto) && prev < vto ? prev : vencimiento(addMonths(ym, -1), dVto);
     let interes = 0;
     while (ie < extras.length && extras[ie].fecha <= fecha) { const a = extras[ie++]; interes += interesPeriodo(P, tin, base, prev, a.fecha); P = Math.max(0, P - num(a.importe)); prev = a.fecha;
       pagos.push({ fecha: a.fecha, importe: num(a.importe), interes: 0, capital: round2(num(a.importe)), pendiente: round2(P), ids: [], real: true, extra: true }); }
-    interes += interesPeriodo(P, tin, base, prev, fecha);
+    interes += interesPeriodo(P, tin, base, prev, act ? vto : fecha);
+    if (act) interes = round2(interes);
     const capital = Math.max(0, Math.min(P, importe - interes));
-    P -= capital; prev = fecha;
+    P -= capital; if (act) P = round2(P); prev = act ? vto : fecha;
     pagos.push({ fecha, importe, interes: round2(interes), capital: round2(capital), pendiente: round2(P), ids, real });
   }
   while (ie < extras.length) { const a = extras[ie++]; P = Math.max(0, P - num(a.importe));
@@ -170,10 +189,12 @@ function deudaInfo(d) {
   const meses = Math.max(0, monthsDiff(refDate, today));
   // Pendiente de hoy: cuota a cuota desde el último dato del banco, con los cargos reales registrados
   const P = (num(d.interes) > 0 || cuota) ? ledgerDeuda(d).pendiente : round2(P0);
-  const sched = amortizar(P, r, cuota, addMonths(ymOf(today), 1));
+  const base = d.base_interes || '30/360', catC = categoriaCuota(d);
+  const dVto = diaRecibo(d, catC ? S.movimientos.filter(m => m.tipo === 'gasto' && m.categoria_id === catC && num(m.importe) < 0).sort((a, b) => a.fecha < b.fecha ? -1 : 1) : []);
+  const sched = amortizar(P, r, cuota, addMonths(ymOf(today), 1), base, dVto);
   const s = sched || [];
   const info = {
-    r, cuota, pendienteHoy: P, pagadas, restContrato, viable: sched !== null,
+    r, cuota, base, dVto, pendienteHoy: P, pagadas, restContrato, viable: sched !== null,
     restantes: sched ? s.length : null, fin: s.length ? s[s.length - 1].ym : null,
     interesesPendientes: sum(s, 'interes'), sched: s, estimado: meses > 0,
     pctAmort: num(d.capital_inicial) > 0 ? Math.max(0, 1 - P / num(d.capital_inicial)) : null

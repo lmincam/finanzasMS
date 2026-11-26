@@ -152,7 +152,8 @@ function filasAmortizacion(d) {
   if (d.fecha_inicio && num(d.capital_inicial) > 0 && num(d.plazo_meses) > 0) {
     let P = num(d.capital_inicial); const c = cuotaFrancesa(P, r, num(d.plazo_meses));
     for (let ym = ymOf(d.fecha_inicio); ym < ymAncla && P > 0.005; ym = addMonths(ym, 1)) {
-      const int = P * r, cap = Math.min(P, c - int); P -= cap; const cg = cargoMes(ym);
+      const act = I.base === 'act/360' || I.base === 'act/365';
+      const int = act ? round2(P * r * 12 * diasEntre(vencimiento(addMonths(ym, -1), I.dVto), vencimiento(ym, I.dVto)) / (I.base === 'act/365' ? 365 : 360)) : P * r, cap = Math.min(P, c - int); P -= cap; if (act) P = round2(P); const cg = cargoMes(ym);
       rows.push({ n: nDe(ym), ym, fecha: cg ? cg.fecha : fechaEn(ym), cuota: c, cobrado: cg ? cg.imp : null, interes: int, capital: cap, pendiente: Math.max(0, P), tipo: 'teorico' });
     }
   }
@@ -162,7 +163,7 @@ function filasAmortizacion(d) {
   // Sin huecos: se proyecta desde la última fila (incluye el mes en curso aunque su cargo aún no esté registrado)
   const last = rows[rows.length - 1], ymHoy = ymOf(hoy);
   const desde = last ? addMonths(last.ym, 1) : addMonths(ymHoy, 1), P0 = last ? last.pendiente : I.pendienteHoy;
-  for (const x of amortizar(P0, r, I.cuota, desde) || []) rows.push({ n: nDe(x.ym), ym: x.ym, fecha: fechaEn(x.ym), cuota: x.cuota, cobrado: null, interes: x.interes, capital: x.capital, pendiente: x.pendiente, tipo: x.ym <= ymHoy ? 'curso' : 'prevista' });
+  for (const x of amortizar(P0, r, I.cuota, desde, I.base, I.dVto) || []) rows.push({ n: nDe(x.ym), ym: x.ym, fecha: fechaEn(x.ym), cuota: x.cuota, cobrado: null, interes: x.interes, capital: x.capital, pendiente: x.pendiente, tipo: x.ym <= ymHoy ? 'curso' : 'prevista' });
   return rows;
 }
 function renderTablaBanco(d) {
