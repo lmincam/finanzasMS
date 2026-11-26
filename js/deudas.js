@@ -138,6 +138,74 @@ function avisosCuadreDeuda(d, L = ledgerDeuda(d)) {
   if (sueltas.length) out.push(`Hay ${sueltas.length} movimiento${sueltas.length > 1 ? 's' : ''} de amortización anticipada (${sueltas.map(m => `${fmtDate(m.fecha)} ${fmtEUR(-num(m.importe))}`).join(', ')}) sin registrar en ningún préstamo. Inicio los cuenta como capital, pero el pendiente no baja hasta que la registras en «Amortizaciones realizadas › + Registrar» del préstamo que corresponda.`);
   return out;
 }
+/* ---------- Tabla de amortización mes a mes (francesa) para comparar con el banco ----------
+   - Antes del último dato del banco: cuadro francés teórico desde la 1ª cuota (capital inicial, plazo y TIN).
+   - Desde el dato del banco hasta hoy: las cuotas reales (las mismas con las que se calcula el pendiente).
+   - Después: el cuadro previsto con la cuota vigente.
+   En cada fila puedes apuntar el capital que dice el banco y la app marca si coincide. */
+const claveBanco = d => 'cuadro_banco:' + d.id;
+const capBanco = d => (((S.ajustesRows || []).find(r => r.clave === claveBanco(d)) || {}).valor) || {};
+function filasAmortizacion(d) {
+  const I = deudaInfo(d), r = I.r, L = ledgerDeuda(d), hoy = todayISO();
+  const tiene = d.capital_pendiente !== null && d.capital_pendiente !== undefined && d.capital_pendiente !== '';
+  const ymAncla = ymOf(tiene ? (d.fecha_capital_pendiente || hoy) : (d.fecha_inicio || hoy));
+  const cat = categoriaCuota(d);
+  const cargos = cat ? S.movimientos.filter(m => m.tipo === 'gasto' && m.categoria_id === cat && num(m.importe) < 0 && deudaDeMovimiento(m) === d) : [];
+  const dia = cargos.length ? Math.round(median(cargos.slice(-12).map(m => +m.fecha.slice(8, 10)))) : +((d.fecha_inicio || hoy).slice(8, 10));
+  const fechaEn = ym => { const [y, mo] = ym.split('-').map(Number); return `${ym}-${pad(Math.min(dia, daysInMonth(y, mo)))}`; };
+  const nDe = ym => d.fecha_inicio ? monthsDiff(ymOf(d.fecha_inicio) + '-01', ym + '-01') + 1 : null;
+  const cargoMes = ym => { const xs = cargos.filter(m => ymOf(m.fecha) === ym); return xs.length ? { fecha: xs[0].fecha, imp: -sum(xs, 'importe') } : null; };
+  const rows = [];
+  // 1) Teórico desde el inicio hasta el dato del banco
+  if (d.fecha_inicio && num(d.capital_inicial) > 0 && num(d.plazo_meses) > 0) {
+    let P = num(d.capital_inicial); const c = cuotaFrancesa(P, r, num(d.plazo_meses));
+    for (let ym = ymOf(d.fecha_inicio); ym < ymAncla && P > 0.005; ym = addMonths(ym, 1)) {
+      const int = P * r, cap = Math.min(P, c - int); P -= cap; const cg = cargoMes(ym);
+      rows.push({ n: nDe(ym), ym, fecha: cg ? cg.fecha : fechaEn(ym), cuota: c, cobrado: cg ? cg.imp : null, interes: int, capital: cap, pendiente: Math.max(0, P), tipo: 'teorico' });
+    }
+  }
+  // 2) Real desde el dato del banco
+  for (const p of L.pagos) rows.push({ n: p.extra ? null : nDe(ymOf(p.fecha)), ym: ymOf(p.fecha), fecha: p.fecha, cuota: p.extra ? null : (p.real ? null : p.importe), cobrado: p.real ? p.importe : null, interes: p.interes, capital: p.capital, pendiente: p.pendiente, tipo: p.extra ? 'extra' : p.real ? 'real' : 'estimada' });
+  // 3) Previsto
+  const ult = rows.length ? rows[rows.length - 1].ym : ymOf(hoy);
+  for (const x of I.sched || []) if (x.ym > ult) rows.push({ n: nDe(x.ym), ym: x.ym, fecha: fechaEn(x.ym), cuota: x.cuota, cobrado: null, interes: x.interes, capital: x.capital, pendiente: x.pendiente, tipo: 'prevista' });
+  return rows;
+}
+function renderTablaBanco(d) {
+  if (!num(d.interes) && !num(d.cuota_mensual)) return '';
+  const rows = filasAmortizacion(d); if (!rows.length) return '';
+  const B = capBanco(d), anioHoy = todayISO().slice(0, 4);
+  const anios = [...new Set(rows.map(x => x.ym.slice(0, 4)))];
+  const etiqueta = { teorico: '<span class="badge" title="Cuadro francés teórico desde la primera cuota">teórica</span>', real: '<span class="badge green" title="Cargo registrado en tus movimientos">cobrada</span>', estimada: '<span class="badge amber" title="No hay cargo registrado: se supone la cuota habitual">sin cargo</span>', extra: '<span class="badge navy">amortización</span>', prevista: '<span class="badge" style="opacity:.7">prevista</span>' };
+  const fila = x => { const k = x.ym + (x.tipo === 'extra' ? 'x' : ''), b = B[k], dif = b !== undefined && b !== null && b !== '' ? round2(num(b) - x.capital) : null;
+    return `<tr class="ta-${x.tipo}"><td class="num">${x.n || ''}</td><td>${ymMedio(x.ym)}</td><td>${fmtDate(x.fecha).slice(0, 5)}</td>
+      <td class="right num">${x.cobrado !== null ? `<b>${fmtEUR(x.cobrado)}</b>` : x.cuota !== null ? fmtEUR(x.cuota) : '—'}</td>
+      <td class="right num neg">${fmtEUR(x.interes)}</td><td class="right num pos">${fmtEUR(x.capital)}</td>
+      <td class="ta-b">${x.tipo === 'prevista' ? '' : `<input type="number" step="0.01" inputmode="decimal" class="ta-in" data-deu="${d.id}" data-k="${k}" value="${b ?? ''}" placeholder="capital" aria-label="Capital según el banco en ${ymMedio(x.ym)}">`}</td>
+      <td class="ta-ok">${dif === null ? '' : Math.abs(dif) < 0.5 ? '<span class="pos" title="Coincide con el banco">✓</span>' : `<span class="neg" title="Diferencia con el banco">${dif > 0 ? '+' : ''}${fmtEUR(dif)}</span>`}</td>
+      <td class="right num">${fmtEUR(x.pendiente)}</td>
+      <td>${etiqueta[x.tipo]}</td></tr>`; };
+  const nOk = Object.keys(B).filter(k => { const x = rows.find(r => r.ym + (r.tipo === 'extra' ? 'x' : '') === k); return x && Math.abs(num(B[k]) - x.capital) < 0.5; }).length, nB = Object.keys(B).filter(k => B[k] !== '' && B[k] !== null).length;
+  return `<div class="card ta-card"><div class="card-head"><div><h3>📑 Tabla de amortización mes a mes</h3>
+      <div class="small muted">Sistema francés: cuota fija; cada mes intereses = pendiente × TIN/12 y el resto es capital. Apunta en <b>Banco</b> el capital que pone tu recibo y la app te dice si coincide.${nB ? ` · <b>${nOk} de ${nB}</b> meses coinciden` : ''}</div></div></div>
+    ${anios.map(a => { const xs = rows.filter(x => x.ym.startsWith(a)); return `<details class="ta-anio" ${a === anioHoy ? 'open' : ''}><summary><b>${a}</b><span class="muted small">${xs.length} cuota${xs.length > 1 ? 's' : ''} · capital ${fmtEUR(sum(xs, 'capital'), 0)} · intereses ${fmtEUR(sum(xs, 'interes'), 0)}</span></summary>
+      <div class="tbl-wrap tbl-scroll"><table class="tbl tbl-nowrap ta-tbl"><thead><tr><th>Nº</th><th>Mes</th><th>Cobro</th><th class="right">Cuota</th><th class="right">Intereses</th><th class="right">Capital</th><th>Banco</th><th></th><th class="right">Pendiente</th><th></th></tr></thead>
+      <tbody>${xs.map(fila).join('')}</tbody></table></div></details>`; }).join('')}
+  </div>`;
+}
+// Guardar el capital que dice el banco (en ajustes, por préstamo)
+document.addEventListener('change', async e => {
+  const inp = e.target.closest && e.target.closest('.ta-in'); if (!inp) return;
+  const d = S.deudas.find(x => x.id === inp.dataset.deu); if (!d) return;
+  const valor = { ...capBanco(d) }; const v = inp.value.trim();
+  if (v === '') delete valor[inp.dataset.k]; else valor[inp.dataset.k] = round2(num(v));
+  try {
+    await DB.upsert('ajustes', { clave: claveBanco(d), valor, updated_at: new Date().toISOString() }, 'clave');
+    const row = (S.ajustesRows = S.ajustesRows || []).find(r => r.clave === claveBanco(d)); if (row) row.valor = valor; else S.ajustesRows.push({ clave: claveBanco(d), valor });
+    const y = window.scrollY; render(); window.scrollTo(0, y);
+  } catch (err) { toast('No se pudo guardar: ' + err.message, 'err'); }
+});
+
 function renderDeudaDetalle(d) {
   const el = $('#tab-deudas');
   const I = deudaInfo(d), sim = simDefault(d), V = S.deudaVista;
@@ -178,6 +246,7 @@ function renderDeudaDetalle(d) {
     ${I.pctAmort !== null ? `<div class="card" style="padding:14px 18px"><div class="small muted" style="margin-bottom:6px">Amortizado <b>${fmtPct(I.pctAmort)}</b> del capital inicial</div>${pctBar(I.pctAmort, 'navy')}</div>` : ''}
 
     ${renderCuotasReales(d)}
+    ${renderTablaBanco(d)}
 
     ${I.sched.length ? renderSimulador(d, I, sim) : ''}
 

@@ -1351,3 +1351,15 @@ html,body{overflow-x:clip}
 .pz-sel .v{font-size:16px;font-weight:650;font-variant-numeric:tabular-nums}
 .pz-sel .t{font-size:12px;color:var(--muted)}
 .cap-card .cap-como{white-space:normal;max-width:300px;font-size:11px}.cap-card tr.tot td{border-top:2px solid var(--line)}
+/* Préstamos · tabla de amortización mes a mes */
+.ta-anio{border-top:1px solid var(--line);padding:8px 0}
+.ta-anio>summary{display:flex;gap:12px;align-items:baseline;cursor:pointer;list-style:none;padding:4px 2px}
+.ta-anio>summary::-webkit-details-marker{display:none}
+.ta-anio>summary::before{content:'▸';color:var(--muted);transition:transform .15s}
+.ta-anio[open]>summary::before{transform:rotate(90deg)}
+.ta-tbl td,.ta-tbl th{padding:7px 9px}
+.ta-tbl tr.ta-prevista td{color:var(--muted)}
+.ta-tbl tr.ta-teorico td{opacity:.85}
+.ta-tbl tr.ta-extra td{background:color-mix(in srgb,#1e3a8a 6%,transparent)}
+.ta-in{width:96px;padding:4px 7px;font:inherit;font-size:13px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--txt);text-align:right}
+.ta-ok{font-weight:700;white-space:nowrap}

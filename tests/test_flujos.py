@@ -365,3 +365,16 @@ def test_chequeo_de_datos(app):
 def test_garantia_sin_desfase_horario(app):
     assert app.ev("garantiaDe({ fecha_compra: '2025-03-10' })") == '2028-03-10'
     assert app.ev("garantiaDe({ fecha_compra: '2024-02-29' })") == '2027-02-28'
+
+
+def test_tabla_amortizacion_compara_banco(app):
+    a = app
+    a.ir('deudas')
+    a.ev("Actions['deu-open']({dataset:{id:S.deudas[0].id}})"); a.page.wait_for_timeout(250)
+    assert a.page.locator('.ta-card .ta-tbl tr').count() > 12
+    inp = a.page.locator('.ta-anio[open] .ta-in >> nth=0')
+    k = inp.get_attribute('data-k')
+    fila = a.ev(f"filasAmortizacion(S.deudas[0]).find(f=>f.ym==='{k}')")
+    inp.fill(str(fila['capital'])); inp.dispatch_event('change'); a.page.wait_for_timeout(300)
+    assert a.ev(f"capBanco(S.deudas[0])['{k}']") is not None
+    assert '✓' in a.texto('.ta-anio[open] .ta-tbl')

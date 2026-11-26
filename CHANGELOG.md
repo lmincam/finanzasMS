@@ -1,5 +1,9 @@
 # Historial de versiones
 
+## 5.29.0 — 26/11/2026 · Tabla de amortización mes a mes
+- Deudas: en el detalle de cada préstamo, tabla francesa completa por años (nº de cuota, mes, día de cobro, cuota, intereses, capital, pendiente) desde la primera cuota hasta la última.
+- Columna «Banco»: apuntas el capital del recibo y la app marca ✓ si coincide o la diferencia; se guarda por préstamo y la cabecera cuenta cuántos meses cuadran.
+
 ## 5.28.9 — 26/11/2026 · TIN a la vista
 - Deudas: cada préstamo muestra su TIN y cómo se calculan sus intereses en la tarjeta («sin TIN ⚠» si falta), y en el detalle junto al nombre.
 
