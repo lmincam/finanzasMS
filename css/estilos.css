@@ -1209,3 +1209,7 @@ html,body{overflow-x:clip}
 @media (max-width:640px){ .kpi-grid .kpi-bal .v{font-size:22px} .kpi-bal .bal-mini{font-size:11px} }
 .acc-fuera-r{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:3px 0;border-top:1px dashed rgba(180,83,9,.25)}
 .acc-fuera-r span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Patrimonio › Lo que tenéis con pertenencias: 5 recuadros */
+.pz-grid.pz-grid-5{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media (max-width:1300px){ .pz-grid.pz-grid-5{grid-template-columns:repeat(2,minmax(0,1fr))} .pz-grid-5>.pz-box:last-child{grid-column:1/-1} }
+@media (max-width:640px){ .pz-grid.pz-grid-5{grid-template-columns:1fr} }

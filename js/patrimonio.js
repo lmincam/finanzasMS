@@ -65,7 +65,7 @@ function renderResumenPatrimonio() {
     </div>
 
     <div class="pz-sec">Lo que tenéis</div>
-    <div class="pz-grid">
+    <div class="pz-grid ${typeof pertOk === 'function' && pertOk() ? 'pz-grid-5' : ''}">
       ${caja({ k: 'liquidez', tab: 'cuentas', ico: icono('wallet'), titulo: 'Liquidez disponible', valor: fmtEUR(P.liquidez, 0),
         lineas: [corrientes ? linea('Cuentas corrientes', corrientes) : '', ahorro ? linea('Ahorro / fondo de emergencia', ahorro) : '', anual ? linea('Anualidades (apartado)', anual) : '', efectivo ? linea('Efectivo', efectivo) : ''].join('') })}
       ${caja({ k: 'inversiones', tab: 'inversiones', ico: icono('trend'), titulo: 'Inversiones', valor: fmtEUR(P.inversiones, 0),
@@ -77,6 +77,8 @@ function renderResumenPatrimonio() {
       ${caja({ k: 'vehiculos', tab: 'vehiculos', ico: icono('car'), titulo: 'Vehículos', valor: fmtEUR(P.vehiculos, 0),
         pie: veh.length ? `${veh.length} vehículo(s)` : 'Sin vehículos',
         lineas: veh.map(v => linea(esc(v.nombre), num(v.valor_actual))).join('') + (vehDep > 0 ? `<div class="pz-l"><span>Depreciación acumulada</span><b class="neg">−${fmtEUR(vehDep, 0)}</b></div>` : '') })}
+      ${typeof pertOk === 'function' && pertOk() ? (T => caja({ k: 'pertenencias', tab: 'pertenencias', ico: icono('bag'), titulo: 'Pertenencias', cls: 'pz-pert', lineas: T.n ? linea('Coste de reponerlo todo', T.repo) : '',
+        valor: T.n ? fmtEUR(T.venta, 0) : '—', pie: T.n ? `Venta estimada · no suma al neto` : 'Tecnología, muebles, bebé… (no suma al neto)' }))(pertTotales()) : ''}
     </div>
 
     <div class="pz-sec">Lo que debéis</div>
@@ -91,11 +93,10 @@ function renderResumenPatrimonio() {
     ${cuotaMes ? `<div class="small muted pz-nota">Pagáis ${fmtEUR(cuotaMes)} al mes en cuotas de préstamos.</div>` : ''}
 
     <div class="pz-sec">Seguimiento</div>
-    <div class="pz-grid ${typeof pertOk === 'function' && pertOk() ? 'pz-grid-2' : 'pz-grid-1'}">
+    <div class="pz-grid pz-grid-1">
       ${caja({ k: 'evolucion', tab: 'auditoria', ico: icono('chart'), titulo: 'Evolución del patrimonio', valor: prev ? `${signed(P.neto - num(prev.patrimonio_neto))}` : '—',
         pie: prev ? `Respecto al cierre de ${ymLabel(prev.anio_mes)}` : 'Histórico de cierres y fotos trimestrales' })}
-      ${typeof pertOk === 'function' && pertOk() ? (T => caja({ k: 'pertenencias', tab: 'pertenencias', ico: icono('bag'), titulo: 'Pertenencias', cls: 'pz-pert',
-        valor: T.n ? fmtEUR(T.venta, 0) : '—', pie: T.n ? `Venta estimada · no suma al neto · reposición ${fmtEUR(T.repo, 0)}` : 'Inventario de casa: tecnología, muebles, bebé… (no suma al neto)' }))(pertTotales()) : ''}
+
     </div>`;
 }
 

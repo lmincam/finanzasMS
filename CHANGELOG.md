@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.26.9 — 26/11/2026 · Pertenencias en «Lo que tenéis»
+- Patrimonio: el recuadro de Pertenencias pasa de «Seguimiento» a «Lo que tenéis», junto a liquidez, inversiones, inmuebles y vehículos, con la venta estimada y el coste de reponerlo todo. Sigue sin sumar al patrimonio neto.
+
 ## 5.26.8 — 26/11/2026 · Movimientos que no sumaban al saldo
 - Un movimiento apuntado a mano después de conciliar una cuenta, pero con fecha anterior a la conciliación, no suma al saldo (se entiende que el saldo real ya lo incluía). Ahora se ve: la fila lleva «no suma al saldo» y, al abrir la cuenta, un aviso con la lista y el botón «Que cuenten en el saldo» para corregirlo en un toque.
 
