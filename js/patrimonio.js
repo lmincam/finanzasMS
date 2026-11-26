@@ -60,8 +60,9 @@ function renderResumenPatrimonio() {
         <div><span>Lo que debéis</span><b class="neg">−${fmtEUR(P.deudas, 0)}</b></div>
         <div><span>Endeudamiento</span><b>${P.activos > 0 ? fmtPct(P.deudas / P.activos, 0) : '—'}</b></div>
       </div>
-      ${comp.length ? `<div class="pz-bar">${comp.map(c => `<span style="flex:${c[1]};background:${c[2]}" title="${c[0]}: ${fmtEUR(c[1], 0)}"></span>`).join('')}</div>
-      <div class="pz-leg">${comp.map(c => `<span><i style="background:${c[2]}"></i>${c[0]} <b>${fmtPct(pctA(c[1]), 0)}</b></span>`).join('')}</div>` : ''}
+      ${comp.length ? `<div class="pz-bar">${comp.map((c, i) => `<button type="button" class="pz-seg" data-action="pz-seg" data-i="${i}" data-n="${esc(c[0])}" data-v="${round2(c[1])}" data-p="${pctA(c[1])}" style="flex:${c[1]};background:${c[2]}" aria-label="${esc(c[0])}: ${fmtEUR(c[1], 0)}"></button>`).join('')}</div>
+      <div class="pz-sel" hidden></div>
+      <div class="pz-leg">${comp.map((c, i) => `<button type="button" class="pz-legi" data-action="pz-seg" data-i="${i}" data-n="${esc(c[0])}" data-v="${round2(c[1])}" data-p="${pctA(c[1])}"><i style="background:${c[2]}"></i>${c[0]} <b>${fmtPct(pctA(c[1]), 0)}</b></button>`).join('')}</div>` : ''}
     </div>
 
     <div class="pz-sec">Lo que tenéis</div>
@@ -101,3 +102,15 @@ function renderResumenPatrimonio() {
 }
 
 Views.patrimonio = renderResumenPatrimonio;
+
+/* Barra de composición: al tocar un tramo (o su leyenda) se ve su % y su importe sobre lo que tenéis */
+Actions['pz-seg'] = el => {
+  const hero = el.closest('.pz-hero'), box = hero.querySelector('.pz-sel'), i = el.dataset.i;
+  const yaSel = box.dataset.i === i && !box.hidden;
+  hero.querySelectorAll('.pz-seg,.pz-legi').forEach(x => x.classList.toggle('on', !yaSel && x.dataset.i === i));
+  hero.querySelector('.pz-bar').classList.toggle('con-sel', !yaSel);
+  if (yaSel) { box.hidden = true; box.dataset.i = ''; return; }
+  const seg = hero.querySelector(`.pz-seg[data-i="${i}"]`);
+  box.dataset.i = i; box.hidden = false; box.style.setProperty('--c', seg.style.background);
+  box.innerHTML = `<i></i><span class="n">${esc(el.dataset.n)}</span><b class="p">${fmtPct(num(el.dataset.p), 1)}</b><span class="v">${fmtEUR(num(el.dataset.v), 0)}</span><span class="t">de ${esc(hero.querySelector('.pz-hero-side b').textContent)}</span>`;
+};
