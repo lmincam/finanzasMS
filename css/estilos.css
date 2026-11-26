@@ -1324,22 +1324,15 @@ html,body{overflow-x:clip}
   .kpi-wide .bal-main .v{margin-bottom:0}
   .kpi-wide .bal-calc{flex:1 1 100%;margin-top:6px;padding-top:6px}
 }
-/* Inicio en el móvil: más compacto para que quepa hasta Liquidez y Patrimonio (iPhone 16 Pro Max) */
+/* Inicio en el móvil: un poco más compacto para que quepa hasta Liquidez y Patrimonio (iPhone 16 Pro Max) */
 @media (max-width:640px){
-  #tab-dashboard .cz-banner{padding:8px 12px;margin-bottom:10px;font-size:13px;display:flex;align-items:center;gap:10px}
-  #tab-dashboard .cz-banner .btn{flex:none;padding:6px 10px;font-size:12.5px;margin:0}
-  #tab-dashboard .per-card{padding:8px 10px;gap:7px;margin-bottom:10px}
-  #tab-dashboard .per-nav .mpick{min-height:32px;padding:3px 8px}
-  #tab-dashboard .per-nav .pin .btn,#tab-dashboard .per-cal-b{width:32px;height:32px}
-  #tab-dashboard .per-chips button{padding:5px 0}
-  #tab-dashboard .kpi-grid{gap:9px;margin-bottom:14px}
-  #tab-dashboard .kpi-grid .kpi{padding:11px 12px}
-  #tab-dashboard .kpi .l{font-size:10.5px}
-  #tab-dashboard .kpi .v{font-size:21px;margin-top:4px}
-  #tab-dashboard .kpi-grid .kpi-wide .v{font-size:24px}
-  #tab-dashboard .kpi-ing .ki-list,#tab-dashboard .kpi-gas .kg-op{margin-top:7px;padding-top:6px}
-  #tab-dashboard .kpi-gas .kg-bar{margin-top:6px}
-  #tab-dashboard .kpi-gas .kg-leg{display:none}
-  #tab-dashboard .kpi-wide .bal-calc{margin-top:4px;padding-top:5px;gap:1px;font-size:12px}
+  #tab-dashboard .per-card{padding:9px 10px;gap:8px;margin-bottom:12px}
+  #tab-dashboard .kpi-grid{gap:10px;margin-bottom:16px}
+  #tab-dashboard .kpi-grid .kpi{padding-top:12px;padding-bottom:12px}
   #tab-dashboard .kpi .l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #tab-dashboard .cz-banner{padding-top:9px;padding-bottom:9px;margin-bottom:12px}
+  #tab-dashboard .per-chips button{padding-top:5px;padding-bottom:5px}
 }
+/* La flecha › de la tarjeta de gastos no pisa la barra ni la leyenda */
+.kpi-gas .kg-bar,.kpi-gas .kg-leg{margin-right:18px}
+.kpi-gas .kg-leg{padding-right:0}

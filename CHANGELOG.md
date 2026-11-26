@@ -1,5 +1,9 @@
 # Historial de versiones
 
+## 5.28.4 — 26/11/2026 · Inicio móvil: ajuste mínimo
+- Se deshace la compactación fuerte de la 5.28.3: vuelven los tamaños de antes y solo se recorta un poco el relleno y la separación (unos 40 px en total). Vuelve la leyenda de la barra de gastos.
+- Corregido: la flecha › de la tarjeta de gastos ya no se monta sobre la barra.
+
 ## 5.28.3 — 26/11/2026 · Inicio compacto en el móvil
 - Móvil: Inicio más compacto (aviso de cierre, periodo y tarjetas con menos relleno y cifras algo más pequeñas) para que en un iPhone 16 Pro Max se vea hasta Liquidez y Patrimonio sin desplazarse.
 
