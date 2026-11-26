@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.26.3 — 26/11/2026 · Presupuesto con los Bizum por cobrar
+- Inicio › Presupuesto vs. gastado real: lo que te deben de un gasto compartido (Bizum pendiente) ya no cuenta como gastado; debajo de lo gastado aparece «↩ X € por cobrar». Las devoluciones ya cobradas y vinculadas al gasto seguían descontándose.
+
 ## 5.26.2 — 26/11/2026 · Último movimiento cargado
 - Movimientos: antes de la lista, dos recuadros con la fecha del último movimiento de la cuenta principal y del efectivo (hace cuántos días, concepto e importe), para saber desde qué día retomar la carga. Si pasa de una semana, se resalta en ámbar. Al pulsarlo, se filtra la lista por esa cuenta.
 

@@ -139,7 +139,14 @@ function renderDashboard() {
 function budgetRows(gastosMov, nM, months) {
   const spentBy = {}, hasta = months[months.length - 1], anio = hasta.slice(0, 4);
   const known = new Set(S.categorias.filter(c => c.tipo === 'gasto').map(c => c.id));
-  for (const m of gastosMov) { const k = (m.categoria_id && known.has(m.categoria_id)) ? m.categoria_id : '_none'; spentBy[k] = (spentBy[k] || 0) - num(m.importe); }
+  // Lo que te tienen que devolver (gasto compartido, Bizum pendiente) no cuenta como gastado: ya te lo descuentas
+  const pendBy = {};
+  for (const m of gastosMov) {
+    const k = (m.categoria_id && known.has(m.categoria_id)) ? m.categoria_id : '_none';
+    const pend = num(m.importe) < 0 && num(m.a_cobrar) > 0 ? infoCompartido(m).pendiente : 0;
+    spentBy[k] = (spentBy[k] || 0) - num(m.importe) - pend;
+    if (pend) pendBy[k] = (pendBy[k] || 0) + pend;
+  }
   const rows = [];
   // Anualidad: se compara lo gastado en el año natural con el presupuesto anual (un seguro de 600 € no "se pasa" el mes que se cobra)
   const filaAnual = (c, lvl, color, ids) => ({ lvl, nombre: c.nombre, color, spent: gastadoEnAnio(ids, hasta), bud: presAnual(c), own: true, catId: c.id, anual: true, anio,
@@ -150,12 +157,12 @@ function budgetRows(gastosMov, nM, months) {
     const mens = ch.filter(c => !presAnual(c)), anuales = ch.filter(c => presAnual(c));
     const spent = (spentBy[r.id] || 0) + sum(mens, c => spentBy[c.id] || 0);
     const bud = (num(r.presupuesto_mensual) > 0 ? num(r.presupuesto_mensual) : sum(mens, 'presupuesto_mensual')) * nM;
-    const hijos = mens.map(c => ({ lvl: 1, nombre: c.nombre, color: c.color || color, spent: spentBy[c.id] || 0, bud: num(c.presupuesto_mensual) * nM, own: true, catId: c.id, padre: r.nombre, padreOwn: num(r.presupuesto_mensual) > 0 }))
+    const hijos = mens.map(c => ({ lvl: 1, nombre: c.nombre, color: c.color || color, spent: spentBy[c.id] || 0, pend: pendBy[c.id] || 0, bud: num(c.presupuesto_mensual) * nM, own: true, catId: c.id, padre: r.nombre, padreOwn: num(r.presupuesto_mensual) > 0 }))
       .filter(x => x.spent || x.bud).concat(anuales.map(c => ({ ...filaAnual(c, 1, c.color || color, [c.id]), padre: r.nombre })).filter(x => x.spent || x.bud));
     if (!spent && !bud && !hijos.length) continue;
-    rows.push({ lvl: 0, nombre: r.nombre, color, spent, bud, own: num(r.presupuesto_mensual) > 0, catId: r.id, directo: spentBy[r.id] || 0, conHijos: mens.length > 0 }, ...hijos);
+    rows.push({ lvl: 0, nombre: r.nombre, color, spent, pend: (pendBy[r.id] || 0) + sum(mens, c => pendBy[c.id] || 0), bud, own: num(r.presupuesto_mensual) > 0, catId: r.id, directo: spentBy[r.id] || 0, pendDirecto: pendBy[r.id] || 0, conHijos: mens.length > 0 }, ...hijos);
   }
-  if (spentBy._none) rows.push({ lvl: 0, nombre: 'Sin categoría', color: '#94a3b8', spent: spentBy._none, bud: 0 });
+  if (spentBy._none) rows.push({ lvl: 0, nombre: 'Sin categoría', color: '#94a3b8', spent: spentBy._none, pend: pendBy._none || 0, bud: 0 });
   for (const r of rows) r.fijo = !r.anual && !!r.catId && esGastoFijo(r.catId, months[0]);
   return rows;
 }
@@ -171,7 +178,7 @@ function filaPresupuesto(r, nombre) {
   const tag = r.anual ? ` <span class="badge blue" title="Presupuesto anual: se compara con lo gastado en ${r.anio}">anual</span>` : r.fijo ? ' <span class="badge" title="Gasto fijo: estar al 100 % es lo normal">fijo</span>' : '';
   return `<tr class="${r.lvl && !nombre ? 'sub' : 'root'} ${r.fijo ? 'muted-row' : ''}"><td><span class="cdot" style="background:${esc(r.color)}"></span>${nombre || esc(r.nombre)}${tag}</td>
     <td class="right num" data-l="Presupuesto">${r.bud ? fmtEUR(r.bud) + (r.anual ? '<span class="small muted">/año</span>' : '') : '<span class="muted">—</span>'}</td>
-    <td class="right num" data-l="Gastado">${fmtEUR(r.spent)}${r.anual ? `<div class="small muted">en ${r.anio}</div>` : ''}</td>
+    <td class="right num" data-l="Gastado">${fmtEUR(r.spent)}${r.anual ? `<div class="small muted">en ${r.anio}</div>` : ''}${r.pend > 0.01 ? `<div class="bud-pend" title="Gastos compartidos: lo que te deben devolver (Bizum…) ya está descontado">↩ ${fmtEUR(r.pend)} por cobrar</div>` : ''}</td>
     <td class="bud-bar"><div style="display:flex;gap:8px;align-items:center">${pctBar(pc === null ? 0 : pc, cls)}<span class="small num ${pc > 1 ? 'neg' : ''}">${pc === null ? '' : fmtPct(pc, 0)}</span></div></td>
     <td class="right num ${dev === null ? 'muted' : dev >= 0 ? 'pos' : 'neg'}" data-l="${dev !== null && dev < 0 ? 'Te pasas' : 'Queda'}">${dev === null ? '—' : fmtEUR(dev)}</td></tr>`;
 }
@@ -196,7 +203,7 @@ function renderBudgetCard(rows, nM, totBud, totSpent) {
         fijosHijos.forEach(x => items.push({ ...x, ruta: ruta(x) }));
         if (sp || bu) items.push({ ...r, spent: sp, bud: bu, fijo: fijosHijos.length ? false : r.fijo, ruta: esc(r.nombre) + (fijosHijos.length ? ' <span class="muted small">(sin fijos)</span>' : '') });
       } else if (r.anual || r.own || !r.conHijos) { if (r.spent || r.bud) items.push({ ...r, ruta: esc(r.nombre) }); }
-      else if (r.directo > 0) items.push({ ...r, spent: r.directo, bud: 0, ruta: `${esc(r.nombre)} <span class="muted">› general</span>` });
+      else if (r.directo > 0) items.push({ ...r, spent: r.directo, pend: r.pendDirecto, bud: 0, ruta: `${esc(r.nombre)} <span class="muted">› general</span>` });
     } else if (r.anual || !r.padreOwn) items.push({ ...r, ruta: ruta(r) });
   }
   const rank = orden === 'gasto' ? (a, b) => b.spent - a.spent

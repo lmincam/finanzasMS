@@ -1157,3 +1157,4 @@ html,body{overflow-x:clip}
 .ult-h{font-size:13px;font-weight:650;color:var(--muted);margin:4px 2px 8px}
 .ult-h span{font-weight:500}
 @media (max-width:640px){ .ult-h span{display:none} .ult-mov .acc-logo{width:32px;height:32px} .ult-mov .acc-logo.hucha svg{width:24px;height:24px} .ult-mov .acc-logo img{width:20px;height:20px} }
+.bud-pend{font-size:11.5px;color:#b45309;font-weight:600;white-space:nowrap}

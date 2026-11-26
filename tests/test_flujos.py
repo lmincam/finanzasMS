@@ -246,3 +246,19 @@ def test_notas(app):
     tit = a.page.locator('.nota-card .nota-tit').all_inner_texts()
     assert tit[:2] == ['Segunda nota', 'Primera nota']                    # de la más nueva a la más antigua
     assert 'Revisar seguro del coche' in a.texto('#tab-notas')         # se ve el principio del texto
+
+
+def test_presupuesto_descuenta_bizum_pendiente(app):
+    a = app
+    r = a.ev("""(() => {
+      const c = S.categorias.find(x => x.tipo === 'gasto' && x.parent_id && !presAnual(x) && !presAnual(catById(x.parent_id)));
+      const g = { id: 'gx', tipo: 'gasto', importe: -150, a_cobrar: 75, categoria_id: c.id, fecha: todayISO(), cuenta_id: S.cuentas[0].id };
+      const ant = budgetRows([g], 1, [mesActual()]).find(x => x.catId === c.id);
+      const dev = { id: 'dx', tipo: 'gasto', importe: 50, reembolso_de: 'gx', categoria_id: c.id, fecha: todayISO(), cuenta_id: S.cuentas[0].id };
+      S.movimientos.push(g, dev);
+      const des = budgetRows([g, dev], 1, [mesActual()]).find(x => x.catId === c.id);
+      S.movimientos = S.movimientos.filter(m => m.id !== 'gx' && m.id !== 'dx');
+      return [ant.spent, ant.pend, des.spent, des.pend];
+    })()""")
+    assert r[0] == 75 and r[1] == 75          # 150 gastados, 75 por cobrar → cuentan 75
+    assert r[2] == 75 and r[3] == 25          # cobrados 50 por Bizum: siguen contando 75 (25 aún por cobrar)
