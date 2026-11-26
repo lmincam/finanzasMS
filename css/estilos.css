@@ -1253,3 +1253,66 @@ html,body{overflow-x:clip}
 .ch-go{cursor:pointer}.ch-go:hover{background:var(--card2)}
 .ch-ver{color:var(--blue);font-weight:600}
 .ch-ok{font-size:12.5px;color:var(--muted);margin-top:10px;line-height:1.5}
+/* ---------- Inicio · selector de periodo (tarjeta única) ---------- */
+.per-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px 14px;margin:2px 0 18px;box-shadow:0 1px 2px rgba(15,23,42,.05);display:flex;flex-direction:column;gap:10px}
+.per-top{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px}
+.per-nav .pin{display:flex;align-items:center;gap:6px}
+.per-nav .pin .btn{width:36px;height:36px;padding:0;justify-content:center;border-radius:10px;font-size:18px}
+.per-nav .mpick{font-size:17px;font-weight:750;padding:6px 12px;border-radius:10px;min-height:36px}
+.per-rng{display:flex;flex-direction:column;line-height:1.25;font-size:12.5px;color:var(--muted);min-width:0}
+.per-rng b{color:var(--txt);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.per-cal-b{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--card2);color:var(--txt);border-radius:12px;padding:0 14px;height:38px;font:inherit;font-size:13.5px;font-weight:650;cursor:pointer}
+.per-cal-b:hover{border-color:var(--blue)}
+.per-cal-b .emo{font-size:16px;line-height:1}
+.per-chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0}
+.per-chips::-webkit-scrollbar{display:none}
+.per-chips button{flex:none;border:1px solid var(--line);background:transparent;color:var(--muted);font:inherit;font-size:13px;font-weight:600;padding:6px 14px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s,border-color .15s}
+.per-chips button:hover{color:var(--txt);border-color:var(--muted2)}
+.per-chips button.active{background:var(--ink);border-color:var(--ink);color:#fff}
+[data-theme="dark"] .per-chips button.active{background:#e2e8f0;border-color:#e2e8f0;color:#0f172a}
+@media (min-width:900px){
+  .per-card{flex-direction:row;align-items:center;justify-content:space-between;gap:18px}
+  .per-top{flex:1 1 auto}
+  .per-chips{flex:none;order:0}
+  .per-card .per-top{order:0}
+}
+@media (max-width:640px){
+  .per-card{padding:10px 10px;border-radius:16px}
+  .per-top{gap:8px}
+  .per-nav .mpick{font-size:15.5px;padding:5px 8px}
+  .per-nav .pin .btn{width:32px;height:32px}
+  .per-rng{font-size:11.5px}
+  .per-cal-b{width:38px;padding:0;justify-content:center}
+  .per-cal-b .t{display:none}
+  .per-chips button{padding:6px 12px;font-size:12.5px}
+}
+/* ---------- Inicio · gastos: total grande + sin capital ---------- */
+.kpi-gas .kg-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.kpi-gas .kg-op{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:10px;padding-top:9px;border-top:1px dashed var(--line);font-size:12.5px;color:var(--muted)}
+.kpi-gas .kg-op b{font-size:15.5px;color:var(--txt);font-variant-numeric:tabular-nums;white-space:nowrap}
+.kpi-gas .kg-bar{height:6px;border-radius:999px;background:#fecaca;overflow:hidden;margin-top:8px}
+.kpi-gas .kg-bar span{display:block;height:100%;background:#dc2626;border-radius:999px}
+.kpi-gas .kg-leg{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted);margin-top:4px;white-space:nowrap}
+.kpi-gas .kg-leg i{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:4px;vertical-align:middle}
+.kpi-gas .kg-leg i.op{background:#dc2626}.kpi-gas .kg-leg i.cap{background:#fecaca}
+@media (max-width:640px){
+  .kpi-gas .kg-sub{display:none}
+  .kpi-gas .kg-op{flex-direction:column;align-items:flex-start;gap:1px;font-size:11px}
+  .kpi-gas .kg-op b{font-size:14.5px}
+  .kpi-gas .kg-leg{flex-direction:column;gap:1px}
+}
+.per-chips .sm{display:none}
+.kpi-ing .ki-list{display:flex;flex-direction:column;gap:3px;margin-top:10px;padding-top:9px;border-top:1px dashed var(--line);font-size:12.5px;color:var(--muted)}
+.kpi-ing .ki-list div{display:flex;justify-content:space-between;gap:8px}
+.kpi-ing .ki-list span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kpi-ing .ki-list b{color:var(--txt);font-variant-numeric:tabular-nums;white-space:nowrap}
+.kpi-gas .kg-leg{padding-right:16px}
+.kpi-ing .s{display:block}
+@media (max-width:640px){
+  .per-top{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"nav cal" "rng rng";row-gap:4px}
+  .per-nav{grid-area:nav}.per-cal-b{grid-area:cal}.per-rng{grid-area:rng;flex-direction:row;gap:8px;padding-left:2px}
+  .per-chips{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;overflow:visible}
+  .per-chips button{padding:6px 0;font-size:12.5px}
+  .per-chips .lg{display:none}.per-chips .sm{display:inline}
+  .kpi-ing .ki-list{font-size:11px}
+}

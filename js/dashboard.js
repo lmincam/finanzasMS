@@ -34,7 +34,7 @@ function renderDashboard() {
   const tasaInv = st.ingresos > 0 ? st.aport.inversion / st.ingresos : null;
   const nM = months.length;
   const p = S.period;
-  const modes = [['mes', 'Mes'], ['2m', '2 meses'], ['3m', '3 meses'], ['6m', '6 meses'], ['anio', 'Año'], ['custom', 'Personalizado']];
+  const modes = [['mes', 'Mes'], ['2m', '2<span class="lg"> meses</span><span class="sm"> m</span>'], ['3m', '3<span class="lg"> meses</span><span class="sm"> m</span>'], ['6m', '6<span class="lg"> meses</span><span class="sm"> m</span>'], ['anio', 'Año'], ['custom', 'Rango']];
   // Selector de mes: ‹ [noviembre 2026] ›. El texto es un botón; encima va un <input type=month> invisible que abre el selector nativo.
   const mesPick = (id, val, txt) => `<button type="button" class="mpick" data-action="mes-pick" data-id="${id}" data-v="${val}" aria-label="Elegir mes"><span>${txt}</span></button>`;
   const inputs = p.mode === 'custom'
@@ -67,23 +67,36 @@ function renderDashboard() {
   el.innerHTML = `
     ${snapshotBanner()}
     ${bannerCierre()}
-    <div class="per-bar">
-      <div class="seg per-modes">${modes.map(([k, l]) => `<button data-action="period-mode" data-mode="${k}" class="${p.mode === k ? 'active' : ''}">${l}</button>`).join('')}</div>
-      <div class="per-sel">
-        ${inputs}
-        <div class="per-info">${p.mode !== 'mes' ? `<span class="period-label">${periodLabel(months)}</span><br>` : ''}<span class="small muted" title="${mesNominaActivo() ? 'Mes de nómina: de un cobro al día antes del siguiente' : 'Meses naturales'}">${fmtDate(rangoCiclo(months[0]).ini)} – ${finCicloTxt(months[months.length - 1])}</span></div>
+    <div class="per-card">
+      <div class="per-top">
+        <div class="per-nav">${inputs}</div>
+        <div class="per-rng" title="${mesNominaActivo() ? 'Mes de nómina: de un cobro al día antes del siguiente' : 'Meses naturales'}">${p.mode !== 'mes' && p.mode !== 'anio' ? `<b>${periodLabel(months)}</b>` : ''}<span>${fmtDate(rangoCiclo(months[0]).ini).slice(0, 5)} – ${cicloAbierto(months[months.length - 1]) ? 'próxima nómina' : fmtDate(rangoCiclo(months[months.length - 1]).fin).slice(0, 5)}</span></div>
+        <button class="per-cal-b" data-action="cal-open" data-noico title="Ver los gastos de cada día"><span class="emo">📅</span><span class="t">Calendario</span></button>
       </div>
-      <button class="btn primary per-cal" data-action="cal-open" data-noico title="Ver los gastos de cada día"><span class="emo">📅</span> Calendario</button>
+      <div class="per-chips" role="tablist">${modes.map(([k, l]) => `<button role="tab" data-action="period-mode" data-mode="${k}" class="${p.mode === k ? 'active' : ''}" aria-selected="${p.mode === k}">${l}</button>`).join('')}</div>
     </div>
 
     <div class="kpi-grid">
-        ${kpiLink('ingresos', 'Ingresos <button class="info-btn" data-action="kpi-info" data-k="ingresos" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(st.ingresos), '', 'pos')}
-        ${kpiLink('gastos', 'Gastos <button class="info-btn" data-action="kpi-info" data-k="gastos" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(st.gastosCaja), 'Todo lo salido de cuenta', 'neg')}
-        ${kpiLink('gastos', 'Gastos sin capital <button class="info-btn" data-action="kpi-info" data-k="gastos" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(st.gastos), st.capital > 0 ? `Sin los ${fmtEUR(st.capital)} de capital amortizado` : 'Sin capital de deuda en el periodo', 'neg')}
+        ${kpiLink('ingresos', 'Ingresos <button class="info-btn" data-action="kpi-info" data-k="ingresos" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(st.ingresos), (() => {
+          // De dónde vienen: las 3 categorías principales de ingreso del periodo
+          const por = {}; for (const m of st.movs) if (m.tipo === 'ingreso') { const c = catById(m.categoria_id), r = c && c.parent_id ? catById(c.parent_id) : c, k = r ? r.nombre : 'Sin categoría'; por[k] = (por[k] || 0) + num(m.importe); }
+          const xs = Object.entries(por).filter(([, v]) => v > 0.005).sort((a, b) => b[1] - a[1]).slice(0, 3);
+          return xs.length ? `<div class="ki-list">${xs.map(([n, v]) => `<div><span>${esc(n)}</span><b>${sinCent(fmtEUR(v))}</b></div>`).join('')}</div>` : ''; })(), 'pos kpi-ing')}
+        <div class="kpi neg clickable kpi-gas" data-action="dash-detalle" data-k="gastos" role="button" tabindex="0" title="Ver el detalle">
+          <div class="l">Gastos <button class="info-btn" data-action="kpi-info" data-k="gastos" title="¿De dónde sale este dato?">ⓘ</button></div>
+          <div class="v">${sinCent(fmtEUR(st.gastosCaja))}</div>
+          <div class="kg-sub">Todo lo que ha salido de las cuentas</div>
+          <div class="kg-op"><span>Sin capital amortizado</span><b>${sinCent(fmtEUR(st.gastos))}</b></div>
+          ${st.capital > 0 ? `<div class="kg-bar" title="Gasto operativo y capital amortizado"><span style="width:${Math.max(0, Math.min(100, st.gastos / st.gastosCaja * 100)).toFixed(1)}%"></span></div><div class="kg-leg"><span><i class="op"></i>Gasto ${fmtPct(st.gastos / st.gastosCaja, 0)}</span><span><i class="cap"></i>Capital ${sinCent(fmtEUR(st.capital))}</span></div>` : ''}
+          <span class="kpi-arrow">›</span></div>
         ${(() => { const pos = st.ahorro >= 0, tit = nM === 1 ? 'Balance mensual' : `Balance · ${nM} meses`;
-          return `<div class="kpi kpi-bal ${pos ? 'bal-pos' : 'bal-neg'}">
-            <div class="l">${tit} <button class="info-btn" data-action="kpi-info" data-k="ahorro" title="¿De dónde sale este dato?">ⓘ</button></div><div class="v">${pos ? '+' : ''}${fmtEUR(st.ahorro)}</div>
-            <div class="bal-mini"><span>${fmtEUR(st.ingresos, 0)} ingresos</span><span>− ${fmtEUR(st.gastosCaja, 0)} gastos</span></div></div>`; })()}
+          return `<div class="kpi kpi-wide ${pos ? 'bal-pos' : 'bal-neg'}">
+            <div class="bal-main"><div class="l">${tit} <button class="info-btn" data-action="kpi-info" data-k="ahorro" title="¿De dónde sale este dato?">ⓘ</button></div><div class="v">${pos ? '+' : ''}${fmtEUR(st.ahorro)}</div></div>
+            <div class="bal-calc">
+              <div><span>Ingresos</span><b>${fmtEUR(st.ingresos)}</b></div>
+              <div><span>− Gastos (salido de cuenta)</span><b>${fmtEUR(st.gastosCaja)}</b></div>
+              <div class="tot"><span>= Balance</span><b>${pos ? '+' : ''}${fmtEUR(st.ahorro)}</b></div>
+            </div></div>`; })()}
         ${kpi('Tasa de ahorro <button class="info-btn" data-action="kpi-info" data-k="tasa-ahorro" title="¿De dónde sale este dato?">ⓘ</button>', fmtPct(tasaAh), '', 'yellow')}
         ${kpi('Tasa de inversión <button class="info-btn" data-action="kpi-info" data-k="inversion" title="¿De dónde sale este dato?">ⓘ</button>', fmtPct(tasaInv), '', 'yellow')}
         ${kpi('Liquidez disponible <button class="info-btn" data-action="kpi-info" data-k="liquidez" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(P.liquidez, 0), '', 'sky')}

@@ -1,5 +1,11 @@
 # Historial de versiones
 
+## 5.28.1 — 26/11/2026 · Inicio: periodo, gastos y balance
+- Selector de periodo rediseñado: una sola tarjeta con el mes (‹ ›), su rango y el calendario arriba, y los periodos como pastillas (Mes · 2 · 3 · 6 meses · Año · Rango); en el móvil caben todas en una fila.
+- Gastos en una sola tarjeta: en grande lo que ha salido de las cuentas y debajo el gasto sin capital amortizado, con una barra que separa gasto y capital.
+- Ingresos muestra de dónde vienen (principales categorías).
+- Balance vuelve a ocupar el doble, con la cuenta Ingresos − Gastos = Balance.
+
 ## 5.28.0 — 26/11/2026 · Revisión completa
 - Nuevo: Ajustes › **Revisar mis datos**. Repasa tus datos reales y avisa de duplicados, transferencias sin pareja o descuadradas, devoluciones huérfanas o mayores que el gasto, gastos en positivo sin vincular, ingresos negativos, movimientos de cuentas o categorías borradas, sin categoría, con fecha futura, imputados a meses lejanos o que no suman al saldo, cuentas del día a día en negativo y préstamos que no cuadran. Cada aviso lleva al movimiento o préstamo.
 - Corregido: la garantía de las pertenencias salía un día antes (desfase horario de España).
