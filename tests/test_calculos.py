@@ -110,3 +110,18 @@ def test_hipoteca_act360_cuadra_con_recibos_del_banco(app, tin, base, p0, pend, 
     assert abs(r['pend'] - pend) < 0.01
     # Diciembre (30 días de noviembre): 112745,31 × 1,875 % × 30 / 360
     assert r['sig']['ym'] == '2026-12' and r['sig']['interes'] == round(pend * tin / 100 * 30 / dias, 2)
+
+
+def test_hipoteca_cuotas_anteriores_al_dato_del_banco(app):
+    # Mismo caso real, pero con el pendiente del banco tras el último recibo: las cuotas pasadas se reconstruyen hacia atrás
+    banco = [("2025-09-01",237.68,187.94),("2025-10-01",244.12,181.50),("2025-11-03",238.46,187.16),("2025-12-01",244.87,180.75),("2026-01-02",239.24,186.38),("2026-02-02",239.63,185.99),("2026-03-02",257.98,167.64),("2026-04-01",240.43,185.19),("2026-05-04",246.78,178.84),("2026-06-01",241.22,184.40),("2026-07-01",247.54,178.08),("2026-08-03",242.01,183.61),("2026-09-01",242.40,183.22),("2026-10-01",248.69,176.93),("2026-11-02",243.19,182.43)]
+    movs = [{"id": f"hc{i}", "cuenta_id": "a", "fecha": f, "importe": -425.62, "tipo": "gasto", "categoria_id": "gHC", "concepto": "Hipoteca"} for i, (f, _, _) in enumerate(banco)]
+    import json
+    r = app.ev("""(movs => { S.categorias.push({id:'gHC',tipo:'gasto',nombre:'Hipoteca C',parent_id:null}); S.movimientos.push(...movs);
+      const d = {id:'dHC',nombre:'Hipoteca',tipo:'prestamo',interes:1.9,base_interes:'act/365',cuota_mensual:425.62,capital_pendiente:112808.32,fecha_capital_pendiente:'2026-11-01',categoria_cuota_id:'gHC',activa:true};
+      S.deudas.push(d); _deudaCache.clear();
+      return { atras: ledgerAtras(d).map(p => p.interes), cap: movs.map(m => capitalDeMovimiento(m)), fwd: ledgerDeuda(d).pagos.filter(p => p.real).length }; })""" + f"({json.dumps(movs)})")
+    difs = [abs(a - b[2]) for a, b in zip(r['atras'], banco)]
+    assert len(r['atras']) == 15 and max(difs) <= 0.01
+    assert max(abs(c - b[1]) for c, b in zip(r['cap'], banco)) <= 0.01
+    assert r['fwd'] == 0  # el recibo del 1/11 ya está en el dato del banco: no se cuenta dos veces

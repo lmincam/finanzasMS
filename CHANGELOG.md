@@ -1,5 +1,9 @@
 # Historial de versiones
 
+## 5.30.1 — 26/11/2026 · Cada cuota con su interés y capital reales
+- Hipoteca: se ajusta una sola vez a los recibos de Unicaja (TIN 1,90 %, días reales/365, pendiente 112.808,32 € a 01/11/2026).
+- Las cuotas anteriores al dato del banco ya no se estiman con una media: se reconstruyen hacia atrás desde ese pendiente con la regla del banco, así cada cargo tiene su interés y su capital exactos (validado con 15 recibos reales, diferencia ≤ 1 céntimo). Esto corrige el «capital amortizado» de Inicio y Patrimonio.
+
 ## 5.30.0 — 26/11/2026 · Intereses calculados como el banco
 - Préstamos con «Días reales / 360» (o /365): los intereses de cada recibo se calculan con los días entre vencimientos (p. ej. del 1 al 1), no entre fechas de cargo, y se redondean al céntimo cada mes, igual que el banco. Validado céntimo a céntimo con 15 recibos reales de Unicaja (TIN 1,875 %).
 - La previsión de cuotas futuras y el tramo teórico de la tabla usan el mismo método.

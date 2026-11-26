@@ -157,6 +157,10 @@ function filasAmortizacion(d) {
       rows.push({ n: nDe(ym), ym, fecha: cg ? cg.fecha : fechaEn(ym), cuota: c, cobrado: cg ? cg.imp : null, interes: int, capital: cap, pendiente: Math.max(0, P), tipo: 'teorico' });
     }
   }
+  // 1b) Cuotas cobradas antes del dato del banco: reparto real reconstruido hacia atrás (sustituye al teórico)
+  for (const p of ledgerAtras(d)) { const i = rows.findIndex(x => x.ym === p.ym); const f = { n: nDe(p.ym), ym: p.ym, fecha: p.fecha, cuota: null, cobrado: p.importe, interes: p.interes, capital: p.capital, pendiente: p.pendiente, tipo: 'real' };
+    if (i >= 0) rows[i] = f; else rows.push(f); }
+  rows.sort((a, b) => a.ym < b.ym ? -1 : a.ym > b.ym ? 1 : 0);
   // 2) Real desde el dato del banco
   for (const p of L.pagos) rows.push({ n: p.extra ? null : nDe(ymOf(p.fecha)), ym: ymOf(p.fecha), fecha: p.fecha, cuota: p.extra ? null : (p.real ? null : p.importe), cobrado: p.real ? p.importe : null, interes: p.interes, capital: p.capital, pendiente: p.pendiente, tipo: p.extra ? 'extra' : p.real ? 'real' : 'estimada' });
   // 3) Previsto
@@ -435,4 +439,21 @@ Object.assign(Actions, {
   'dv-esc': el => { S.deudaVista.esc = el.dataset.v; render(); },
   'dv-modo': el => { S.deudaVista.modo = el.dataset.v; render(); },
   'dv-anual': el => { S.deudaVista.anual = el.dataset.v === '1'; render(); }
+});
+/* Ajuste único (5.30.1): hipoteca de Unicaja con los datos deducidos de los recibos reales del banco.
+   Cuota 425,62 €, TIN 1,90 %, días reales entre vencimientos / 365; pendiente tras el recibo del 01/11/2026 ≈ 112.808,32 €. */
+AfterLoad.push(async () => {
+  const CLAVE = 'fix_hipoteca_5301';
+  if ((S.ajustesRows || []).some(r => r.clave === CLAVE) || !S.deudas) return;
+  const hips = S.deudas.filter(d => d.activa !== false && Math.abs(num(d.cuota_mensual) - 425.62) < 0.01);
+  const d = hips.length === 1 ? hips[0] : null;
+  if (d) {
+    const patch = { interes: 1.9, base_interes: 'act/365' };
+    if (!d.fecha_capital_pendiente || d.fecha_capital_pendiente < '2026-11-01') Object.assign(patch, { capital_pendiente: 112808.32, fecha_capital_pendiente: '2026-11-01' });
+    await DB.update('deudas', d.id, patch); Object.assign(d, patch); _deudaCache = new Map();
+  }
+  const valor = { aplicado: !!d, fecha: todayISO() };
+  await DB.upsert('ajustes', { clave: CLAVE, valor, updated_at: new Date().toISOString() }, 'clave');
+  (S.ajustesRows = S.ajustesRows || []).push({ clave: CLAVE, valor });
+  if (d) { toast('Hipoteca ajustada a los recibos del banco: TIN 1,90 % · días reales/365', 'ok', 5000); if (typeof render === 'function') render(); }
 });

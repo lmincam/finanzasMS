@@ -174,6 +174,37 @@ function ledgerDeuda(d, base = d.base_interes || '30/360', hasta = todayISO()) {
   return out;
 }
 
+/** Cuotas ANTERIORES al dato del banco, reconstruidas hacia atrás desde ese pendiente con la misma regla del banco
+    (cuota = intereses del periodo + capital). Así cada cargo pasado tiene su interés y capital, no una estimación media. */
+function ledgerAtras(d) {
+  const key = `A|${d.id}`;
+  if (_deudaCache.has(key)) return _deudaCache.get(key);
+  const out = [], tiene = d.capital_pendiente !== null && d.capital_pendiente !== undefined && d.capital_pendiente !== '';
+  const cat = categoriaCuota(d);
+  if (tiene && d.fecha_capital_pendiente && cat && num(d.interes) > 0) {
+    const base = d.base_interes || '30/360', act = base === 'act/360' || base === 'act/365', B = base === 'act/365' ? 365 : 360, tin = num(d.interes) / 100;
+    const f0 = d.fecha_capital_pendiente;
+    const todos = S.movimientos.filter(m => m.tipo === 'gasto' && m.categoria_id === cat && num(m.importe) < 0 && deudaDeMovimiento(m) === d).sort((a, b) => a.fecha < b.fecha ? -1 : 1);
+    const dV = diaRecibo(d, todos);
+    // Un cargo ya está incluido en el dato del banco si su vencimiento es anterior o igual a esa fecha
+    const previos = todos.filter(m => (act ? vencimiento(ymOf(m.fecha), dV) : m.fecha) <= f0).reverse();
+    const extras = (S.amortizaciones || []).filter(a => a.deuda_id === d.id && a.fecha <= f0).sort((a, b) => a.fecha < b.fecha ? 1 : -1);
+    let P = num(d.capital_pendiente), ie = 0;
+    for (const m of previos) {
+      while (ie < extras.length && extras[ie].fecha > m.fecha) P = round2(P + num(extras[ie++].importe));
+      const ym = ymOf(m.fecha), imp = -num(m.importe);
+      const k = act ? tin * diasEntre(vencimiento(addMonths(ym, -1), dV), vencimiento(ym, dV)) / B : tin / 12;
+      const antes = (P + imp) / (1 + k), interes = round2(Math.min(imp, antes * k)), capital = round2(imp - interes);
+      out.push({ id: m.id, ym, fecha: m.fecha, importe: imp, interes, capital, pendiente: round2(P) });
+      P = round2(P + capital);
+      if (d.capital_inicial && P > num(d.capital_inicial) + 1) break;
+    }
+  }
+  out.reverse();
+  _deudaCache.set(key, out);
+  return out;
+}
+
 function deudaInfo(d) {
   if (_deudaCache.has(d.id)) return _deudaCache.get(d.id);
   const today = todayISO();
@@ -367,6 +398,8 @@ function capitalDeMovimiento(m) {
   // Si la cuota está en el cuadro calculado desde el último dato del banco, se usa ese reparto (el mismo que da el pendiente)
   const e = ledgerDeuda(d).pagos.find(p => p.ids.includes(m.id));
   if (e) return e.importe ? round2(e.capital * abs / e.importe) : 0;
+  const atras = ledgerAtras(d).find(p => p.id === m.id);
+  if (atras) return atras.importe ? round2(atras.capital * abs / atras.importe) : 0;
   // La cuota que deja el capital en el dato del banco (copiado justo después de pagarla): se deduce hacia atrás
   const tiene = d.capital_pendiente !== null && d.capital_pendiente !== undefined && d.capital_pendiente !== '';
   if (tiene && d.fecha_capital_pendiente && m.fecha <= d.fecha_capital_pendiente && diasEntre(m.fecha, d.fecha_capital_pendiente) <= 25) {
