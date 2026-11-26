@@ -125,3 +125,18 @@ def test_hipoteca_cuotas_anteriores_al_dato_del_banco(app):
     assert len(r['atras']) == 15 and max(difs) <= 0.01
     assert max(abs(c - b[1]) for c, b in zip(r['cap'], banco)) <= 0.01
     assert r['fwd'] == 0  # el recibo del 1/11 ya está en el dato del banco: no se cuenta dos veces
+
+
+def test_prestamo_autocaravana_act365_dia_23(app):
+    banco = [("2026-02-23",345.03,347.24),("2026-03-23",380.88,311.39),("2026-04-23",350.27,342.00),("2026-05-25",363.75,328.52),("2026-06-23",355.42,336.85),("2026-07-23",368.77,323.50),("2026-08-24",360.65,331.62),("2026-09-23",363.25,329.02),("2026-10-23",376.41,315.86),("2026-11-23",368.59,323.68)]
+    movs = [{"id": f"ac{i}", "cuenta_id": "a", "fecha": f, "importe": -692.27, "tipo": "gasto", "categoria_id": "gAC", "concepto": "Préstamo autocaravana"} for i, (f, _, _) in enumerate(banco)]
+    import json
+    base = """(movs => { S.categorias.push({id:'gAC',tipo:'gasto',nombre:'Autocaravana',parent_id:null}); S.movimientos.push(...movs);
+      const d = {id:'dAC',nombre:'Autocaravana',tipo:'prestamo',interes:8.5,base_interes:'act/365',cuota_mensual:692.27,capital_inicial:48100,fecha_inicio:'2026-01-23',plazo_meses:84,ANCLA,categoria_cuota_id:'gAC',activa:true};
+      S.deudas.push(d); _deudaCache.clear(); return movs.map(m => [capitalDeMovimiento(m), Math.abs(m.importe) - capitalDeMovimiento(m)]); })"""
+    # Desde la formalización (hacia delante) y desde el pendiente tras el último recibo (hacia atrás)
+    for ancla in ("capital_pendiente:48100,fecha_capital_pendiente:'2026-01-23'", "capital_pendiente:44466.98,fecha_capital_pendiente:'2026-11-23'"):
+        app.ev("S.deudas = S.deudas.filter(d => d.id !== 'dAC'); S.movimientos = S.movimientos.filter(m => m.categoria_id !== 'gAC')")
+        r = app.ev(base.replace('ANCLA', ancla) + f"({json.dumps(movs)})")
+        assert max(abs(c - b[1]) for (c, _), b in zip(r, banco)) <= 0.01, (ancla, r)
+        assert max(abs(i - b[2]) for (_, i), b in zip(r, banco)) <= 0.011, (ancla, r)

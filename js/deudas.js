@@ -457,3 +457,21 @@ AfterLoad.push(async () => {
   (S.ajustesRows = S.ajustesRows || []).push({ clave: CLAVE, valor });
   if (d) { toast('Hipoteca ajustada a los recibos del banco: TIN 1,90 % · días reales/365', 'ok', 5000); if (typeof render === 'function') render(); }
 });
+/* Ajuste único (5.30.2): préstamo de la autocaravana según sus recibos reales.
+   48.100 € formalizado el 23/01/2026, cuota 692,27 €, TIN 8,50 %, días reales entre vencimientos (día 23) / 365;
+   pendiente tras el recibo del 23/11/2026: 44.466,98 €. */
+AfterLoad.push(async () => {
+  const CLAVE = 'fix_autocaravana_5302';
+  if ((S.ajustesRows || []).some(r => r.clave === CLAVE) || !S.deudas) return;
+  const xs = S.deudas.filter(d => d.activa !== false && Math.abs(num(d.cuota_mensual) - 692.27) < 0.01);
+  const d = xs.length === 1 ? xs[0] : null;
+  if (d) {
+    const patch = { interes: 8.5, base_interes: 'act/365' };
+    if (!d.fecha_capital_pendiente || d.fecha_capital_pendiente < '2026-11-23') Object.assign(patch, { capital_pendiente: 44466.98, fecha_capital_pendiente: '2026-11-23' });
+    await DB.update('deudas', d.id, patch); Object.assign(d, patch); _deudaCache = new Map();
+  }
+  const valor = { aplicado: !!d, fecha: todayISO() };
+  await DB.upsert('ajustes', { clave: CLAVE, valor, updated_at: new Date().toISOString() }, 'clave');
+  (S.ajustesRows = S.ajustesRows || []).push({ clave: CLAVE, valor });
+  if (d) { toast('Préstamo de la autocaravana ajustado a los recibos: TIN 8,50 % · días reales/365', 'ok', 5000); if (typeof render === 'function') render(); }
+});

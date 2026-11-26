@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.30.2 — 26/11/2026 · Préstamo de la autocaravana cuadrado
+- Se ajusta una sola vez a sus recibos: TIN 8,50 %, días reales entre vencimientos (día 23) / 365, pendiente 44.466,98 € a 23/11/2026. Validado con los 10 recibos reales al céntimo.
+
 ## 5.30.1 — 26/11/2026 · Cada cuota con su interés y capital reales
 - Hipoteca: se ajusta una sola vez a los recibos de Unicaja (TIN 1,90 %, días reales/365, pendiente 112.808,32 € a 01/11/2026).
 - Las cuotas anteriores al dato del banco ya no se estiman con una media: se reconstruyen hacia atrás desde ese pendiente con la regla del banco, así cada cargo tiene su interés y su capital exactos (validado con 15 recibos reales, diferencia ≤ 1 céntimo). Esto corrige el «capital amortizado» de Inicio y Patrimonio.
