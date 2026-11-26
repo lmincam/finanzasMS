@@ -1350,3 +1350,4 @@ html,body{overflow-x:clip}
 .pz-sel .p{font-size:20px;font-variant-numeric:tabular-nums}
 .pz-sel .v{font-size:16px;font-weight:650;font-variant-numeric:tabular-nums}
 .pz-sel .t{font-size:12px;color:var(--muted)}
+.cap-card .cap-como{white-space:normal;max-width:300px;font-size:11px}.cap-card tr.tot td{border-top:2px solid var(--line)}

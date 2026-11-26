@@ -40,6 +40,7 @@ function renderDetalle(el, months) {
       ${esG ? kpi('Todos los cargos', fmtEUR(st.gastosCaja + devolTot), devolTot ? `− ${fmtEUR(devolTot)} devueltos por amigos (Bizum)` : 'Sin devoluciones', '') : ''}
       ${esG && st.capital > 0 ? kpi('Capital amortizado', fmtEUR(st.capital), 'No es gasto: reduce tu deuda', 'navy') : ''}
     </div>
+    ${esG && st.capital > 0 ? desgloseCapital(st) : ''}
     <div class="card"><div class="card-head"><h3>Por categoría</h3><span class="sub">${esG ? 'Gasto neto: cargos − devoluciones − capital de deuda' : 'Por mes de imputación'}</span></div>
       ${lista.length ? `<div class="det-cats">${lista.map(g => {
         const nota = [g.cap > 0 ? `${fmtEUR(g.bruto)} − ${fmtEUR(g.cap)} capital` : '', g.devol > 0 ? `${fmtEUR(g.bruto)} − ${fmtEUR(g.devol)} devuelto` : ''].filter(Boolean).join(' · ');
@@ -109,3 +110,25 @@ Object.assign(Actions, {
       } });
   }
 });
+
+/** Cuota a cuota: de dónde sale el capital amortizado del periodo, para compararlo con los recibos del banco. */
+function desgloseCapital(st) {
+  const filas = st.movs.filter(m => m.tipo === 'gasto' && num(m.importe) < 0).map(m => ({ m, cap: capitalDeMovimiento(m) })).filter(x => x.cap > 0.004)
+    .sort((a, b) => a.m.fecha < b.m.fecha ? -1 : 1);
+  if (!filas.length) return '';
+  const info = ({ m, cap }) => {
+    const abs = Math.abs(num(m.importe));
+    if (esCatAmortizacion(m.categoria_id)) return { d: null, como: 'Amortización anticipada: todo es capital', int: 0 };
+    const d = deudaDeMovimiento(m), L = d ? ledgerDeuda(d) : null, e = L && L.pagos.find(p => p.ids.includes(m.id));
+    const como = e ? `Calculado desde el dato del banco (${fmtDate(d.fecha_capital_pendiente || d.fecha_inicio)}) · TIN ${fmtNum(num(d.interes), 2)} % · ${BASES_INTERES[d.base_interes || '30/360']}`
+      : d ? `Estimado (cuota anterior al dato del banco) · TIN ${fmtNum(num(d.interes), 2)} %` : '—';
+    return { d, como, int: round2(abs - cap) };
+  };
+  const tot = sum(filas, 'cap');
+  return `<div class="card cap-card"><div class="card-head"><div><h3>De dónde sale el capital amortizado</h3>
+      <div class="small muted">Compara cada cuota con su recibo del banco. Si los <b>intereses</b> no coinciden, revisa el TIN y la base de cálculo del préstamo (✎ Editar) o pulsa «Comparar con el banco» en el préstamo.</div></div></div>
+    <div class="tbl-wrap tbl-scroll"><table class="tbl tbl-nowrap"><thead><tr><th>Fecha</th><th>Préstamo</th><th class="right">Cuota</th><th class="right">Intereses</th><th class="right">Capital</th></tr></thead><tbody>
+    ${filas.map(x => { const I = info(x); return `<tr title="${esc(I.como)}"><td>${fmtDate(x.m.fecha)}</td><td>${esc(I.d ? I.d.nombre : (catName(x.m.categoria_id) || '—'))}<div class="small muted cap-como">${esc(I.como)}</div></td>
+      <td class="right num">${fmtEUR(Math.abs(num(x.m.importe)))}</td><td class="right num neg">${fmtEUR(I.int)}</td><td class="right num pos"><b>${fmtEUR(x.cap)}</b></td></tr>`; }).join('')}
+    <tr class="tot"><td colspan="4"><b>Total capital amortizado</b></td><td class="right num pos"><b>${fmtEUR(tot)}</b></td></tr></tbody></table></div></div>`;
+}

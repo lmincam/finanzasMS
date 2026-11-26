@@ -1,5 +1,9 @@
 # Historial de versiones
 
+## 5.28.8 — 26/11/2026 · De dónde sale el capital amortizado
+- Detalle de gastos: nueva tabla cuota a cuota con el préstamo, la cuota, los intereses y el capital que calcula la app y cómo lo calcula (TIN, base, dato del banco), para compararla con los recibos.
+- Préstamos: aviso si no tienen TIN (la app contaba toda la cuota como capital).
+
 ## 5.28.7 — 26/11/2026 · Ajuste fino
 - Inicio móvil: Liquidez y Patrimonio suben unos píxeles para no quedar pegados a la barra inferior.
 

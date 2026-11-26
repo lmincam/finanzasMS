@@ -124,6 +124,7 @@ function renderCuotasReales(d) {
 function avisosCuadreDeuda(d, L = ledgerDeuda(d)) {
   const out = [], cat = categoriaCuota(d), I = deudaInfo(d);
   if (!cat) out.push(`La cuota no está vinculada a ninguna categoría (✎ Editar › <b>Categoría donde se registra la cuota</b>). Sin eso, Inicio cuenta la cuota entera como gasto y aquí el pendiente se calcula con cuotas <i>estimadas</i>, no con lo que de verdad se ha cobrado.`);
+  if (!num(d.interes)) out.push(`No tiene <b>TIN</b> (tipo de interés) puesto: la app considera que toda la cuota es capital, así que el capital amortizado sale más alto de lo real. Pon el TIN de tu contrato o recibo en ✎ Editar.`);
   const est = L.pagos.filter(p => !p.real && !p.extra).length;
   if (cat && est) out.push(`${est} cuota${est > 1 ? 's' : ''} sin cargo registrado en la categoría (sale${est > 1 ? 'n' : ''} como «estimada»). Si ya se cobraron, impórtalas o revisa que estén en <b>${esc(catName(cat))}</b>.`);
   const grandes = L.pagos.filter(p => p.real && !p.extra && I.cuota && p.importe > I.cuota * 1.4);
