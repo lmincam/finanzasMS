@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.27.4 — 26/11/2026 · Barra de abajo fija en el iPhone
+- Móvil: la barra de navegación inferior ya no se desplaza al llegar al final de la página (se desactiva el rebote de iOS y la barra va en su propia capa).
+
 ## 5.27.3 — 26/11/2026 · Seguros al mes
 - Seguros: cada póliza muestra en grande lo que equivale al mes; bajo el coste anual total sale el total al mes, y cada grupo por tipo indica €/mes y €/año.
 
