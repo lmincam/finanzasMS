@@ -1,5 +1,10 @@
 # Historial de versiones
 
+## 5.27.5 — 26/11/2026 · Préstamos: capital pendiente que cuadra con Inicio
+- Las amortizaciones anticipadas registradas después del último dato del banco ya bajan el capital pendiente (antes solo lo hacían si al registrarlas se marcaba «actualizar el préstamo»), y aparecen en la tabla de cuotas.
+- Si dos préstamos comparten la categoría de la cuota, cada cargo se asigna al de cuota más parecida (antes los dos contaban el mismo cargo y el pendiente bajaba el doble).
+- Cada préstamo avisa de lo que puede descuadrar Inicio y el pendiente: cuota sin categoría vinculada, cuotas sin cargo registrado («estimadas»), cargos mayores que la cuota en esa categoría, categoría compartida y amortizaciones pagadas sin registrar. En la lista, «⚠ revisar».
+
 ## 5.27.4 — 26/11/2026 · Barra de abajo fija en el iPhone
 - Móvil: la barra de navegación inferior ya no se desplaza al llegar al final de la página (se desactiva el rebote de iOS y la barra va en su propia capa).
 

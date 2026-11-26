@@ -1238,3 +1238,4 @@ html,body{overflow-x:clip}
   .bottomnav{transform:translate3d(0,0,0);-webkit-transform:translate3d(0,0,0);backface-visibility:hidden;will-change:transform}
   body{min-height:100dvh}
 }
+.deu-avisos ul{margin:6px 0 0;padding-left:18px;line-height:1.5}.deu-avisos li{margin-bottom:4px}

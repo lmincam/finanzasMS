@@ -337,3 +337,16 @@ def test_mayores_gastos_netos_de_devoluciones(app):
     top = a.page.locator('.top-list .it b').all_inner_texts()
     assert top.index('Compra mayor') < top.index('Cena grande')      # 750 > 1000 − 500
     assert 'Bizum' not in top
+
+
+def test_amortizacion_sin_actualizar_baja_el_pendiente(app):
+    """Una amortización anticipada registrada después del dato del banco tiene que bajar el capital pendiente (y subir el patrimonio)."""
+    a = app
+    r = a.ev("""(() => { const d = S.deudas.find(x => x.activa !== false && num(x.interes) > 0); if (!d) return null;
+      _deudaCache = new Map(); const antes = deudaInfo(d).pendienteHoy;
+      S.amortizaciones = (S.amortizaciones || []).concat([{ id: 'ax', deuda_id: d.id, fecha: todayISO(), importe: 3000 }]);
+      _deudaCache = new Map(); const despues = deudaInfo(d).pendienteHoy;
+      S.amortizaciones = S.amortizaciones.filter(x => x.id !== 'ax'); _deudaCache = new Map();
+      return [antes, despues]; })()""")
+    assert r is not None
+    assert abs((r[0] - r[1]) - 3000) < 1

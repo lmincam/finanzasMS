@@ -79,7 +79,7 @@ function renderDeudas() {
     ${A.length ? `<div class="card"><div class="card-head"><h3>Evolución prevista de la deuda</h3><span class="sub">Capital pendiente a final de cada año</span></div><div class="chart-box sm"><canvas id="ch-deu-global"></canvas></div></div>` : ''}
     <div class="grid-2e">${infos.map(({ d: x, I }) => `
       <div class="card" style="margin-bottom:0;cursor:pointer" data-action="deu-open" data-id="${x.id}">
-        <div class="asset-head"><div class="asset-ico">🏦</div><div style="flex:1"><h3>${esc(x.nombre)} ${x.activa === false ? '<span class="badge">Cancelada</span>' : ''}</h3>
+        <div class="asset-head"><div class="asset-ico">🏦</div><div style="flex:1"><h3>${esc(x.nombre)} ${x.activa === false ? '<span class="badge">Cancelada</span>' : ''}${x.activa !== false && (num(x.interes) || num(x.cuota_mensual)) && avisosCuadreDeuda(x).length ? ' <span class="badge amber" title="Hay algo que revisar para que el pendiente sea el real: entra en el préstamo">⚠ revisar</span>' : ''}</h3>
           <div class="small muted">${TIPO_DEUDA[x.tipo] || ''}${x.entidad ? ' · ' + esc(x.entidad) : ''} · ${x.tipo_interes || 'fijo'} ${fmtNum(num(x.interes), 2)} %</div></div>
           <span class="btn sm">Ver detalle</span></div>
         <div class="metrics">
@@ -111,13 +111,30 @@ function renderCuotasReales(d) {
   if (!num(d.interes) && !num(d.cuota_mensual)) return '';
   const L = ledgerDeuda(d), xs = L.pagos.slice(-12).reverse();
   const tiene = d.capital_pendiente !== null && d.capital_pendiente !== undefined && d.capital_pendiente !== '';
-  return `<div class="card"><div class="card-head"><div><h3>🧾 Cuotas desde el último dato del banco</h3>
+  const avisos = avisosCuadreDeuda(d, L);
+  return `${avisos.length ? `<div class="banner amber deu-avisos"><b>Revisa estos puntos para que el capital pendiente (y tu patrimonio) sea el real:</b><ul>${avisos.map(a => `<li>${a}</li>`).join('')}</ul></div>` : ''}<div class="card"><div class="card-head"><div><h3>🧾 Cuotas desde el último dato del banco</h3>
       <div class="small muted">${tiene ? `Partida: <b>${fmtEUR(d.capital_pendiente)}</b> pendientes a ${fmtDate(d.fecha_capital_pendiente)}` : 'Partida: capital inicial'} · intereses: <b>${BASES_INTERES[L.base] || L.base}</b>${d.base_interes ? '' : ' (por defecto)'}</div></div>
       <button class="btn sm" data-action="deu-pend" data-id="${d.id}">Comparar con el banco</button></div>
     ${xs.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Fecha</th><th class="right">Cuota</th><th class="right">Intereses</th><th class="right">Capital</th><th class="right">Pendiente</th><th></th></tr></thead><tbody>
       ${xs.map(p => `<tr><td>${fmtDate(p.fecha)}</td><td class="right num">${fmtEUR(p.importe)}</td><td class="right num neg">${fmtEUR(p.interes)}</td><td class="right num pos">${fmtEUR(p.capital)}</td><td class="right num"><b>${fmtEUR(p.pendiente)}</b></td>
-        <td>${p.real ? '<span class="badge green" title="Cargo registrado en tus movimientos">real</span>' : '<span class="badge" title="No hay cargo registrado ese mes: se supone la cuota habitual">estimada</span>'}</td></tr>`).join('')}
+        <td>${p.extra ? '<span class="badge navy" title="Amortización anticipada registrada en este préstamo">amortización</span>' : p.real ? '<span class="badge green" title="Cargo registrado en tus movimientos">real</span>' : '<span class="badge" title="No hay cargo registrado ese mes: se supone la cuota habitual">estimada</span>'}</td></tr>`).join('')}
     </tbody></table></div>` : '<div class="small muted">Aún no hay cuotas desde el último dato del banco.</div>'}</div>`;
+}
+/** Lo que puede hacer que Inicio (capital amortizado) y el pendiente del préstamo no cuadren. */
+function avisosCuadreDeuda(d, L = ledgerDeuda(d)) {
+  const out = [], cat = categoriaCuota(d), I = deudaInfo(d);
+  if (!cat) out.push(`La cuota no está vinculada a ninguna categoría (✎ Editar › <b>Categoría donde se registra la cuota</b>). Sin eso, Inicio cuenta la cuota entera como gasto y aquí el pendiente se calcula con cuotas <i>estimadas</i>, no con lo que de verdad se ha cobrado.`);
+  const est = L.pagos.filter(p => !p.real && !p.extra).length;
+  if (cat && est) out.push(`${est} cuota${est > 1 ? 's' : ''} sin cargo registrado en la categoría (sale${est > 1 ? 'n' : ''} como «estimada»). Si ya se cobraron, impórtalas o revisa que estén en <b>${esc(catName(cat))}</b>.`);
+  const grandes = L.pagos.filter(p => p.real && !p.extra && I.cuota && p.importe > I.cuota * 1.4);
+  if (grandes.length) out.push(`En ${grandes.map(p => ymLabel(ymOf(p.fecha), true)).join(', ')} se cargó en la categoría de la cuota bastante más que la cuota (${grandes.map(p => fmtEUR(p.importe)).join(', ')}). Si había otro gasto en esa categoría, muévelo: se está tomando como capital amortizado.`);
+  if (cat) { const otros = S.deudas.filter(x => x.id !== d.id && x.activa !== false && categoriaCuota(x) === cat); if (otros.length) out.push(`Comparte la categoría de la cuota con <b>${otros.map(x => esc(x.nombre)).join(', ')}</b>. Cada cargo se asigna al préstamo de cuota más parecida; si las cuotas se parecen, usa una categoría distinta para cada uno.`); }
+  // Amortizaciones anticipadas pagadas (movimientos) que no están registradas en ningún préstamo
+  const regs = (S.amortizaciones || []).filter(a => a.deuda_id === d.id);
+  const sueltas = S.movimientos.filter(m => m.tipo === 'gasto' && num(m.importe) < 0 && esCatAmortizacion(m.categoria_id) && m.fecha >= addDias(todayISO(), -400)
+    && !(S.amortizaciones || []).some(a => Math.abs(num(a.importe) - Math.abs(num(m.importe))) < 1 && Math.abs(diasEntre(a.fecha, m.fecha)) <= 7));
+  if (sueltas.length) out.push(`Hay ${sueltas.length} movimiento${sueltas.length > 1 ? 's' : ''} de amortización anticipada (${sueltas.map(m => `${fmtDate(m.fecha)} ${fmtEUR(-num(m.importe))}`).join(', ')}) sin registrar en ningún préstamo. Inicio los cuenta como capital, pero el pendiente no baja hasta que la registras en «Amortizaciones realizadas › + Registrar» del préstamo que corresponda.`);
+  return out;
 }
 function renderDeudaDetalle(d) {
   const el = $('#tab-deudas');

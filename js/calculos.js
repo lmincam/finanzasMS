@@ -124,7 +124,10 @@ function ledgerDeuda(d, base = d.base_interes || '30/360', hasta = todayISO()) {
   let P = tienePend ? num(d.capital_pendiente) : num(d.capital_inicial);
   const f0 = tienePend ? (d.fecha_capital_pendiente || hasta) : (d.fecha_inicio ? addDias(addMonths(ymOf(d.fecha_inicio), -1) + d.fecha_inicio.slice(7), 0) : hasta);
   const cat = categoriaCuota(d);
-  const todos = cat ? S.movimientos.filter(m => m.tipo === 'gasto' && m.categoria_id === cat && num(m.importe) < 0).sort((a, b) => a.fecha < b.fecha ? -1 : 1) : [];
+  const todos = cat ? S.movimientos.filter(m => m.tipo === 'gasto' && m.categoria_id === cat && num(m.importe) < 0 && deudaDeMovimiento(m) === d).sort((a, b) => a.fecha < b.fecha ? -1 : 1) : [];
+  // Amortizaciones anticipadas registradas después del último dato del banco: también bajan el pendiente
+  const extras = (S.amortizaciones || []).filter(a => a.deuda_id === d.id && a.fecha > f0 && a.fecha <= hasta).sort((a, b) => a.fecha < b.fecha ? -1 : 1);
+  let ie = 0;
   const diaHab = todos.length ? Math.round(median(todos.slice(-12).map(m => +m.fecha.slice(8, 10)))) : +((d.fecha_inicio || f0).slice(8, 10));
   const diaEn = ym => { const [y, mo] = ym.split('-').map(Number); return `${ym}-${pad(Math.min(diaHab, daysInMonth(y, mo)))}`; };
   // Desde cuándo corren los intereses de la primera cuota: la última cuota pagada antes del dato del banco
@@ -136,10 +139,17 @@ function ledgerDeuda(d, base = d.base_interes || '30/360', hasta = todayISO()) {
     let fecha, importe, ids = [], real = true;
     if (reales.length) { fecha = reales[0].fecha; importe = -sum(reales, 'importe'); ids = reales.map(m => m.id); }
     else { fecha = diaEn(ym); real = false; importe = cuota; if (!(fecha > f0 && fecha <= hasta) || !cuota) continue; }
-    const interes = interesPeriodo(P, tin, base, prev, fecha), capital = Math.max(0, Math.min(P, importe - interes));
+    // Intereses por tramos si en medio hubo una amortización anticipada
+    let interes = 0;
+    while (ie < extras.length && extras[ie].fecha <= fecha) { const a = extras[ie++]; interes += interesPeriodo(P, tin, base, prev, a.fecha); P = Math.max(0, P - num(a.importe)); prev = a.fecha;
+      pagos.push({ fecha: a.fecha, importe: num(a.importe), interes: 0, capital: round2(num(a.importe)), pendiente: round2(P), ids: [], real: true, extra: true }); }
+    interes += interesPeriodo(P, tin, base, prev, fecha);
+    const capital = Math.max(0, Math.min(P, importe - interes));
     P -= capital; prev = fecha;
     pagos.push({ fecha, importe, interes: round2(interes), capital: round2(capital), pendiente: round2(P), ids, real });
   }
+  while (ie < extras.length) { const a = extras[ie++]; P = Math.max(0, P - num(a.importe));
+    pagos.push({ fecha: a.fecha, importe: num(a.importe), interes: 0, capital: round2(num(a.importe)), pendiente: round2(P), ids: [], real: true, extra: true }); }
   const out = { pagos, pendiente: round2(Math.max(0, P)), base };
   _deudaCache.set(key, out);
   return out;
@@ -314,12 +324,19 @@ function pendienteEnMes(d, ym) {
   else for (let i = 0; i < -k; i++) P = r > 0 ? (P + c) / (1 + r) : P + c;
   return P;
 }
+/** Préstamo al que corresponde un cargo de cuota. Si varios préstamos comparten categoría, el de cuota más parecida al importe. */
+function deudaDeMovimiento(m) {
+  const ds = S.deudas.filter(x => x.activa !== false && categoriaCuota(x) === m.categoria_id);
+  if (ds.length <= 1) return ds[0] || null;
+  const abs = Math.abs(num(m.importe));
+  return ds.reduce((a, b) => Math.abs(cuotaDeuda(b) - abs) < Math.abs(cuotaDeuda(a) - abs) ? b : a);
+}
 /** Parte de capital (no gasto) de un movimiento de gasto. */
 function capitalDeMovimiento(m) {
   const abs = Math.abs(num(m.importe));
   if (!m.categoria_id) return 0;
   if (esCatAmortizacion(m.categoria_id)) return abs;
-  const d = S.deudas.find(x => x.activa !== false && categoriaCuota(x) === m.categoria_id);
+  const d = deudaDeMovimiento(m);
   if (!d) return 0;
   const I = deudaInfo(d); if (!I.r && !I.cuota) return 0;
   // Si la cuota está en el cuadro calculado desde el último dato del banco, se usa ese reparto (el mismo que da el pendiente)
