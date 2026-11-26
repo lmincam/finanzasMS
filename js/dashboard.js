@@ -72,7 +72,7 @@ function renderDashboard() {
 
     <div class="kpi-grid">
         ${kpiLink('ingresos', 'Ingresos <button class="info-btn" data-action="kpi-info" data-k="ingresos" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(st.ingresos), '', 'pos')}
-        ${kpiLink('gastos', 'Gastos operativos <button class="info-btn" data-action="kpi-info" data-k="gastos" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(st.gastos), '', 'neg')}
+        ${kpiLink('gastos', 'Gastos operativos <button class="info-btn" data-action="kpi-info" data-k="gastos" title="¿De dónde sale este dato?">ⓘ</button>', fmtEUR(st.gastos), `<span class="kg-tot"><span>Total salido de cuenta</span><b>${fmtEUR(st.gastosCaja)}</b></span>${st.capital > 0 ? `<span class="kg-cap">incluye ${fmtEUR(st.capital)} de capital amortizado</span>` : '<span class="kg-cap">sin capital de deuda este periodo</span>'}`, 'neg')}
         ${(() => { const pos = st.ahorro >= 0, tit = nM === 1 ? 'Balance mensual' : `Balance del periodo · ${nM} meses`;
           return `<div class="kpi kpi-wide ${pos ? 'bal-pos' : 'bal-neg'}">
             <div class="bal-main"><div class="l">${tit} <button class="info-btn" data-action="kpi-info" data-k="ahorro" title="¿De dónde sale este dato?">ⓘ</button></div><div class="v">${pos ? '+' : ''}${fmtEUR(st.ahorro)}</div></div>

@@ -1,5 +1,9 @@
 # Historial de versiones
 
+## 5.26.6 — 26/11/2026 · Gastos con y sin capital
+- Inicio: la tarjeta de gastos muestra los gastos operativos (grande) y, debajo, el total salido de cuenta con el capital amortizado que incluye.
+- Detalle de gastos/ingresos: las barras por categoría quedan alineadas (columnas de ancho fijo).
+
 ## 5.26.5 — 26/11/2026 · Actualizar cartera
 - Inversiones: botón «⟳ Actualizar cartera» que lanza en el momento la tarea «Precios diarios» de GitHub, espera a que termine (1-2 min) y recarga los datos. La primera vez pide un token de GitHub (solo permiso de Actions sobre finanzasMS) que se guarda únicamente en ese dispositivo.
 

@@ -1175,3 +1175,22 @@ html,body{overflow-x:clip}
 .bv-imp{font-weight:700;white-space:nowrap}
 .bv-tag{font-size:11.5px;color:#15803d;font-weight:600;margin-top:2px}
 .bv-tag.amber{color:#b45309}
+/* Inicio · gastos: operativos (grande) y total salido de cuenta (con capital) */
+.kpi .kg-tot{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:10px;padding-top:9px;border-top:1px dashed var(--line);font-size:13px;color:var(--muted)}
+.kpi .kg-tot b{font-size:16px;color:var(--txt);font-variant-numeric:tabular-nums;white-space:nowrap}
+.kpi .kg-cap{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;text-align:right}
+/* Detalle de gastos/ingresos: columnas fijas para que todas las barras empiecen y acaben igual */
+.det-cat{grid-template-columns:12px minmax(0,200px) minmax(0,1fr) 190px!important}
+.det-cat .det-n{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.det-cat .det-v{text-align:right}
+.det-cat .det-v>div{white-space:nowrap}
+@media (max-width:760px){
+  .det-cat{grid-template-columns:12px minmax(0,1fr) auto!important;row-gap:5px}
+  .det-cat .bar{grid-column:2/-1!important}
+}
+@media (max-width:640px){
+  .kpi .kg-tot{flex-direction:column;align-items:flex-start;gap:1px;font-size:11.5px;margin-top:8px;padding-top:7px}
+  .kpi .kg-tot span{white-space:nowrap}
+  .kpi .kg-tot b{font-size:15px}
+  .kpi .kg-cap{text-align:left;font-size:10.5px;padding-right:14px}
+}
