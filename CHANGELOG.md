@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.28.7 — 26/11/2026 · Ajuste fino
+- Inicio móvil: Liquidez y Patrimonio suben unos píxeles para no quedar pegados a la barra inferior.
+
 ## 5.28.6 — 26/11/2026 · Barra de patrimonio interactiva
 - Patrimonio: al tocar un tramo de la barra (o su nombre en la leyenda) se resalta y aparece su % con un decimal y su importe sobre lo que tenéis; al volver a tocarlo se quita.
 

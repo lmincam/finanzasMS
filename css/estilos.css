@@ -1326,7 +1326,7 @@ html,body{overflow-x:clip}
 }
 /* Inicio en el móvil: un poco más compacto para que quepa hasta Liquidez y Patrimonio (iPhone 16 Pro Max) */
 @media (max-width:640px){
-  #tab-dashboard .per-card{padding:10px 10px;gap:8px;margin-bottom:14px}
+  #tab-dashboard .per-card{padding:9px 10px;gap:8px;margin-bottom:10px}
   #tab-dashboard .kpi-grid{gap:12px;margin-bottom:16px}
   #tab-dashboard .kpi-grid .kpi{padding-top:14px;padding-bottom:14px}
   #tab-dashboard .kpi .l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
