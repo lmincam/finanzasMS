@@ -37,6 +37,33 @@ function confirmDlg(msg, okLabel = 'Confirmar', danger = true) {
     m.el.addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (!b) return; res(b.dataset.c === '1'); m.close(); });
   });
 }
+/* ---------- Selector de fecha en tres partes (día · mes · año), cómodo para ir muchos años atrás ----------
+   Guarda la fecha en un campo oculto con el name/id de siempre (AAAA-MM-DD), así el resto del código no cambia. */
+const MESES_LARGO = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+function dateSel(id, name, v) {
+  const [y, m, d] = /^\d{4}-\d{2}-\d{2}/.test(v || '') ? String(v).slice(0, 10).split('-').map(Number) : [0, 0, 0];
+  const hoy = new Date().getFullYear(), y0 = Math.min(1940, y || 1940), y1 = Math.max(hoy + 40, y || 0);
+  const op = (val, txt, sel) => `<option value="${val}" ${sel ? 'selected' : ''}>${txt}</option>`;
+  let dias = op('', 'Día', !d); for (let i = 1; i <= 31; i++) dias += op(i, i, i === d);
+  let meses = op('', 'Mes', !m); MESES_LARGO.forEach((t, i) => { meses += op(i + 1, t.length > 7 ? t.slice(0, 3) + '.' : t, i + 1 === m); });
+  let anios = op('', 'Año', !y); for (let i = y1; i >= y0; i--) anios += op(i, i, i === y);
+  return `<div class="dsel"><select class="ds-d" id="${id}__d" aria-label="Día">${dias}</select><select class="ds-m" aria-label="Mes">${meses}</select><select class="ds-y" aria-label="Año">${anios}</select>
+    <input type="hidden" id="${id}" name="${name || id}" value="${y && m && d ? String(v).slice(0, 10) : ''}"><button type="button" class="ds-hoy" title="Hoy">Hoy</button></div>`;
+}
+/** Sincroniza las tres partes con el campo oculto (y ajusta el día al último del mes si hace falta). */
+function syncDateSel(box) {
+  const d = box.querySelector('.ds-d'), m = box.querySelector('.ds-m'), y = box.querySelector('.ds-y'), h = box.querySelector('input[type=hidden]');
+  if (m.value && y.value && d.value) { const max = new Date(+y.value, +m.value, 0).getDate(); if (+d.value > max) d.value = String(max); }
+  const val = d.value && m.value && y.value ? `${y.value}-${String(m.value).padStart(2, '0')}-${String(d.value).padStart(2, '0')}` : '';
+  if (h.value !== val) { h.value = val; h.dispatchEvent(new Event('change', { bubbles: true })); h.dispatchEvent(new Event('input', { bubbles: true })); }
+}
+document.addEventListener('change', e => { const box = e.target.closest && e.target.closest('.dsel'); if (box && e.target.tagName === 'SELECT') syncDateSel(box); });
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('.ds-hoy'); if (!b) return;
+  const box = b.closest('.dsel'), t = todayISO().split('-').map(Number);
+  box.querySelector('.ds-y').value = String(t[0]); box.querySelector('.ds-m').value = String(t[1]); box.querySelector('.ds-d').value = String(t[2]); syncDateSel(box);
+});
+
 function fieldHtml(f, v) {
   const id = 'f_' + f.name; let input;
   switch (f.type) {
@@ -48,10 +75,11 @@ function fieldHtml(f, v) {
     case 'textarea': input = `<textarea id="${id}" name="${f.name}" placeholder="${esc(f.ph || '')}">${esc(v ?? '')}</textarea>`; break;
     case 'checkbox': input = `<label class="chk"><input type="checkbox" id="${id}" name="${f.name}" ${v === false ? '' : (v || f.def) ? 'checked' : ''}> ${esc(f.label)}</label>`; break;
     case 'number': input = `<input id="${id}" name="${f.name}" inputmode="decimal" autocomplete="off" value="${esc(numInput(v))}" placeholder="${esc(f.ph || '0,00')}">`; break;
+    case 'date': input = dateSel(id, f.name, v); break;
     case 'int': input = `<input id="${id}" name="${f.name}" type="number" step="1" inputmode="numeric" value="${esc(v ?? '')}">`; break;
     default: input = `<input id="${id}" name="${f.name}" type="${f.type || 'text'}" value="${esc(v ?? (f.type === 'color' ? '#1e3a5f' : ''))}" placeholder="${esc(f.ph || '')}" autocomplete="off">`;
   }
-  return `<div class="${f.full ? 'full ' : ''}${f.cls || ''}">${f.type === 'checkbox' ? '' : `<label for="${id}">${esc(f.label)}${f.required ? ' *' : ''}</label>`}${input}${f.hint ? `<small class="hint">${f.hint}</small>` : ''}</div>`;
+  return `<div class="${f.full ? 'full ' : ''}${f.cls || ''}">${f.type === 'checkbox' ? '' : `<label for="${f.type === 'date' ? id + '__d' : id}">${esc(f.label)}${f.required ? ' *' : ''}</label>`}${input}${f.hint ? `<small class="hint">${f.hint}</small>` : ''}</div>`;
 }
 function collect(form, fields) {
   const o = {};

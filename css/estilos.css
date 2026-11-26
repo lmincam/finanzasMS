@@ -1213,3 +1213,14 @@ html,body{overflow-x:clip}
 .pz-grid.pz-grid-5{grid-template-columns:repeat(5,minmax(0,1fr))}
 @media (max-width:1300px){ .pz-grid.pz-grid-5{grid-template-columns:repeat(2,minmax(0,1fr))} .pz-grid-5>.pz-box:last-child{grid-column:1/-1} }
 @media (max-width:640px){ .pz-grid.pz-grid-5{grid-template-columns:1fr} }
+/* Selector de fecha en tres partes */
+.dsel{display:grid;grid-template-columns:minmax(58px,.8fr) minmax(0,1.6fr) minmax(74px,1fr) auto;gap:6px;align-items:center;width:100%}
+.dsel select{width:100%;min-width:0;padding-left:8px;padding-right:22px}
+.ds-hoy{border:1px solid var(--line);background:var(--card2);color:var(--txt);border-radius:10px;padding:0 10px;height:100%;min-height:40px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+@media (max-width:640px){ .dsel{grid-template-columns:62px minmax(0,1fr) 78px auto;gap:5px} .ds-hoy{padding:0 8px} }
+.dsel{grid-template-columns:76px minmax(0,1fr) 92px auto}
+.dsel select{padding:0 22px 0 10px;text-overflow:clip}
+@media (max-width:640px){ .dsel{grid-template-columns:70px minmax(0,1fr) 86px auto;gap:5px} .dsel select{padding:0 20px 0 9px} }
+@media (max-width:640px){ .dsel{grid-template-columns:64px minmax(0,1fr) 96px auto} } .dsel{grid-template-columns:76px minmax(0,1fr) 100px auto}
+@media (max-width:640px){ .dsel{grid-template-columns:60px minmax(0,1fr) 92px auto;gap:4px} .dsel select{padding:0 18px 0 8px} .ds-hoy{padding:0 7px} }
+@media (max-width:640px){ .dsel{grid-template-columns:68px minmax(0,1fr) 90px auto} }

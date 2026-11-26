@@ -109,7 +109,7 @@ def test_editar_inmueble_mantiene_precio_actualizado(app):
     assert a.ev("S.inmuebles[0].precio_m2_venta") == antes and a.ev("S.inmuebles[0].precio_m2_base") == 2500
     # Un €/m² nuevo pasa a ser la referencia
     a.page.click('[data-action="inm-edit"]'); a.page.wait_for_timeout(150)
-    a.page.fill('.modal [name="precio_m2_venta"]', '2900'); a.page.fill('.modal [name="fecha_precio_m2"]', '2026-11-17')
+    a.page.fill('.modal [name="precio_m2_venta"]', '2900'); a.page.select_option('.modal #f_fecha_precio_m2__d', '17'); a.page.select_option('.modal [name="fecha_precio_m2"] ~ .ds-m, .modal #f_fecha_precio_m2__d ~ .ds-m', '11'); a.page.select_option('.modal #f_fecha_precio_m2__d ~ .ds-y', '2026')
     a.page.click('.modal [type=submit]'); a.page.wait_for_timeout(300)
     assert a.ev("S.inmuebles[0].precio_m2_base") == 2900 and a.ev("S.inmuebles[0].trimestre_ipv") == '2026T4'
 
@@ -313,3 +313,15 @@ def test_formulario_seguro_segun_tipo(app):
     if a.page.locator('.modal [name="capital_contenido"]').count(): assert vis('capital_contenido')
     a.page.select_option('.modal [name="tipo"]', 'salud')
     assert vis('asegurado') and not vis('capital_asegurado')
+
+
+def test_selector_fecha_tres_partes(app):
+    a = app
+    a.ir('pertenencias')
+    a.page.click('[data-action="pert-new"]'); a.page.wait_for_timeout(150)
+    a.page.select_option('.modal #f_fecha_compra__d', '31')
+    a.page.select_option('.modal #f_fecha_compra__d ~ .ds-m', '2')       # febrero: el 31 se ajusta al 28
+    a.page.select_option('.modal #f_fecha_compra__d ~ .ds-y', '1998')
+    assert a.page.input_value('.modal [name="fecha_compra"]') == '1998-02-28'
+    a.page.click('.modal [name="fecha_compra"] ~ .ds-hoy')
+    assert a.page.input_value('.modal [name="fecha_compra"]') == a.ev("todayISO()")

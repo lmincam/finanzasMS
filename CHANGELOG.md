@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.27.1 — 26/11/2026 · Fechas por día, mes y año
+- Todos los formularios (y el registro rápido) eligen la fecha con tres desplegables independientes: día, mes y año (de 1940 a 40 años vista), más un botón «Hoy». Si eliges un día que no existe en ese mes (31 de febrero), se ajusta solo al último día.
+
 ## 5.27.0 — 26/11/2026 · Formulario de seguros según el tipo
 - Seguros: al elegir el tipo, el formulario solo muestra lo que tiene sentido. Vehículo: vehículo asegurado, valor del vehículo y franquicia. Hogar: vivienda, continente, contenido y franquicia. Salud, vida, mascota, decesos, accidentes, viaje y RC: sus propios campos y textos de ayuda. Al guardar, lo que no corresponde al tipo se vacía.
 

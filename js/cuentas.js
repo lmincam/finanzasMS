@@ -243,7 +243,7 @@ function openQuick(tipo = 'gasto', opts = {}) {
     <div class="seg" id="q-seg" style="margin-bottom:14px">${['gasto', 'ingreso', 'transferencia'].map(t => `<button type="button" data-q="${t}" class="${t === tipo ? 'active' : ''}">${{ gasto: '− Gasto', ingreso: '+ Ingreso', transferencia: '⇄ Transferencia' }[t]}</button>`).join('')}</div>
     <form id="q-form" class="form-grid" novalidate>
       <div class="full"><label>Importe (€)</label><input id="q-imp" class="big" inputmode="decimal" placeholder="0,00" autocomplete="off" value="${opts.importe ? esc(numInput(num(opts.importe))) : ''}"></div>
-      <div><label>Fecha</label><input type="date" id="q-fecha" value="${todayISO()}"></div>
+      <div><label for="q-fecha__d">Fecha</label>${dateSel('q-fecha', 'q-fecha', todayISO())}</div>
       <div id="q-dyn" style="display:contents"></div>
       <div class="full"><label>Concepto</label><input id="q-concepto" placeholder="Ej: Panadería, gasolina…" autocomplete="off" value="${esc(opts.concepto || '')}"></div>
       <div class="full actions"><button type="button" class="btn ghost" data-qclose>Cancelar</button><button type="submit" class="btn success">Guardar</button></div>
