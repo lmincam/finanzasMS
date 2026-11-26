@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.27.2 — 26/11/2026 · Mayores gastos netos de devoluciones
+- Inicio › Mayores gastos: se ordenan por lo que de verdad habéis pagado, restando las devoluciones vinculadas (Bizum) y lo pendiente de cobrar. Debajo del importe se ve cuánto pagaste y cuánto te devolvieron. Las devoluciones ya no aparecen en la lista.
+
 ## 5.27.1 — 26/11/2026 · Fechas por día, mes y año
 - Todos los formularios (y el registro rápido) eligen la fecha con tres desplegables independientes: día, mes y año (de 1940 a 40 años vista), más un botón «Hoy». Si eliges un día que no existe en ese mes (31 de febrero), se ajusta solo al último día.
 

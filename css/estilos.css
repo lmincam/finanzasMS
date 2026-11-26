@@ -1224,3 +1224,4 @@ html,body{overflow-x:clip}
 @media (max-width:640px){ .dsel{grid-template-columns:64px minmax(0,1fr) 96px auto} } .dsel{grid-template-columns:76px minmax(0,1fr) 100px auto}
 @media (max-width:640px){ .dsel{grid-template-columns:60px minmax(0,1fr) 92px auto;gap:4px} .dsel select{padding:0 18px 0 8px} .ds-hoy{padding:0 7px} }
 @media (max-width:640px){ .dsel{grid-template-columns:68px minmax(0,1fr) 90px auto} }
+.top-imp{text-align:right;flex:none}.top-dev{font-size:11px;color:#15803d;white-space:nowrap}

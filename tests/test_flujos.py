@@ -325,3 +325,15 @@ def test_selector_fecha_tres_partes(app):
     assert a.page.input_value('.modal [name="fecha_compra"]') == '1998-02-28'
     a.page.click('.modal [name="fecha_compra"] ~ .ds-hoy')
     assert a.page.input_value('.modal [name="fecha_compra"]') == a.ev("todayISO()")
+
+
+def test_mayores_gastos_netos_de_devoluciones(app):
+    a = app
+    a.ev("""(() => { const c = S.categorias.find(x => x.tipo === 'gasto' && !x.gasto_fijo && !(x.parent_id && (catById(x.parent_id) || {}).gasto_fijo)); const cu = S.cuentas[0].id, f = todayISO();
+      S.movimientos.push({ id: 'g100', tipo: 'gasto', importe: -1000, concepto: 'Cena grande', categoria_id: c.id, fecha: f, cuenta_id: cu, mes_imputacion: f },
+        { id: 'd50', tipo: 'gasto', importe: 500, reembolso_de: 'g100', concepto: 'Bizum', categoria_id: c.id, fecha: f, cuenta_id: cu, mes_imputacion: f },
+        { id: 'g75', tipo: 'gasto', importe: -750, concepto: 'Compra mayor', categoria_id: c.id, fecha: f, cuenta_id: cu, mes_imputacion: f }); })()""")
+    a.ir('dashboard')
+    top = a.page.locator('.top-list .it b').all_inner_texts()
+    assert top.index('Compra mayor') < top.index('Cena grande')      # 750 > 1000 − 500
+    assert 'Bizum' not in top

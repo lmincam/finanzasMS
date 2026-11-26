@@ -54,7 +54,13 @@ function renderDashboard() {
 
   // Sin gastos fijos (hipoteca, recibos…): interesan los gastos en los que puedes decidir
   const _fijo = new Map(), esFijo = c => { if (!c) return false; if (!_fijo.has(c)) _fijo.set(c, esGastoFijo(c, months[months.length - 1])); return _fijo.get(c); };
-  const topGastos = [...gastosMov].filter(m => !esFijo(m.categoria_id)).sort((a, b) => num(a.importe) - num(b.importe)).slice(0, 8);
+  // Lo que de verdad habéis pagado: se restan las devoluciones vinculadas (Bizum…) y lo pendiente de cobrar
+  const devueltoDe = {};
+  for (const m of S.movimientos) if (m.reembolso_de && num(m.importe) > 0) devueltoDe[m.reembolso_de] = (devueltoDe[m.reembolso_de] || 0) + num(m.importe);
+  const topGastos = gastosMov.filter(m => num(m.importe) < 0 && !esFijo(m.categoria_id))
+    .map(m => { const dev = devueltoDe[m.id] || 0, pend = num(m.a_cobrar) > 0 ? infoCompartido(m).pendiente : 0;
+      return { m, bruto: -num(m.importe), dev, pend, neto: round2(-num(m.importe) - dev - pend) }; })
+    .filter(x => x.neto > 0.005).sort((a, b) => b.neto - a.neto).slice(0, 8);
   const rows = budgetRows(gastosMov, nM, months);
   const totBud = sum(rows.filter(r => r.lvl === 0 && !r.anual), 'bud'), totSpent = sum(rows.filter(r => r.lvl === 0 && !r.anual), 'spent');
 
@@ -108,7 +114,7 @@ function renderDashboard() {
     ${renderBudgetCard(rows, nM, totBud, totSpent)}
 
     <div class="card top-card"><div class="card-head"><h3>Mayores gastos</h3><span class="sub">Sin gastos fijos</span></div>
-      <div class="top-list">${topGastos.length ? topGastos.slice(0, 5).map(m => `<div class="it" data-action="mov-edit" data-id="${m.id}" style="cursor:pointer">${iconoMovimiento(m)}<div class="c"><b>${esc(m.concepto || '—')}</b><div class="small muted">${fmtDate(m.fecha)} · ${esc(catName(m.categoria_id) || 'Sin categoría')}</div></div><div class="num neg">${fmtEUR(num(m.importe))}</div></div>`).join('') : '<div class="empty">—</div>'}</div></div>
+      <div class="top-list">${topGastos.length ? topGastos.slice(0, 5).map(({ m, bruto, dev, pend, neto }) => `<div class="it" data-action="mov-edit" data-id="${m.id}" style="cursor:pointer">${iconoMovimiento(m)}<div class="c"><b>${esc(m.concepto || '—')}</b><div class="small muted">${fmtDate(m.fecha)} · ${esc(catName(m.categoria_id) || 'Sin categoría')}</div></div><div class="top-imp"><div class="num neg">${fmtEUR(-neto)}</div>${dev || pend ? `<div class="top-dev" title="Pagaste ${esc(fmtEUR(bruto))}">de ${fmtEUR(bruto, 0)} · ↩ ${fmtEUR(dev + pend, 0)}${pend ? ' (por cobrar)' : ''}</div>` : ''}</div></div>`).join('') : '<div class="empty">—</div>'}</div></div>
     </div>
 `;
 
