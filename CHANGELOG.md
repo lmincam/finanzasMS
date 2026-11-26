@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.28.2 — 26/11/2026 · Balance más compacto
+- Inicio › Balance: la cuenta (Ingresos − Gastos) queda pegada a la cifra, sin el hueco de antes.
+
 ## 5.28.1 — 26/11/2026 · Inicio: periodo, gastos y balance
 - Selector de periodo rediseñado: una sola tarjeta con el mes (‹ ›), su rango y el calendario arriba, y los periodos como pastillas (Mes · 2 · 3 · 6 meses · Año · Rango); en el móvil caben todas en una fila.
 - Gastos en una sola tarjeta: en grande lo que ha salido de las cuentas y debajo el gasto sin capital amortizado, con una barra que separa gasto y capital.

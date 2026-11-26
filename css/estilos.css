@@ -1316,3 +1316,11 @@ html,body{overflow-x:clip}
   .per-chips .lg{display:none}.per-chips .sm{display:inline}
   .kpi-ing .ki-list{font-size:11px}
 }
+/* Balance: la cuenta pegada a la cifra */
+.kpi-grid .kpi-wide{gap:6px 22px;align-items:center}
+.kpi-wide .bal-calc{flex:0 1 300px;margin-left:0}
+@media (max-width:640px){
+  .kpi-grid .kpi-wide{gap:0}
+  .kpi-wide .bal-main .v{margin-bottom:0}
+  .kpi-wide .bal-calc{flex:1 1 100%;margin-top:6px;padding-top:6px}
+}
