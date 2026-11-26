@@ -81,14 +81,14 @@ const FIELDS_SEG = [
   { name: 'tipo', label: 'Tipo', type: 'select', options: Object.entries(TIPO_SEGURO).map(([v, l]) => ({ v, l })) },
   { name: 'nombre', label: 'Nombre', required: true, ph: 'Ej: Seguro coche todo riesgo' },
   { name: 'aseguradora', label: 'Aseguradora' }, { name: 'poliza', label: 'Nº de póliza' },
-  { name: 'tomador', label: 'Tomador' }, { name: 'asegurado', label: 'Asegurado / bien', ph: 'Persona, mascota…' },
-  { name: 'vehiculo_id', label: 'Vehículo vinculado', type: 'select', options: () => [{ v: '', l: '— Ninguno —' }].concat(S.vehiculos.map(v => ({ v: v.id, l: v.nombre }))) },
-  { name: 'inmueble_id', label: 'Inmueble vinculado', type: 'select', options: () => [{ v: '', l: '— Ninguno —' }].concat(S.inmuebles.map(i => ({ v: i.id, l: i.nombre }))) },
+  { name: 'tomador', label: 'Tomador' }, { name: 'asegurado', label: 'Asegurado / bien', ph: 'Persona, mascota…', cls: 'sg sg-salud sg-vida sg-mascota sg-decesos sg-accidentes sg-viaje sg-otro' },
+  { name: 'vehiculo_id', label: 'Vehículo asegurado', cls: 'sg sg-vehiculo', type: 'select', options: () => [{ v: '', l: '— Ninguno —' }].concat(S.vehiculos.map(v => ({ v: v.id, l: v.nombre }))) },
+  { name: 'inmueble_id', label: 'Vivienda asegurada', cls: 'sg sg-hogar', type: 'select', options: () => [{ v: '', l: '— Ninguno —' }].concat(S.inmuebles.map(i => ({ v: i.id, l: i.nombre }))) },
   { name: 'prima_anual', label: 'Prima anual total (€)', type: 'number', required: true },
   { name: 'forma_pago', label: 'Forma de pago', type: 'select', options: Object.keys(FREQ_PAGO).map(k => ({ v: k, l: k[0].toUpperCase() + k.slice(1) })) },
   { name: 'fecha_inicio', label: 'Fecha de alta', type: 'date' }, { name: 'fecha_vencimiento', label: 'Fecha de vencimiento / renovación', type: 'date' },
-  { name: 'capital_asegurado', label: 'Capital asegurado (€)', type: 'number', hint: 'En hogar: el del continente (la vivienda)' }, { name: 'franquicia', label: 'Franquicia (€)', type: 'number' },
-  { name: 'capital_contenido', label: 'Capital de contenido (€)', type: 'number', cls: 'v12', hint: 'Solo seguros de hogar: lo que cubre de muebles, aparatos y enseres' },
+  { name: 'capital_asegurado', label: 'Capital asegurado (€)', type: 'number', cls: 'sg sg-vehiculo sg-hogar sg-vida sg-decesos sg-responsabilidad_civil sg-accidentes sg-otro' }, { name: 'franquicia', label: 'Franquicia (€)', type: 'number', cls: 'sg sg-vehiculo sg-hogar sg-salud sg-mascota sg-responsabilidad_civil sg-otro' },
+  { name: 'capital_contenido', label: 'Capital de contenido (€)', type: 'number', cls: 'v12 sg sg-hogar', hint: 'Lo que cubre de muebles, aparatos y enseres' },
   { name: 'telefono_asistencia', label: 'Teléfono de asistencia', type: 'tel' },
   { name: 'cuenta_id', label: 'Cuenta de cargo', type: 'rawselect', html: v => accOpts(v, { empty: '— Sin indicar —' }) },
   { name: 'coberturas', label: 'Coberturas principales', type: 'textarea', full: true, ph: 'Todo riesgo con franquicia, asistencia en viaje, lunas…' },
@@ -96,13 +96,44 @@ const FIELDS_SEG = [
   { name: 'activo', label: 'Póliza en vigor', type: 'checkbox', def: true },
   { name: 'notas', label: 'Notas', type: 'textarea', full: true }
 ];
-const limpiarSeg = v => ({ ...v, vehiculo_id: v.vehiculo_id || null, inmueble_id: v.inmueble_id || null, cuenta_id: v.cuenta_id || null, prima_anual: v.prima_anual || 0 });
+const limpiarSeg = v => {
+  const t = v.tipo, vale = n => { const f = FIELDS_SEG.find(x => x.name === n); return !f || !(f.cls || '').includes('sg ') || f.cls.split(' ').includes('sg-' + t); };
+  const out = { ...v, vehiculo_id: v.vehiculo_id || null, inmueble_id: v.inmueble_id || null, cuenta_id: v.cuenta_id || null, prima_anual: v.prima_anual || 0 };
+  // Lo que no corresponde al tipo elegido se vacía (p. ej. el contenido en un seguro de coche)
+  for (const n of ['asegurado', 'vehiculo_id', 'inmueble_id', 'capital_asegurado', 'franquicia', 'capital_contenido']) if (n in out && !vale(n)) out[n] = null;
+  return out;
+};
+/** Textos de cada tipo de seguro: el formulario se adapta al tipo elegido. */
+const SEG_TXT = {
+  vehiculo: { nombre: 'Ej: Coche todo riesgo con franquicia', capital: 'Valor asegurado del vehículo (€)', cob: 'Todo riesgo con franquicia, asistencia en viaje, lunas…' },
+  hogar: { nombre: 'Ej: Hogar vivienda habitual', capital: 'Continente: la vivienda (€)', cob: 'Daños por agua, robo, responsabilidad civil, asistencia 24 h…' },
+  salud: { nombre: 'Ej: Salud familiar', aseg: 'Quiénes están cubiertos', asegPh: 'Ej: los cuatro de la familia', cob: 'Cuadro médico, copagos, dental…' },
+  vida: { nombre: 'Ej: Vida vinculado a la hipoteca', aseg: 'Persona asegurada', capital: 'Capital en caso de fallecimiento (€)', cob: 'Fallecimiento, invalidez absoluta…' },
+  mascota: { nombre: 'Ej: Seguro del perro', aseg: 'Mascota', asegPh: 'Nombre y especie', cob: 'Responsabilidad civil, veterinario…' },
+  decesos: { nombre: 'Ej: Decesos familiar', aseg: 'Personas cubiertas', capital: 'Capital del servicio (€)', cob: 'Servicio funerario, traslado…' },
+  responsabilidad_civil: { nombre: 'Ej: RC familiar', capital: 'Límite de cobertura (€)', cob: 'Daños a terceros…' },
+  accidentes: { nombre: 'Ej: Accidentes personales', aseg: 'Persona asegurada', capital: 'Capital asegurado (€)', cob: 'Fallecimiento o invalidez por accidente…' },
+  viaje: { nombre: 'Ej: Seguro de viaje anual', aseg: 'Viajeros cubiertos', cob: 'Asistencia médica, cancelación, equipaje…' },
+  otro: { nombre: 'Nombre del seguro', aseg: 'Asegurado / bien', capital: 'Capital asegurado (€)', cob: 'Coberturas principales' }
+};
+function adaptarFormSeg(md) {
+  const form = md.el.querySelector('form') || md.el, sel = form.querySelector('[name="tipo"]'); if (!sel) return;
+  const setLabel = (n, t) => { const i = form.querySelector(`[name="${n}"]`); const l = i && form.querySelector(`label[for="${i.id}"]`); if (l && t) l.textContent = t; };
+  const ajustar = () => {
+    const t = sel.value, T = SEG_TXT[t] || SEG_TXT.otro;
+    form.querySelectorAll('.sg').forEach(w => { w.style.display = w.classList.contains('sg-' + t) ? '' : 'none'; });
+    setLabel('capital_asegurado', T.capital || 'Capital asegurado (€)'); setLabel('asegurado', T.aseg || 'Asegurado / bien');
+    const ph = (n, v) => { const i = form.querySelector(`[name="${n}"]`); if (i && v) i.placeholder = v; };
+    ph('nombre', T.nombre); ph('asegurado', T.asegPh || ''); ph('coberturas', T.cob);
+  };
+  sel.addEventListener('change', ajustar); ajustar();
+}
 
 Views.seguros = renderSeguros;
 
 Object.assign(Actions, {
-  'seg-new': () => openForm({ title: 'Nuevo seguro', fields: camposV4(FIELDS_SEG), values: { tipo: 'vehiculo', forma_pago: 'anual', renovacion_auto: true, activo: true }, onSubmit: v => saveEntity('seguros', null, limpiarSeg(v)) }),
-  'seg-edit': el => { const s = S.seguros.find(x => x.id === el.dataset.id); openForm({ title: 'Editar seguro', fields: camposV4(FIELDS_SEG), values: s, onSubmit: v => saveEntity('seguros', s.id, limpiarSeg(v)) }); },
+  'seg-new': () => adaptarFormSeg(openForm({ title: 'Nuevo seguro', fields: camposV4(FIELDS_SEG), values: { tipo: 'vehiculo', forma_pago: 'anual', renovacion_auto: true, activo: true }, onSubmit: v => saveEntity('seguros', null, limpiarSeg(v)) })),
+  'seg-edit': el => { const s = S.seguros.find(x => x.id === el.dataset.id); adaptarFormSeg(openForm({ title: 'Editar seguro', fields: camposV4(FIELDS_SEG), values: s, onSubmit: v => saveEntity('seguros', s.id, limpiarSeg(v)) })); },
   'seg-del': async el => {
     const s = S.seguros.find(x => x.id === el.dataset.id);
     if (!(await confirmDlg(`¿Eliminar <b>${esc(s.nombre)}</b>?<br><span class="small">Si solo la has dado de baja, mejor edítala y desmarca “Póliza en vigor” para conservar el histórico.</span>`, 'Eliminar'))) return;

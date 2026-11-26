@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.27.0 — 26/11/2026 · Formulario de seguros según el tipo
+- Seguros: al elegir el tipo, el formulario solo muestra lo que tiene sentido. Vehículo: vehículo asegurado, valor del vehículo y franquicia. Hogar: vivienda, continente, contenido y franquicia. Salud, vida, mascota, decesos, accidentes, viaje y RC: sus propios campos y textos de ayuda. Al guardar, lo que no corresponde al tipo se vacía.
+
 ## 5.26.9 — 26/11/2026 · Pertenencias en «Lo que tenéis»
 - Patrimonio: el recuadro de Pertenencias pasa de «Seguimiento» a «Lo que tenéis», junto a liquidez, inversiones, inmuebles y vehículos, con la venta estimada y el coste de reponerlo todo. Sigue sin sumar al patrimonio neto.
 

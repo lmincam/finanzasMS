@@ -300,3 +300,16 @@ def test_movimiento_fuera_de_saldo(app):
     assert a.page.locator('.modal .acc-fuera').count() == 1
     a.page.click('.modal [data-op="cuenta-contar-fuera"]'); a.page.wait_for_timeout(400)
     assert abs(a.ev(f"num(cuentaById('{cid}').saldo_inicial)") - (base - 100)) < 0.01         # el saldo de partida ya lo incluye
+
+
+def test_formulario_seguro_segun_tipo(app):
+    a = app
+    a.ir('seguros')
+    a.ev("Actions['seg-new']()"); a.page.wait_for_timeout(150)
+    vis = lambda n: a.page.locator(f'.modal [name="{n}"]').is_visible()
+    assert vis('vehiculo_id') and not vis('capital_contenido') and not vis('inmueble_id')    # coche: sin contenido
+    a.page.select_option('.modal [name="tipo"]', 'hogar')
+    assert vis('inmueble_id') and not vis('vehiculo_id')
+    if a.page.locator('.modal [name="capital_contenido"]').count(): assert vis('capital_contenido')
+    a.page.select_option('.modal [name="tipo"]', 'salud')
+    assert vis('asegurado') and not vis('capital_asegurado')
