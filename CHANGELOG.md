@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.31.1 — 26/11/2026 · Seguros con céntimos
+- Pestaña Seguros: coste anual total, coste mensual y totales por tipo con el importe exacto (antes redondeado a euros).
+
 ## 5.31.0 — 26/11/2026 · Un único método: el del banco
 - Todos los préstamos calculan los intereses como el banco: pendiente × TIN × días reales entre recibos / 365, redondeado al céntimo. Desaparece el selector TIN/12 · /360 · /365 y la «calibración» automática.
 

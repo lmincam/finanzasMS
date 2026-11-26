@@ -48,7 +48,7 @@ function renderSeguros() {
       <div class="card"><div class="card-head"><h3>Recibos previstos</h3><span class="sub">Próximos 12 meses según forma de pago</span></div><div class="chart-box sm"><canvas id="ch-seg-rec"></canvas></div></div>
       <div class="card"><div class="card-head"><h3>Coste anual por tipo</h3></div><div class="chart-box sm"><canvas id="ch-seg-tipo"></canvas></div></div>
     </div>` : ''}
-    ${porTipo.map(g => `<div class="sub-title grp-title"><span>${TIPO_SEGURO[g.t]}</span><span class="muted">${fmtEUR(sum(g.items, o => o.x.prima) / 12)}/mes · ${fmtEUR(sum(g.items, o => o.x.prima), 0)}/año</span></div>
+    ${porTipo.map(g => `<div class="sub-title grp-title"><span>${TIPO_SEGURO[g.t]}</span><span class="muted">${fmtEUR(sum(g.items, o => o.x.prima) / 12)}/mes · ${fmtEUR(sum(g.items, o => o.x.prima))}/año</span></div>
       <div class="grid-2e" style="margin-bottom:16px">${g.items.map(({ s, x }) => tarjetaSeguro(s, x)).join('')}</div>`).join('')}
     ${inact.length ? `<details class="card"><summary>Pólizas dadas de baja (${inact.length})</summary><div class="grid-2e" style="margin-top:10px">${inact.map(s => tarjetaSeguro(s, seguroInfo(s))).join('')}</div></details>` : ''}`;
 
