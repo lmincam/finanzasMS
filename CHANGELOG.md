@@ -1,5 +1,9 @@
 # Historial de versiones
 
+## 5.26.7 — 26/11/2026 · Gastos totales y sin capital, cada uno en su tarjeta
+- Inicio: fila de cuatro tarjetas iguales: Ingresos · Gastos (todo lo salido de cuenta) · Gastos sin capital · Balance (más compacto, con ingresos − gastos debajo).
+- Detalle de gastos/ingresos: cada categoría ocupa una fila de la misma altura (nombre y, debajo, nº de movimientos y devoluciones o capital), con las barras alineadas y separadores finos.
+
 ## 5.26.6 — 26/11/2026 · Gastos con y sin capital
 - Inicio: la tarjeta de gastos muestra los gastos operativos (grande) y, debajo, el total salido de cuenta con el capital amortizado que incluye.
 - Detalle de gastos/ingresos: las barras por categoría quedan alineadas (columnas de ancho fijo).

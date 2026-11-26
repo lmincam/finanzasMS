@@ -41,9 +41,12 @@ function renderDetalle(el, months) {
       ${esG && st.capital > 0 ? kpi('Capital amortizado', fmtEUR(st.capital), 'No es gasto: reduce tu deuda', 'navy') : ''}
     </div>
     <div class="card"><div class="card-head"><h3>Por categoría</h3><span class="sub">${esG ? 'Gasto neto: cargos − devoluciones − capital de deuda' : 'Por mes de imputación'}</span></div>
-      ${lista.length ? `<div class="det-cats">${lista.map(g => `<div class="det-cat"><span class="cdot" style="background:${esc(g.color)}"></span><span class="det-n">${esc(g.nombre)} <span class="muted small">${g.n}</span></span>
+      ${lista.length ? `<div class="det-cats">${lista.map(g => {
+        const nota = [g.cap > 0 ? `${fmtEUR(g.bruto)} − ${fmtEUR(g.cap)} capital` : '', g.devol > 0 ? `${fmtEUR(g.bruto)} − ${fmtEUR(g.devol)} devuelto` : ''].filter(Boolean).join(' · ');
+        return `<div class="det-cat"><span class="cdot" style="background:${esc(g.color)}"></span>
+        <div class="det-n"><b>${esc(g.nombre)}</b><small>${g.n} mov.${nota ? ' · ' + nota : ''}</small></div>
         <div class="bar"><span style="width:${Math.max(0, g.neto / max * 100).toFixed(1)}%;background:${esc(g.color)}"></span></div>
-        <span class="num det-v"><b>${fmtEUR(g.neto)}</b>${total ? ` <span class="muted small">${fmtPct(g.neto / total, 0)}</span>` : ''}${g.cap > 0 ? `<div class="small muted">${fmtEUR(g.bruto)} − ${fmtEUR(g.cap)} capital</div>` : ''}${g.devol > 0 ? `<div class="small muted">${fmtEUR(g.bruto)} − ${fmtEUR(g.devol)} devuelto</div>` : ''}</span></div>`).join('')}</div>`
+        <div class="num det-v"><b>${fmtEUR(g.neto)}</b>${total ? `<small>${fmtPct(g.neto / total, 0)}</small>` : ''}</div></div>`; }).join('')}</div>`
         : `<div class="empty">Sin ${esG ? 'gastos' : 'ingresos'} en el periodo</div>`}
     </div>
     <div class="card"><div class="card-head"><h3>Movimientos</h3><span class="sub">Pulsa uno para verlo o corregirlo</span></div>
