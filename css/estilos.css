@@ -1158,3 +1158,20 @@ html,body{overflow-x:clip}
 .ult-h span{font-weight:500}
 @media (max-width:640px){ .ult-h span{display:none} .ult-mov .acc-logo{width:32px;height:32px} .ult-mov .acc-logo.hucha svg{width:24px;height:24px} .ult-mov .acc-logo img{width:20px;height:20px} }
 .bud-pend{font-size:11.5px;color:#b45309;font-weight:600;white-space:nowrap}
+/* Presupuesto: cada partida se puede abrir para ver sus movimientos */
+.bud-tbl tr.bud-click{cursor:pointer}
+.bud-tbl tr.bud-click:hover td{background:color-mix(in srgb,var(--blue) 5%,transparent)}
+.bud-tbl tr.bud-click td:first-child::after{content:'›';margin-left:6px;color:var(--muted2);font-weight:700}
+.bv-sum{display:flex;flex-wrap:wrap;gap:8px 18px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card2);margin-bottom:12px}
+.bv-sum>div{display:flex;flex-direction:column;font-size:12px;color:var(--muted)}
+.bv-sum b{font-size:16px;color:var(--txt);font-variant-numeric:tabular-nums}
+.bv-sum .tot{margin-left:auto;text-align:right}
+.bv-sum .tot b{font-size:19px}
+.bv-sum .amber-t{color:#b45309}
+.bv-list{display:flex;flex-direction:column;max-height:56vh;overflow:auto;margin:0 -4px;padding:0 4px}
+.bv-row{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.bv-row:last-child{border-bottom:0}
+.bv-c b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+.bv-imp{font-weight:700;white-space:nowrap}
+.bv-tag{font-size:11.5px;color:#15803d;font-weight:600;margin-top:2px}
+.bv-tag.amber{color:#b45309}

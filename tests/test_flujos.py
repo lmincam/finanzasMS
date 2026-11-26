@@ -262,3 +262,17 @@ def test_presupuesto_descuenta_bizum_pendiente(app):
     })()""")
     assert r[0] == 75 and r[1] == 75          # 150 gastados, 75 por cobrar → cuentan 75
     assert r[2] == 75 and r[3] == 25          # cobrados 50 por Bizum: siguen contando 75 (25 aún por cobrar)
+
+
+def test_presupuesto_ver_movimientos(app):
+    a = app
+    a.ir('dashboard')
+    filas = a.page.locator('#tab-dashboard tr.bud-click')
+    assert filas.count() > 0
+    for i in range(min(filas.count(), 6)):
+        f = filas.nth(i); esperado = float(f.get_attribute('data-spent'))
+        f.click(); a.page.wait_for_timeout(150)
+        tot = a.page.locator('.modal .bv-sum .tot b').inner_text()
+        n = float(tot.replace('€', '').replace('.', '').replace(',', '.').replace('\u2212', '-').strip())
+        assert abs(n - esperado) < 0.01, (f.get_attribute('data-nombre'), n, esperado)   # el detalle cuadra con la fila
+        a.page.click('.modal [data-close]'); a.page.wait_for_timeout(100)

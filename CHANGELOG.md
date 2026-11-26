@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.26.4 — 26/11/2026 · Ver los movimientos de cada partida del presupuesto
+- Inicio › Presupuesto vs. gastado real: al pulsar una partida se abren todos sus movimientos del periodo (o del año, si es anual), con lo gastado, lo devuelto por Bizum, lo pendiente de cobrar y el total que cuenta en el presupuesto, que cuadra con la fila.
+
 ## 5.26.3 — 26/11/2026 · Presupuesto con los Bizum por cobrar
 - Inicio › Presupuesto vs. gastado real: lo que te deben de un gasto compartido (Bizum pendiente) ya no cuenta como gastado; debajo de lo gastado aparece «↩ X € por cobrar». Las devoluciones ya cobradas y vinculadas al gasto seguían descontándose.
 
