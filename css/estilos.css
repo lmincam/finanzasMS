@@ -1207,3 +1207,5 @@ html,body{overflow-x:clip}
 .kpi-grid .kpi-bal .v{font-size:28px}
 .kpi.bal-neg .v{color:var(--red)}
 @media (max-width:640px){ .kpi-grid .kpi-bal .v{font-size:22px} .kpi-bal .bal-mini{font-size:11px} }
+.acc-fuera-r{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:3px 0;border-top:1px dashed rgba(180,83,9,.25)}
+.acc-fuera-r span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

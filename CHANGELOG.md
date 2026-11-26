@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.26.8 — 26/11/2026 · Movimientos que no sumaban al saldo
+- Un movimiento apuntado a mano después de conciliar una cuenta, pero con fecha anterior a la conciliación, no suma al saldo (se entiende que el saldo real ya lo incluía). Ahora se ve: la fila lleva «no suma al saldo» y, al abrir la cuenta, un aviso con la lista y el botón «Que cuenten en el saldo» para corregirlo en un toque.
+
 ## 5.26.7 — 26/11/2026 · Gastos totales y sin capital, cada uno en su tarjeta
 - Inicio: fila de cuatro tarjetas iguales: Ingresos · Gastos (todo lo salido de cuenta) · Gastos sin capital · Balance (más compacto, con ingresos − gastos debajo).
 - Detalle de gastos/ingresos: cada categoría ocupa una fila de la misma altura (nombre y, debajo, nº de movimientos y devoluciones o capital), con las barras alineadas y separadores finos.

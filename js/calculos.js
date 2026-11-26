@@ -49,6 +49,13 @@ const Calc = {
     return { saldo_inicial: round2(num(saldo) - sum(delDia, 'importe')), fecha_saldo_inicial: diaAnterior(fecha),
       ...(S.v7 ? { saldo_actualizado: new Date().toISOString() } : {}) };
   },
+  /** Apuntado a mano DESPUÉS de conciliar la cuenta pero con fecha anterior (o igual) a la conciliación: no suma al saldo
+   *  (lo importado del banco no se marca: el saldo del banco ya lo incluía),
+   *  porque se supone que el saldo real que diste ya lo incluía. Si no lo incluía (un reajuste, algo olvidado), hay que contarlo a mano. */
+  fueraDeSaldo(m) {
+    const c = cuentaById(m.cuenta_id); if (m.origen === 'import' || !c || !c.fecha_saldo_inicial || !c.saldo_actualizado || !m.created_at) return false;
+    return m.fecha <= c.fecha_saldo_inicial && tsMs(m.created_at) > tsMs(c.saldo_actualizado) && !this.posterior(m, c.fecha_saldo_inicial, c.saldo_actualizado);
+  },
   movsDesde(cid, desde, ts) { return S.movimientos.filter(m => m.cuenta_id === cid && this.posterior(m, desde, ts)); },
   /** Saldo contable = saldo de partida + movimientos posteriores. */
   saldo(c) { return round2(num(c.saldo_inicial) + sum(this.movsDesde(c.id, c.fecha_saldo_inicial, c.saldo_actualizado), 'importe')); },

@@ -284,3 +284,19 @@ def test_actualizar_cartera_pide_token(app):
     a.page.click('[data-action="inv-actualizar"]'); a.page.wait_for_timeout(200)
     assert a.page.locator('.modal #gh-tok').count() == 1                 # sin token, explica cómo crearlo
     a.page.click('.modal [data-x]')
+
+
+def test_movimiento_fuera_de_saldo(app):
+    """Un reajuste apuntado tras conciliar pero con fecha anterior no sumaba: ahora se avisa y se puede contar."""
+    a = app
+    a.ir('cuentas')
+    cid = a.ev("(() => { const c = S.cuentas.find(x => x.tipo === 'corriente'); c.fecha_saldo_inicial = diaAnterior(todayISO()); c.saldo_actualizado = new Date().toISOString(); return c.id; })()")
+    base = a.ev(f"num(cuentaById('{cid}').saldo_inicial)")
+    antes = a.ev(f"Calc.saldo(cuentaById('{cid}'))")
+    a.ev(f"S.movimientos.push({{ id: 'fx', cuenta_id: '{cid}', fecha: diaAnterior(diaAnterior(todayISO())), importe: -100, tipo: 'gasto', concepto: 'Reajuste', created_at: new Date(Date.now() + 5000).toISOString(), mes_imputacion: todayISO() }}); renderCuentas()")
+    assert a.ev(f"Calc.saldo(cuentaById('{cid}'))") == antes                       # no suma (comportamiento de siempre)
+    assert 'no suma al saldo' in a.texto('#tab-cuentas')
+    a.page.click(f'.acc-card[data-id="{cid}"]'); a.page.wait_for_timeout(150)
+    assert a.page.locator('.modal .acc-fuera').count() == 1
+    a.page.click('.modal [data-op="cuenta-contar-fuera"]'); a.page.wait_for_timeout(400)
+    assert abs(a.ev(f"num(cuentaById('{cid}').saldo_inicial)") - (base - 100)) < 0.01         # el saldo de partida ya lo incluye

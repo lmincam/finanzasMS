@@ -21,12 +21,22 @@ function abrirMenuCuenta(id) {
   const md = modal(`<h3 style="margin-bottom:2px">${esc(c.nombre)}</h3>
     <div class="small muted" style="margin-bottom:12px">${esc(c.entidad || '')}${c.entidad ? ' · ' : ''}${TIPO_CUENTA[c.tipo] || c.tipo} · <b class="${saldo < 0 ? 'neg' : ''}">${fmtEUR(saldo)}</b></div>
     ${k ? `<div class="acc-det ${Math.abs(num(k.dif)) < 0.01 ? 'ok' : 'warn'}">🏦 ${Math.abs(num(k.dif)) < 0.01 ? '✅ Cuadra con el banco' : `⚠ Descuadre de ${signed(num(k.dif))} con el banco`} <span class="muted">· ${fmtDate(k.fecha)}</span></div>` : ''}
+    ${(fuera => fuera.length ? `<div class="acc-det warn acc-fuera"><b>⚠ ${fuera.length} movimiento${fuera.length > 1 ? 's' : ''} no suma${fuera.length > 1 ? 'n' : ''} al saldo</b>
+      <div class="small" style="margin:4px 0 8px">Los apuntaste después de conciliar la cuenta (el ${fmtDate(k ? k.fecha : c.fecha_saldo_inicial)}), pero con una fecha anterior, así que la app entiende que el saldo que diste ya los incluía. Si no los incluía (un reajuste, algo que apuntaste tarde), haz que cuenten:</div>
+      ${fuera.map(m => `<div class="acc-fuera-r"><span>${fmtDate(m.fecha).slice(0, 5)} · ${esc(m.concepto || '—')}</span><b class="${num(m.importe) < 0 ? 'neg' : 'pos'}">${fmtEUR(num(m.importe))}</b></div>`).join('')}
+      <button class="btn sm" data-op="cuenta-contar-fuera" style="margin-top:8px">Que cuenten en el saldo (${signed(sum(fuera, 'importe'))})</button></div>` : '')(S.movimientos.filter(m => m.cuenta_id === c.id && Calc.fueraDeSaldo(m)))}
     ${resumenAnualidades(c)}
     <div class="mv-ops">
     ${inv ? op('cuenta-valor', '📈', 'Actualizar valor') : op('cuenta-conciliar', '🏦', 'Conciliar saldo con el banco')}
     ${op('mov-filtrar-cuenta', '🔎', 'Ver sus movimientos')}
     ${op('cuenta-edit', '✎', 'Editar')}${op('cuenta-del', '🗑', 'Eliminar', 'style="color:var(--red)"')}</div>`);
-  md.el.addEventListener('click', e => { if (e.target.closest('[data-action="anual-ver"]')) { md.close(); return; } const b = e.target.closest('[data-op]'); if (!b) return; md.close();
+  md.el.addEventListener('click', async e => { if (e.target.closest('[data-action="anual-ver"]')) { md.close(); return; } const b = e.target.closest('[data-op]'); if (!b) return; md.close();
+    if (b.dataset.op === 'cuenta-contar-fuera') {
+      const fuera = S.movimientos.filter(m => m.cuenta_id === id && Calc.fueraDeSaldo(m)), c2 = cuentaById(id);
+      // Se suman al saldo de partida: el saldo pasa a incluirlos sin tocar la fecha de conciliación
+      await withSaving(null, () => saveEntity('cuentas', id, { saldo_inicial: round2(num(c2.saldo_inicial) + sum(fuera, 'importe')), ...(S.v7 ? { saldo_actualizado: new Date().toISOString() } : {}) }), 'Saldo corregido');
+      render(); return;
+    }
     if (b.dataset.op === 'mov-filtrar-cuenta') { S.movFilter.cuenta = id; S.movLimit = 150; renderCuentas(); const l = $('.mv-head'); if (l) l.scrollIntoView({ behavior: 'smooth' }); return; }
     Actions[b.dataset.op]({ dataset: { id } }); });
 }
@@ -165,6 +175,7 @@ function movRow(m) {
   if (S.v6 && num(m.a_cobrar) > 0) { const i = infoCompartido(m); tags.push(`<span class="badge ${i.pendiente > 0.01 ? 'amber' : 'green'}">👥 ${i.pendiente > 0.01 ? `te deben ${fmtEUR(i.pendiente)}` : 'cobrado'}</span>`); }
   if (!isT && ymOf(m.mes_imputacion) !== ymOf(m.fecha)) tags.push(`<span class="badge blue">→ ${ymLabel(ymOf(m.mes_imputacion), true)}</span>`);
   if (!isT && !m.categoria_id) tags.push('<span class="badge amber">sin categoría</span>');
+  if (Calc.fueraDeSaldo(m)) tags.push(`<span class="badge red" title="Lo apuntaste después de conciliar ${esc(cta ? cta.nombre : 'la cuenta')} y tiene fecha anterior: no suma al saldo. Ábrelo desde la tarjeta de la cuenta para contarlo.">no suma al saldo</span>`);
   return `<div class="mv" data-action="mov-edit" data-id="${m.id}" role="button" tabindex="0">
     ${iconoMovimiento(m)}
     <div class="mv-main"><div class="mv-con">${esc(m.concepto || '—')}</div>
