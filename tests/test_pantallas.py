@@ -41,7 +41,7 @@ def test_detalles_y_subvistas(app):
     assert a.page.locator('.prod-tbl tbody tr').count() == 2
     a.ir('deudas')
     a.ev("S.deudaSel = S.deudas[0].id; render()")
-    assert 'Cuotas desde el último dato del banco' in a.texto('#tab-deudas')
+    assert 'Cuotas desde el último dato del banco' not in a.texto('#tab-deudas') and 'Tabla de amortización' in a.texto('#tab-deudas')
 
 
 def test_estructura_dashboard(app):

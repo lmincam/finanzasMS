@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.29.1 — 26/11/2026 · Menos ruido en Deudas
+- Quitada la tarjeta «Cuotas desde el último dato del banco» (lo cubre la tabla de amortización). Se mantienen los avisos de cuadre; el botón para actualizar el pendiente pasa a la tabla.
+
 ## 5.29.0 — 26/11/2026 · Tabla de amortización mes a mes
 - Deudas: en el detalle de cada préstamo, tabla francesa completa por años (nº de cuota, mes, día de cobro, cuota, intereses, capital, pendiente) desde la primera cuota hasta la última.
 - Columna «Banco»: apuntas el capital del recibo y la app marca ✓ si coincide o la diferencia; se guarda por préstamo y la cabecera cuenta cuántos meses cuadran.

@@ -107,19 +107,11 @@ function simDefault(d) {
 }
 function extrasSim(sim, modo) { return extrasPauta({ importe: sim.importe, cada: num(sim.cada), desdeYm: sim.desde, hastaYm: sim.hasta || null, modo }); }
 
-/** Cuotas desde el último dato del banco: con qué se calcula el capital pendiente de hoy (para comparar con los recibos). */
+/** Avisos de cuadre del capital pendiente (TIN, cargos que faltan…). */
 function renderCuotasReales(d) {
   if (!num(d.interes) && !num(d.cuota_mensual)) return '';
-  const L = ledgerDeuda(d), xs = L.pagos.slice(-12).reverse();
-  const tiene = d.capital_pendiente !== null && d.capital_pendiente !== undefined && d.capital_pendiente !== '';
-  const avisos = avisosCuadreDeuda(d, L);
-  return `${avisos.length ? `<div class="banner amber deu-avisos"><b>Revisa estos puntos para que el capital pendiente (y tu patrimonio) sea el real:</b><ul>${avisos.map(a => `<li>${a}</li>`).join('')}</ul></div>` : ''}<div class="card"><div class="card-head"><div><h3>🧾 Cuotas desde el último dato del banco</h3>
-      <div class="small muted">${tiene ? `Partida: <b>${fmtEUR(d.capital_pendiente)}</b> pendientes a ${fmtDate(d.fecha_capital_pendiente)}` : 'Partida: capital inicial'} · intereses: <b>${BASES_INTERES[L.base] || L.base}</b>${d.base_interes ? '' : ' (por defecto)'}</div></div>
-      <button class="btn sm" data-action="deu-pend" data-id="${d.id}">Comparar con el banco</button></div>
-    ${xs.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Fecha</th><th class="right">Cuota</th><th class="right">Intereses</th><th class="right">Capital</th><th class="right">Pendiente</th><th></th></tr></thead><tbody>
-      ${xs.map(p => `<tr><td>${fmtDate(p.fecha)}</td><td class="right num">${fmtEUR(p.importe)}</td><td class="right num neg">${fmtEUR(p.interes)}</td><td class="right num pos">${fmtEUR(p.capital)}</td><td class="right num"><b>${fmtEUR(p.pendiente)}</b></td>
-        <td>${p.extra ? '<span class="badge navy" title="Amortización anticipada registrada en este préstamo">amortización</span>' : p.real ? '<span class="badge green" title="Cargo registrado en tus movimientos">real</span>' : '<span class="badge" title="No hay cargo registrado ese mes: se supone la cuota habitual">estimada</span>'}</td></tr>`).join('')}
-    </tbody></table></div>` : '<div class="small muted">Aún no hay cuotas desde el último dato del banco.</div>'}</div>`;
+  const avisos = avisosCuadreDeuda(d, ledgerDeuda(d));
+  return avisos.length ? `<div class="banner amber deu-avisos"><b>Revisa estos puntos para que el capital pendiente (y tu patrimonio) sea el real:</b><ul>${avisos.map(a => `<li>${a}</li>`).join('')}</ul></div>` : '';
 }
 /** Lo que puede hacer que Inicio (capital amortizado) y el pendiente del préstamo no cuadren. */
 function avisosCuadreDeuda(d, L = ledgerDeuda(d)) {
@@ -187,7 +179,7 @@ function renderTablaBanco(d) {
       <td>${etiqueta[x.tipo]}</td></tr>`; };
   const nOk = Object.keys(B).filter(k => { const x = rows.find(r => r.ym + (r.tipo === 'extra' ? 'x' : '') === k); return x && Math.abs(num(B[k]) - x.capital) < 0.5; }).length, nB = Object.keys(B).filter(k => B[k] !== '' && B[k] !== null).length;
   return `<div class="card ta-card"><div class="card-head"><div><h3>📑 Tabla de amortización mes a mes</h3>
-      <div class="small muted">Sistema francés: cuota fija; cada mes intereses = pendiente × TIN/12 y el resto es capital. Apunta en <b>Banco</b> el capital que pone tu recibo y la app te dice si coincide.${nB ? ` · <b>${nOk} de ${nB}</b> meses coinciden` : ''}</div></div></div>
+      <div class="small muted">Sistema francés: cuota fija; cada mes intereses = pendiente × TIN/12 y el resto es capital. Apunta en <b>Banco</b> el capital que pone tu recibo y la app te dice si coincide.${nB ? ` · <b>${nOk} de ${nB}</b> meses coinciden` : ''}</div></div><button class="btn sm" data-action="deu-pend" data-id="${d.id}">Actualizar pendiente</button></div>
     ${anios.map(a => { const xs = rows.filter(x => x.ym.startsWith(a)); return `<details class="ta-anio" ${a === anioHoy ? 'open' : ''}><summary><b>${a}</b><span class="muted small">${xs.length} cuota${xs.length > 1 ? 's' : ''} · capital ${fmtEUR(sum(xs, 'capital'), 0)} · intereses ${fmtEUR(sum(xs, 'interes'), 0)}</span></summary>
       <div class="tbl-wrap tbl-scroll"><table class="tbl tbl-nowrap ta-tbl"><thead><tr><th>Nº</th><th>Mes</th><th>Cobro</th><th class="right">Cuota</th><th class="right">Intereses</th><th class="right">Capital</th><th>Banco</th><th></th><th class="right">Pendiente</th><th></th></tr></thead>
       <tbody>${xs.map(fila).join('')}</tbody></table></div></details>`; }).join('')}
