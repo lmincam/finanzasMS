@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.28.9 — 26/11/2026 · TIN a la vista
+- Deudas: cada préstamo muestra su TIN y cómo se calculan sus intereses en la tarjeta («sin TIN ⚠» si falta), y en el detalle junto al nombre.
+
 ## 5.28.8 — 26/11/2026 · De dónde sale el capital amortizado
 - Detalle de gastos: nueva tabla cuota a cuota con el préstamo, la cuota, los intereses y el capital que calcula la app y cómo lo calcula (TIN, base, dato del banco), para compararla con los recibos.
 - Préstamos: aviso si no tienen TIN (la app contaba toda la cuota como capital).

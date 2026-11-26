@@ -80,11 +80,12 @@ function renderDeudas() {
     <div class="grid-2e">${infos.map(({ d: x, I }) => `
       <div class="card" style="margin-bottom:0;cursor:pointer" data-action="deu-open" data-id="${x.id}">
         <div class="asset-head"><div class="asset-ico">🏦</div><div style="flex:1"><h3>${esc(x.nombre)} ${x.activa === false ? '<span class="badge">Cancelada</span>' : ''}${x.activa !== false && (num(x.interes) || num(x.cuota_mensual)) && avisosCuadreDeuda(x).length ? ' <span class="badge amber" title="Hay algo que revisar para que el pendiente sea el real: entra en el préstamo">⚠ revisar</span>' : ''}</h3>
-          <div class="small muted">${TIPO_DEUDA[x.tipo] || ''}${x.entidad ? ' · ' + esc(x.entidad) : ''} · ${x.tipo_interes || 'fijo'} ${fmtNum(num(x.interes), 2)} %</div></div>
+          <div class="small muted">${TIPO_DEUDA[x.tipo] || ''}${x.entidad ? ' · ' + esc(x.entidad) : ''} · interés ${x.tipo_interes || 'fijo'}</div></div>
           <span class="btn sm">Ver detalle</span></div>
         <div class="metrics">
           ${metric('Pendiente', fmtEUR(I.pendienteHoy, 0), 'neg')}${metric('Cuota', fmtEUR(I.cuota))}
-          ${metric('Cuotas restantes', I.restantes !== null ? fmtNum(I.restantes, 0) : '—')}${metric('Fin', I.fin ? ymMedio(I.fin) : '—')}
+          ${metric('TIN', num(x.interes) ? `${fmtNum(num(x.interes), 2)} %` : '<span class="warn-t">sin TIN ⚠</span>')}${metric('Cuotas restantes', I.restantes !== null ? fmtNum(I.restantes, 0) : '—')}
+          ${metric('Fin', I.fin ? ymMedio(I.fin) : '—')}${metric('Cálculo intereses', BASES_INTERES[x.base_interes || '30/360'].replace('Mensual fijo (TIN/12)', 'Mensual fijo'))}
         </div>
         ${I.pctAmort !== null ? `<div style="margin-top:10px"><div class="small muted" style="margin-bottom:4px">Amortizado ${fmtPct(I.pctAmort)}</div>${pctBar(I.pctAmort, 'navy')}</div>` : ''}
       </div>`).join('') || '<div class="card empty">Sin préstamos registrados</div>'}</div>`;
@@ -158,7 +159,7 @@ function renderDeudaDetalle(d) {
 
   el.innerHTML = `
     <div class="section-head"><div style="display:flex;gap:10px;align-items:center"><button class="btn sm ghost" data-action="deu-back">← Todas las deudas</button>
-      <div><h2>${esc(d.nombre)}</h2><div class="small muted">${TIPO_DEUDA[d.tipo] || ''}${d.entidad ? ' · ' + esc(d.entidad) : ''} · Interés ${d.tipo_interes || 'fijo'} ${fmtNum(num(d.interes), 2)} %${num(d.comision_amortizacion) ? ` · Comisión amortización ${fmtNum(num(d.comision_amortizacion), 2)} %` : ''}</div></div></div>
+      <div><h2>${esc(d.nombre)}</h2><div class="small muted">${TIPO_DEUDA[d.tipo] || ''}${d.entidad ? ' · ' + esc(d.entidad) : ''} · Interés ${d.tipo_interes || 'fijo'} · <b>TIN ${num(d.interes) ? fmtNum(num(d.interes), 2) + ' %' : 'sin poner ⚠'}</b>${num(d.comision_amortizacion) ? ` · Comisión amortización ${fmtNum(num(d.comision_amortizacion), 2)} %` : ''}</div></div></div>
       <div class="btn-row"><button class="btn sm" data-action="deu-pend" data-id="${d.id}">Actualizar pendiente</button><button class="btn sm" data-action="deu-edit" data-id="${d.id}">✎ Editar</button><button class="btn sm ghost" data-action="deu-del" data-id="${d.id}">🗑</button></div></div>
     ${bannerV4()}
     ${!I.viable ? '<div class="banner red">⚠ La cuota no cubre los intereses: revisa cuota e interés (✎ Editar).</div>' : ''}
