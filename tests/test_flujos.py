@@ -387,3 +387,14 @@ def test_tabla_amortizacion_incluye_mes_en_curso(app):
       const yms = filasAmortizacion(d).map(f => f.ym); window.ledgerDeuda = orig;
       return { hoy, tiene: yms.includes(hoy), unicos: new Set(yms).size === yms.length }; })()""")
     assert r['tiene'] and r['unicos']
+
+
+def test_calendario_rejilla_y_detalle_del_dia(movil):
+    a = movil
+    a.page.click('[data-action="cal-open"]'); a.page.wait_for_timeout(200)
+    assert a.page.locator('.cm-cell[data-f]').count() >= 28
+    assert 'Lo que dice el mes' in a.texto('.cr-card')
+    a.page.click('.cm-cell[data-f="2026-11-05"]'); a.page.wait_for_timeout(200)
+    assert a.page.locator('.cd-dia').count() == 1 and 'Mercadona' in a.texto('.cd-card')
+    a.page.click('.cd-card [data-action="cal-dia"]'); a.page.wait_for_timeout(200)
+    assert a.page.locator('.cd-dia').count() > 1

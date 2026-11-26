@@ -1,5 +1,9 @@
 # Historial de versiones
 
+## 5.32.0 — 26/11/2026 · Calendario limpio
+- Calendario de gastos rehecho: rejilla del mes completa también en el móvil, cada día con su total y color según lo gastado; al tocar un día se ven sus gastos debajo.
+- Nuevo resumen «Lo que dice el mes»: gasto medio por día, días sin gastar, día y semana más caros, día de la semana que más gastáis y en qué se va.
+
 ## 5.31.1 — 26/11/2026 · Seguros con céntimos
 - Pestaña Seguros: coste anual total, coste mensual y totales por tipo con el importe exacto (antes redondeado a euros).
 
