@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.28.3 — 26/11/2026 · Inicio compacto en el móvil
+- Móvil: Inicio más compacto (aviso de cierre, periodo y tarjetas con menos relleno y cifras algo más pequeñas) para que en un iPhone 16 Pro Max se vea hasta Liquidez y Patrimonio sin desplazarse.
+
 ## 5.28.2 — 26/11/2026 · Balance más compacto
 - Inicio › Balance: la cuenta (Ingresos − Gastos) queda pegada a la cifra, sin el hueco de antes.
 
