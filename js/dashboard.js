@@ -71,7 +71,7 @@ function renderDashboard() {
       <div class="seg per-modes">${modes.map(([k, l]) => `<button data-action="period-mode" data-mode="${k}" class="${p.mode === k ? 'active' : ''}">${l}</button>`).join('')}</div>
       <div class="per-sel">
         ${inputs}
-        <div class="per-info">${p.mode !== 'mes' ? `<span class="period-label">${periodLabel(months)}</span><br>` : ''}<span class="small muted" title="${mesNominaActivo() ? 'Mes de nómina: de un cobro al día antes del siguiente' : 'Meses naturales'}">${fmtDate(rangoCiclo(months[0]).ini)} – ${fmtDate(rangoCiclo(months[months.length - 1]).fin)}</span></div>
+        <div class="per-info">${p.mode !== 'mes' ? `<span class="period-label">${periodLabel(months)}</span><br>` : ''}<span class="small muted" title="${mesNominaActivo() ? 'Mes de nómina: de un cobro al día antes del siguiente' : 'Meses naturales'}">${fmtDate(rangoCiclo(months[0]).ini)} – ${finCicloTxt(months[months.length - 1])}</span></div>
       </div>
       <button class="btn primary per-cal" data-action="cal-open" data-noico title="Ver los gastos de cada día"><span class="emo">📅</span> Calendario</button>
     </div>

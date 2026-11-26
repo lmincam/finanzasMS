@@ -1239,3 +1239,17 @@ html,body{overflow-x:clip}
   body{min-height:100dvh}
 }
 .deu-avisos ul{margin:6px 0 0;padding-left:18px;line-height:1.5}.deu-avisos li{margin-bottom:4px}
+/* Ajustes › Revisar mis datos */
+.ch-card{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.ch-sec{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.ch-sec>summary{display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none}
+.ch-sec>summary::-webkit-details-marker{display:none}
+.ch-dot{width:9px;height:9px;border-radius:50%;flex:none;background:#94a3b8}
+.ch-sec.alto .ch-dot{background:#dc2626}.ch-sec.medio .ch-dot{background:#f59e0b}
+.ch-n{margin-left:auto;font-size:12px;font-weight:700;background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:1px 9px}
+.ch-r{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:6px 0;border-top:1px dashed var(--line)}
+.ch-r span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.ch-r small{color:var(--muted)}
+.ch-go{cursor:pointer}.ch-go:hover{background:var(--card2)}
+.ch-ver{color:var(--blue);font-weight:600}
+.ch-ok{font-size:12.5px;color:var(--muted);margin-top:10px;line-height:1.5}

@@ -134,14 +134,14 @@ function renderCierre(el, ym) {
   if (reg.cerrado) {
     el.innerHTML = `<div class="card period"><button class="btn sm" data-action="cierre-close">← Dashboard</button><div class="period-label">📋 Cierre de ${ymLabel(ym)}</div></div>
       <div class="card"><div class="card-head"><h3>✅ Mes cerrado el ${fmtDate(reg.cerrado.slice(0, 10))}</h3><button class="btn sm ghost" data-action="cierre-reabrir" data-ym="${ym}">Reabrir</button></div>
-      <div class="small muted" style="margin-bottom:8px">Mes de nómina del ${fmtDate(rangoCiclo(ym).ini)} al ${fmtDate(rangoCiclo(ym).fin)}</div>${htmlResumen(ym, reg.resumen || resumenCierre(ym))}</div>`;
+      <div class="small muted" style="margin-bottom:8px">Mes de nómina del ${fmtDate(rangoCiclo(ym).ini)} al ${cicloAbierto(ym) ? 'cobro de la próxima nómina' : fmtDate(rangoCiclo(ym).fin)}</div>${htmlResumen(ym, reg.resumen || resumenCierre(ym))}</div>`;
     return;
   }
   const P = pasosCierre(ym), done = p => p.ok || !!hechos[p.k];
   const n = P.filter(done).length, pend = P.filter(p => !done(p) && !p.info);
   el.innerHTML = `
     <div class="card period"><button class="btn sm" data-action="cierre-close">← Dashboard</button>
-      <div class="period-label">📋 Cierre de ${ymLabel(ym)} <span class="small muted">· del ${fmtDate(rangoCiclo(ym).ini)} al ${fmtDate(rangoCiclo(ym).fin)}</span></div></div>
+      <div class="period-label">📋 Cierre de ${ymLabel(ym)} <span class="small muted">· del ${fmtDate(rangoCiclo(ym).ini)} al ${cicloAbierto(ym) ? 'cobro de la próxima nómina' : fmtDate(rangoCiclo(ym).fin)}</span></div></div>
     <div class="card cz-prog"><div class="cz-prog-t"><b>${n} de ${P.length} pasos</b><span class="small muted">Los que la app puede comprobar se marcan solos; el resto, márcalos al hacerlos.</span></div>${pctBar(n / P.length, n === P.length ? '' : 'amber')}</div>
     ${P.map((p, i) => `<div class="card cz-paso ${done(p) ? 'hecho' : ''}">
       <div class="cz-head"><span class="cz-n">${done(p) ? '✓' : i + 1}</span><h3>${p.ic} ${p.t}${p.info ? ' <span class="badge">opcional</span>' : ''}</h3>

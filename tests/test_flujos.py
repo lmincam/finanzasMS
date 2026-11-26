@@ -350,3 +350,18 @@ def test_amortizacion_sin_actualizar_baja_el_pendiente(app):
       return [antes, despues]; })()""")
     assert r is not None
     assert abs((r[0] - r[1]) - 3000) < 1
+
+
+def test_chequeo_de_datos(app):
+    a = app
+    r = a.ev("""(() => { const m = S.movimientos.find(x => x.tipo === 'gasto');
+      S.movimientos.push({ ...m, id: 'dup1' });
+      const sec = chequeoDatos(); S.movimientos = S.movimientos.filter(x => x.id !== 'dup1');
+      return sec.find(s => s.titulo.startsWith('Posibles movimientos duplicados')).items.length; })()""")
+    assert r >= 1
+    a.ir('ajustes'); a.page.click('[data-action="chequeo-datos"]'); a.page.wait_for_timeout(200)
+    assert 'Revisión de tus datos' in a.page.locator('.modal').inner_text()
+
+def test_garantia_sin_desfase_horario(app):
+    assert app.ev("garantiaDe({ fecha_compra: '2025-03-10' })") == '2028-03-10'
+    assert app.ev("garantiaDe({ fecha_compra: '2024-02-29' })") == '2027-02-28'

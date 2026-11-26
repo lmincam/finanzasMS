@@ -247,6 +247,10 @@ function inicioCiclo(ym) {
 }
 /** Rango del mes de nómina: { ini, fin } (fin = día antes del siguiente cobro, estimado si aún no ha llegado). */
 const rangoCiclo = ym => ({ ini: inicioCiclo(ym), fin: addDias(inicioCiclo(addMonths(ym, 1)), -1) });
+/** ¿El mes de nómina sigue abierto (aún no ha llegado la nómina que lo cierra)? Entonces su último día es solo una estimación. */
+const cicloAbierto = ym => mesNominaActivo() && ym >= mesActual() && !(ciclosNomina().inicio || {})[addMonths(ym, 1)];
+/** Fin del mes de nómina para mostrar: la fecha real o «la próxima nómina» si aún no se sabe. */
+const finCicloTxt = ym => cicloAbierto(ym) ? 'próxima nómina' : fmtDate(rangoCiclo(ym).fin);
 /** Mes de nómina al que pertenece una fecha. */
 function cicloDe(fecha) {
   let ym = ymOf(fecha);
@@ -267,7 +271,7 @@ function mesDe(m) {
   if (c && c[0] === m.fecha && c[1] === m.mes_imputacion) return c[2];
   const r = cicloDe(m.fecha); C.memo.set(m, [m.fecha, m.mes_imputacion, r]); return r;
 }
-const fmtRango = ym => { const r = rangoCiclo(ym); return `${fmtDate(r.ini).slice(0, 5)} – ${fmtDate(r.fin).slice(0, 5)}`; };
+const fmtRango = ym => { const r = rangoCiclo(ym); return `${fmtDate(r.ini).slice(0, 5)} – ${cicloAbierto(ym) ? 'próx. nómina' : fmtDate(r.fin).slice(0, 5)}`; };
 
 function periodMonths() {
   const p = S.period;

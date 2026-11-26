@@ -34,7 +34,9 @@ const aniosDesde = f => f ? Math.max(0, (Date.parse(todayISO()) - Date.parse(f))
 function garantiaDe(p) {
   if (p.garantia_hasta) return p.garantia_hasta;
   if (!p.fecha_compra) return null;
-  const f = new Date(p.fecha_compra + 'T00:00:00'); f.setFullYear(f.getFullYear() + GARANTIA_ANIOS); return f.toISOString().slice(0, 10);
+  // Mismo día y mes, N años después (sin pasar por la hora local: en España daba un día menos). 29/02 → 28/02.
+  const [y, m, d] = p.fecha_compra.slice(0, 10).split('-').map(Number), Y = y + GARANTIA_ANIOS;
+  return `${Y}-${pad(m)}-${pad(Math.min(d, daysInMonth(Y, m)))}`;
 }
 /** Valores de un objeto: reposición, venta estimada y estado de la garantía. */
 function pertInfo(p) {

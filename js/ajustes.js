@@ -15,6 +15,8 @@ function renderAjustes() {
       ${renderAppCard()}
     </div>
 
+    <div class="card ch-card"><div><h3>🩺 Revisar mis datos</h3><div class="small muted">Busca duplicados, transferencias sin pareja, devoluciones huérfanas, saldos imposibles y préstamos que no cuadran.</div></div>
+      <button class="btn primary" data-action="chequeo-datos">Revisar ahora</button></div>
     <div class="aj-grid">
       <div class="card"><div class="card-head"><h3>⏭ Mes de nómina</h3></div>
         <label class="chk-line"><input type="checkbox" id="cfg-mesnom" ${mesNominaActivo() ? 'checked' : ''}>

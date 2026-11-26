@@ -1,5 +1,11 @@
 # Historial de versiones
 
+## 5.28.0 — 26/11/2026 · Revisión completa
+- Nuevo: Ajustes › **Revisar mis datos**. Repasa tus datos reales y avisa de duplicados, transferencias sin pareja o descuadradas, devoluciones huérfanas o mayores que el gasto, gastos en positivo sin vincular, ingresos negativos, movimientos de cuentas o categorías borradas, sin categoría, con fecha futura, imputados a meses lejanos o que no suman al saldo, cuentas del día a día en negativo y préstamos que no cuadran. Cada aviso lleva al movimiento o préstamo.
+- Corregido: la garantía de las pertenencias salía un día antes (desfase horario de España).
+- Corregido: Inicio, el cierre de mes y las explicaciones ya no muestran un último día del mes de nómina inventado mientras no llega la siguiente nómina («27/10 – próxima nómina»).
+- Revisado sin errores: todas las pestañas en ordenador y móvil, claro y oscuro (sin errores, sin NaN, sin desbordes) y las cuentas cruzadas (gastos = operativos + capital, presupuesto = gastos, gastos + ahorro = ingresos, patrimonio = activos − deudas).
+
 ## 5.27.5 — 26/11/2026 · Préstamos: capital pendiente que cuadra con Inicio
 - Las amortizaciones anticipadas registradas después del último dato del banco ya bajan el capital pendiente (antes solo lo hacían si al registrarlas se marcaba «actualizar el préstamo»), y aparecen en la tabla de cuotas.
 - Si dos préstamos comparten la categoría de la cuota, cada cargo se asigna al de cuota más parecida (antes los dos contaban el mismo cargo y el pendiente bajaba el doble).
