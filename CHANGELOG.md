@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.28.5 — 26/11/2026 · Inicio móvil a medida
+- Móvil: se devuelve el relleno de las tarjetas (unos 26 px) para que Liquidez y Patrimonio queden justo encima de la barra inferior, sin hueco.
+
 ## 5.28.4 — 26/11/2026 · Inicio móvil: ajuste mínimo
 - Se deshace la compactación fuerte de la 5.28.3: vuelven los tamaños de antes y solo se recorta un poco el relleno y la separación (unos 40 px en total). Vuelve la leyenda de la barra de gastos.
 - Corregido: la flecha › de la tarjeta de gastos ya no se monta sobre la barra.
