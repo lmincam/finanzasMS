@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.26.2 — 26/11/2026 · Último movimiento cargado
+- Movimientos: antes de la lista, dos recuadros con la fecha del último movimiento de la cuenta principal y del efectivo (hace cuántos días, concepto e importe), para saber desde qué día retomar la carga. Si pasa de una semana, se resalta en ámbar. Al pulsarlo, se filtra la lista por esa cuenta.
+
 ## 5.26.1 — 20/11/2026 · Notas sin IA
 - Notas sin resumen por IA: cada tarjeta muestra el principio del texto. Se quita la tarea «Resumen de notas» y las columnas de resumen del bloque 16.
 

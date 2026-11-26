@@ -55,6 +55,24 @@ function logoCuenta(c) {
 }
 const nombreEntidad = c => c.entidad || ({ 'unicaja.es': 'Unicaja', 'myinvestor.es': 'MyInvestor' })[webEntidad(c)] || '';
 
+/** Dos recuadros con el último movimiento de la cuenta principal y del efectivo: desde qué día retomar la carga. */
+function ultimosMovs(liq) {
+  const princ = liq.find(c => c.tipo === 'corriente' && c.activa !== false), efec = liq.find(c => c.tipo === 'efectivo' && c.activa !== false);
+  const caja = c => {
+    if (!c) return '';
+    const ult = S.movimientos.filter(m => m.cuenta_id === c.id).reduce((a, m) => !a || m.fecha > a.fecha || (m.fecha === a.fecha && String(m.created_at) > String(a.created_at)) ? m : a, null);
+    const dias = ult ? Math.round((new Date(todayISO()) - new Date(ult.fecha)) / 864e5) : null;
+    const hace = dias === null ? '' : dias <= 0 ? 'hoy' : dias === 1 ? 'ayer' : `hace ${dias} días`;
+    return `<button class="ult-mov ${dias !== null && dias > 7 ? 'viejo' : ''}" data-action="ult-mov-ver" data-id="${c.id}" title="Ver los movimientos de ${esc(c.nombre)}">
+      ${logoCuenta(c)}<div class="ult-txt"><div class="ult-l">${esc(c.nombre)}</div>
+      ${ult ? `<div class="ult-f">${fmtDate(ult.fecha)} <span>${hace}</span></div><div class="ult-c">${esc(ult.concepto || '—')} · <b class="${num(ult.importe) < 0 ? 'neg' : 'pos'}">${fmtEUR(num(ult.importe))}</b></div>`
+            : '<div class="ult-f">Sin movimientos</div>'}</div></button>`;
+  };
+  const html = caja(princ) + caja(efec);
+  return html ? `<div class="ult-h">Último movimiento cargado <span>· para saber desde qué día retomar</span></div><div class="ult-grid">${html}</div>` : '';
+}
+Actions['ult-mov-ver'] = el => { S.movFilter.cuenta = el.dataset.id; S.movFilter.mes = ''; S.movLimit = 150; renderCuentas(); const l = $('.mv-head'); if (l) l.scrollIntoView({ behavior: 'smooth' }); };
+
 function renderCuentas() {
   const el = $('#tab-cuentas');
   const P = Calc.patrimonio();
@@ -85,7 +103,7 @@ function renderCuentas() {
       </div></div>
     <div class="acc-grid acc-liq ${liq.length === 4 ? 'acc-4' : ''}">${cards || '<div class="card empty">Sin cuentas</div>'}</div>
     <div class="card" id="import-card" hidden></div>
-
+    ${ultimosMovs(liq)}
     <div class="card">
       <div class="card-head mv-head"><h3>Movimientos</h3><div class="btn-row">${chipPendientes()}
         <button class="btn sm mf-orden" data-action="mf-orden" title="${S.movOrden === 'asc' ? 'Más antiguos primero · pulsa para ver los más recientes primero' : 'Más recientes primero · pulsa para ver los más antiguos primero'}" aria-label="${S.movOrden === 'asc' ? 'Orden: más antiguos primero' : 'Orden: más recientes primero'}">${S.movOrden === 'asc' ? '↑' : '↓'}</button>

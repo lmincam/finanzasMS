@@ -1142,3 +1142,18 @@ html,body{overflow-x:clip}
 .nota-texto{white-space:pre-wrap;line-height:1.55;font-size:14.5px;max-height:55vh;overflow:auto;overflow-wrap:anywhere}
 .modal textarea[name="texto"]{min-height:220px}
 @media (max-width:640px){ .notas-list{grid-template-columns:1fr} }
+/* Movimientos · último movimiento de la cuenta principal y del efectivo */
+.ult-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 14px}
+.ult-mov{display:flex;align-items:center;gap:12px;text-align:left;font:inherit;color:var(--txt);background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;cursor:pointer;min-width:0;box-shadow:0 1px 2px rgba(15,23,42,.05)}
+.ult-mov:hover{box-shadow:0 6px 16px -10px rgba(15,23,42,.3)}
+.ult-txt{min-width:0}
+.ult-l{font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ult-f{font-size:19px;font-weight:750;margin-top:2px;font-variant-numeric:tabular-nums}
+.ult-f span{font-size:13px;font-weight:500;color:var(--muted);margin-left:4px}
+.ult-c{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ult-mov.viejo{border-color:#f59e0b;background:color-mix(in srgb,#f59e0b 7%,var(--card))}
+.ult-mov.viejo .ult-f span{color:#b45309;font-weight:600}
+@media (max-width:640px){ .ult-grid{gap:8px} .ult-mov{padding:10px;gap:8px} .ult-l{font-size:10.5px} .ult-f{font-size:16px} .ult-f span{display:block;margin:0;font-size:11.5px} }
+.ult-h{font-size:13px;font-weight:650;color:var(--muted);margin:4px 2px 8px}
+.ult-h span{font-weight:500}
+@media (max-width:640px){ .ult-h span{display:none} .ult-mov .acc-logo{width:32px;height:32px} .ult-mov .acc-logo.hucha svg{width:24px;height:24px} .ult-mov .acc-logo img{width:20px;height:20px} }
