@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.31.0 — 26/11/2026 · Un único método: el del banco
+- Todos los préstamos calculan los intereses como el banco: pendiente × TIN × días reales entre recibos / 365, redondeado al céntimo. Desaparece el selector TIN/12 · /360 · /365 y la «calibración» automática.
+
 ## 5.30.2 — 26/11/2026 · Préstamo de la autocaravana cuadrado
 - Se ajusta una sola vez a sus recibos: TIN 8,50 %, días reales entre vencimientos (día 23) / 365, pendiente 44.466,98 € a 23/11/2026. Validado con los 10 recibos reales al céntimo.
 

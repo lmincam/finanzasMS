@@ -115,7 +115,9 @@ function diaRecibo(d, cargos) {
    (importe y fecha de cada cuota registrada) y la base de cálculo de intereses del banco:
    - 30/360: interés mensual = pendiente × TIN / 12 (igual todos los meses)
    - act/360 y act/365: interés = pendiente × TIN × días entre cuotas / 360 (o 365): varía según los días del mes */
-const BASES_INTERES = { '30/360': 'Mensual fijo (TIN/12)', 'act/360': 'Días reales / 360', 'act/365': 'Días reales / 365' };
+/** Cómo calculan los bancos los intereses de cada recibo (comprobado con los recibos reales de la hipoteca y la autocaravana):
+    pendiente × TIN × días reales entre vencimientos / 365, redondeado al céntimo. Se aplica a todos los préstamos. */
+const BASE_BANCO = 'act/365';
 const interesPeriodo = (P, tin, base, desde, hasta) => (base === 'act/360' || base === 'act/365')
   ? P * tin * Math.max(0, (Date.parse(hasta) - Date.parse(desde)) / 864e5) / (base === 'act/360' ? 360 : 365) : P * tin / 12;
 function cuotaDeuda(d) {
@@ -129,7 +131,7 @@ function cuotaDeuda(d) {
   return cuota;
 }
 /** Cuotas desde el último dato del banco hasta `hasta` (hoy): [{ fecha, importe, interes, capital, pendiente, ids, real }] y el pendiente final. */
-function ledgerDeuda(d, base = d.base_interes || '30/360', hasta = todayISO()) {
+function ledgerDeuda(d, base = BASE_BANCO, hasta = todayISO()) {
   const key = `L|${d.id}|${base}|${hasta}`;
   if (_deudaCache.has(key)) return _deudaCache.get(key);
   const tin = num(d.interes) / 100, cuota = cuotaDeuda(d);
@@ -182,7 +184,7 @@ function ledgerAtras(d) {
   const out = [], tiene = d.capital_pendiente !== null && d.capital_pendiente !== undefined && d.capital_pendiente !== '';
   const cat = categoriaCuota(d);
   if (tiene && d.fecha_capital_pendiente && cat && num(d.interes) > 0) {
-    const base = d.base_interes || '30/360', act = base === 'act/360' || base === 'act/365', B = base === 'act/365' ? 365 : 360, tin = num(d.interes) / 100;
+    const base = BASE_BANCO, act = base === 'act/360' || base === 'act/365', B = base === 'act/365' ? 365 : 360, tin = num(d.interes) / 100;
     const f0 = d.fecha_capital_pendiente;
     const todos = S.movimientos.filter(m => m.tipo === 'gasto' && m.categoria_id === cat && num(m.importe) < 0 && deudaDeMovimiento(m) === d).sort((a, b) => a.fecha < b.fecha ? -1 : 1);
     const dV = diaRecibo(d, todos);
@@ -220,7 +222,7 @@ function deudaInfo(d) {
   const meses = Math.max(0, monthsDiff(refDate, today));
   // Pendiente de hoy: cuota a cuota desde el último dato del banco, con los cargos reales registrados
   const P = (num(d.interes) > 0 || cuota) ? ledgerDeuda(d).pendiente : round2(P0);
-  const base = d.base_interes || '30/360', catC = categoriaCuota(d);
+  const base = BASE_BANCO, catC = categoriaCuota(d);
   const dVto = diaRecibo(d, catC ? S.movimientos.filter(m => m.tipo === 'gasto' && m.categoria_id === catC && num(m.importe) < 0).sort((a, b) => a.fecha < b.fecha ? -1 : 1) : []);
   const sched = amortizar(P, r, cuota, addMonths(ymOf(today), 1), base, dVto);
   const s = sched || [];
@@ -403,7 +405,7 @@ function capitalDeMovimiento(m) {
   // La cuota que deja el capital en el dato del banco (copiado justo después de pagarla): se deduce hacia atrás
   const tiene = d.capital_pendiente !== null && d.capital_pendiente !== undefined && d.capital_pendiente !== '';
   if (tiene && d.fecha_capital_pendiente && m.fecha <= d.fecha_capital_pendiente && diasEntre(m.fecha, d.fecha_capital_pendiente) <= 25) {
-    const base = d.base_interes || '30/360', tin = num(d.interes) / 100;
+    const base = BASE_BANCO, tin = num(d.interes) / 100;
     const ant = S.movimientos.filter(x => x.tipo === 'gasto' && x.categoria_id === m.categoria_id && num(x.importe) < 0 && x.fecha < m.fecha).sort((a, b) => a.fecha < b.fecha ? 1 : -1)[0];
     const rate = interesPeriodo(1, tin, base, ant && diasEntre(ant.fecha, m.fecha) <= 40 ? ant.fecha : addDias(m.fecha, -30), m.fecha);
     return round2(Math.max(0, Math.min(abs, (abs - num(d.capital_pendiente) * rate) / (1 + rate))));

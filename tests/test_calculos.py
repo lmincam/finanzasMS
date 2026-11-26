@@ -19,12 +19,11 @@ def test_balance_liquido_y_capital(app):
     assert st['c'] > 0
 
 
-def test_hipoteca_base_de_intereses(app):
-    a = app
-    a.ev("""(()=>{for (const f of ['2026-06-03','2026-07-03','2026-08-03','2026-09-03','2026-10-03']) S.movimientos.push({id:'q'+f,cuenta_id:'a',fecha:f,mes_imputacion:f.slice(0,7)+'-01',importe:-650,tipo:'gasto',categoria_id:'g2',concepto:'CUOTA'}); S.movimientos=[...S.movimientos]; _deudaCache=new Map();})()""")
-    banco = a.ev("ledgerDeuda(S.deudas[0],'act/360','2026-11-03').pendiente")
-    cal = a.ev(f"calibrarBase(S.deudas[0], {banco}, '2026-11-03')")
-    assert cal['base'] == 'act/360' and abs(cal['dif']) < 0.01 and abs(cal['difAntes']) > 1
+def test_todos_los_prestamos_usan_el_metodo_del_banco(app):
+    assert app.ev("BASE_BANCO") == 'act/365'
+    assert app.ev("typeof BASES_INTERES") == 'undefined'
+    app.ev("Actions['deu-edit']({dataset:{id:S.deudas[0].id}})"); app.page.wait_for_timeout(150)
+    assert app.page.locator('.modal [name="base_interes"]').count() == 0
 
 
 def test_inversion_participaciones_y_reparto(app):
@@ -96,7 +95,7 @@ def test_prevision_detecta_nomina(app):
 import pytest
 
 
-@pytest.mark.parametrize("tin,base,p0,pend,dias", [(1.875, "act/360", 116399.55, 112745.31, 360), (1.90, "act/365", 116462.27, 112808.03, 365)])
+@pytest.mark.parametrize("tin,base,p0,pend,dias", [(1.90, "act/365", 116462.27, 112808.03, 365)])
 def test_hipoteca_act360_cuadra_con_recibos_del_banco(app, tin, base, p0, pend, dias):
     # Recibos reales de Unicaja: cuota 425,62 €, TIN 1,875 %, días reales entre vencimientos (día 1) / 360
     banco = [("2025-09-01",237.68,187.94),("2025-10-01",244.12,181.50),("2025-11-03",238.46,187.16),("2025-12-01",244.87,180.75),("2026-01-02",239.24,186.38),("2026-02-02",239.63,185.99),("2026-03-02",257.98,167.64),("2026-04-01",240.43,185.19),("2026-05-04",246.78,178.84),("2026-06-01",241.22,184.40),("2026-07-01",247.54,178.08),("2026-08-03",242.01,183.61),("2026-09-01",242.40,183.22),("2026-10-01",248.69,176.93),("2026-11-02",243.19,182.43)]

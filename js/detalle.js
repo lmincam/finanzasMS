@@ -120,7 +120,7 @@ function desgloseCapital(st) {
     const abs = Math.abs(num(m.importe));
     if (esCatAmortizacion(m.categoria_id)) return { d: null, como: 'Amortización anticipada: todo es capital', int: 0 };
     const d = deudaDeMovimiento(m), L = d ? ledgerDeuda(d) : null, e = L && L.pagos.find(p => p.ids.includes(m.id));
-    const como = e ? `Calculado desde el dato del banco (${fmtDate(d.fecha_capital_pendiente || d.fecha_inicio)}) · TIN ${fmtNum(num(d.interes), 2)} % · ${BASES_INTERES[d.base_interes || '30/360']}`
+    const como = e ? `Calculado desde el dato del banco (${fmtDate(d.fecha_capital_pendiente || d.fecha_inicio)}) · TIN ${fmtNum(num(d.interes), 2)} % · días reales entre recibos / 365`
       : d ? `Estimado (cuota anterior al dato del banco) · TIN ${fmtNum(num(d.interes), 2)} %` : '—';
     return { d, como, int: round2(abs - cap) };
   };
