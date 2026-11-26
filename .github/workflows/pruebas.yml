@@ -51,15 +51,11 @@ jobs:
       - name: Ejecutar pruebas
         run: python -m pytest tests -q
 
+  # Dos trabajos: preparar sube la web y desplegar la publica. Separados, GitHub ya tiene el paquete
+  # registrado cuando se despliega (en un solo trabajo a veces no lo encontraba: "No artifacts named github-pages").
   publicar:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - name: Preparar los archivos de la web
@@ -70,5 +66,18 @@ jobs:
       - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
+
+  desplegar:
+    needs: publicar
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Esperar a que el paquete esté disponible
+        run: sleep 10
       - id: deploy
         uses: actions/deploy-pages@v5
