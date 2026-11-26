@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.26.5 — 26/11/2026 · Actualizar cartera
+- Inversiones: botón «⟳ Actualizar cartera» que lanza en el momento la tarea «Precios diarios» de GitHub, espera a que termine (1-2 min) y recarga los datos. La primera vez pide un token de GitHub (solo permiso de Actions sobre finanzasMS) que se guarda únicamente en ese dispositivo.
+
 ## 5.26.4 — 26/11/2026 · Ver los movimientos de cada partida del presupuesto
 - Inicio › Presupuesto vs. gastado real: al pulsar una partida se abren todos sus movimientos del periodo (o del año, si es anual), con lo gastado, lo devuelto por Bizum, lo pendiente de cobrar y el total que cuenta en el presupuesto, que cuadra con la fila.
 

@@ -148,7 +148,7 @@ function renderInversiones() {
 
   el.innerHTML = `
     <div class="section-head"><div><h2>Inversiones</h2><div class="small muted">${act.length} cuenta(s)${cambios.length ? ` · 📡 precios de cierre del ${fmtDate(cambios[0].A.fecha)}` : ''}</div></div>
-      <div class="btn-row"><button class="btn" data-action="inv-new">+ Cuenta de inversión</button><button class="btn" data-action="sic-open">${icono('chart')} Simulador</button></div></div>
+      <div class="btn-row"><button class="btn primary" data-action="inv-actualizar" ${S.actualizandoCartera ? 'disabled' : ''}>${S.actualizandoCartera ? '⟳ Actualizando…' : '⟳ Actualizar cartera'}</button><button class="btn" data-action="inv-new">+ Cuenta de inversión</button><button class="btn" data-action="sic-open">${icono('chart')} Simulador</button></div></div>
     ${bannerV4()}
     ${avisos}
     ${heroInversion({ valor: totVal, aportado: totAp, plus: totPlus, cambio: cambioDia, t, mensual, titulo: 'Valor total de la cartera' })}
@@ -370,3 +370,55 @@ Object.assign(Actions, {
     await withSaving(null, async () => { await DB.remove('aportaciones_periodicas', el.dataset.id); await reloadTable('aportaciones_periodicas'); }, 'Eliminada'); render();
   }
 });
+
+/* ---------- Actualizar cartera ya (además de las ejecuciones automáticas) ----------
+   Los precios los descarga la tarea "Precios diarios" de GitHub (necesita claves que no pueden estar en la web).
+   Este botón la lanza en el momento con un token de GitHub guardado SOLO en este dispositivo,
+   espera a que termine y recarga los datos. */
+const GH_REPO = 'lmincam/finanzasMS';
+const tokenGH = () => { try { return localStorage.getItem('pf_gh_token') || ''; } catch (e) { return ''; } };
+const estadoPreciosAhora = async () => (((await DB.all('ajustes')).find(r => r.clave === 'precios_estado') || {}).valor || {}).ejecutado || '';
+
+function pedirTokenGH() {
+  return new Promise(res => {
+    const md = modal(`<h3>Actualizar cartera desde la app</h3>
+      <p class="small" style="line-height:1.5">Los precios los descarga GitHub. Para lanzarlo desde aquí, la app necesita un <b>token de GitHub</b> con permiso solo para eso. Se guarda únicamente en este dispositivo.</p>
+      <ol class="small" style="line-height:1.6;padding-left:18px;margin:8px 0 12px">
+        <li>En GitHub: <b>Settings › Developer settings › Personal access tokens › Fine-grained tokens › Generate new token</b>.</li>
+        <li><b>Repository access:</b> «Only select repositories» › <b>finanzasMS</b>.</li>
+        <li><b>Permissions › Actions:</b> «Read and write». Nada más.</li>
+        <li>Genera el token y pégalo aquí.</li></ol>
+      <input id="gh-tok" type="password" placeholder="github_pat_…" autocomplete="off" style="width:100%">
+      <div class="actions"><button class="btn" data-x>Cancelar</button><button class="btn primary" data-ok>Guardar y actualizar</button></div>`, { onClose: () => res('') });
+    md.el.querySelector('[data-x]').addEventListener('click', () => md.close());
+    md.el.querySelector('[data-ok]').addEventListener('click', () => { const t = md.el.querySelector('#gh-tok').value.trim(); if (!t) return;
+      try { localStorage.setItem('pf_gh_token', t); } catch (e) { /* sin almacenamiento */ } res(t); md.close(); });
+  });
+}
+
+Actions['inv-actualizar'] = async () => {
+  if (S.actualizandoCartera) return;
+  let tok = tokenGH();
+  if (!tok) { tok = await pedirTokenGH(); if (!tok) return; }
+  const antes = await estadoPreciosAhora().catch(() => '');
+  const r = await fetch(`https://api.github.com/repos/${GH_REPO}/actions/workflows/precios.yml/dispatches`, {
+    method: 'POST', headers: { Authorization: `Bearer ${tok}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: JSON.stringify({ ref: 'main' })
+  }).catch(() => null);
+  if (!r || !r.ok) {
+    if (r && (r.status === 401 || r.status === 403 || r.status === 404)) { try { localStorage.removeItem('pf_gh_token'); } catch (e) { /* */ } toast('GitHub no acepta el token (caducado o sin permiso de Actions). Vuelve a pulsar para poner uno nuevo.', 'err'); }
+    else toast('No se pudo lanzar la actualización. Revisa la conexión.', 'err');
+    return;
+  }
+  S.actualizandoCartera = true; render();
+  toast('Descargando precios… suele tardar 1-2 minutos', 'ok');
+  const t0 = Date.now();
+  const mirar = async () => {
+    let ahora = ''; try { ahora = await estadoPreciosAhora(); } catch (e) { /* reintenta */ }
+    if (ahora && ahora !== antes) {
+      await loadAll(); S.actualizandoCartera = false; render(); toast('Cartera actualizada con los últimos precios', 'ok'); return;
+    }
+    if (Date.now() - t0 > 6 * 60000) { S.actualizandoCartera = false; render(); toast('Está tardando más de lo normal. Los precios aparecerán solos en cuanto termine.', 'warn'); return; }
+    setTimeout(mirar, 10000);
+  };
+  setTimeout(mirar, 20000);
+};

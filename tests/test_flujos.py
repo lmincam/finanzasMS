@@ -276,3 +276,11 @@ def test_presupuesto_ver_movimientos(app):
         n = float(tot.replace('€', '').replace('.', '').replace(',', '.').replace('\u2212', '-').strip())
         assert abs(n - esperado) < 0.01, (f.get_attribute('data-nombre'), n, esperado)   # el detalle cuadra con la fila
         a.page.click('.modal [data-close]'); a.page.wait_for_timeout(100)
+
+
+def test_actualizar_cartera_pide_token(app):
+    a = app
+    a.ir('inversiones')
+    a.page.click('[data-action="inv-actualizar"]'); a.page.wait_for_timeout(200)
+    assert a.page.locator('.modal #gh-tok').count() == 1                 # sin token, explica cómo crearlo
+    a.page.click('.modal [data-x]')
