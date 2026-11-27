@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.32.1 — 27/11/2026 · Orden de Planificar
+- Seguros pasa a ser la segunda pestaña de Planificar, justo después de Presupuestos.
+
 ## 5.32.0 — 26/11/2026 · Calendario limpio
 - Calendario de gastos rehecho: rejilla del mes completa también en el móvil, cada día con su total y color según lo gastado; al tocar un día se ven sus gastos debajo.
 - Nuevo resumen «Lo que dice el mes»: gasto medio por día, días sin gastar, día y semana más caros, día de la semana que más gastáis y en qué se va.
