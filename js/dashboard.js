@@ -51,6 +51,7 @@ function renderDashboard() {
   if (donut.length > 9) { const rest = donut.slice(8); donut = donut.slice(0, 8).concat([{ k: '_otros', v: sum(rest, 'v'), c: { nombre: 'Resto', color: '#cbd5e1' } }]); }
   // Lo que no se gasta: a qué cuentas de ahorro / inversión ha ido, lo apartado para anualidades y lo que queda en la cuenta
   const destinos = destinosAhorro(st);
+  S._dv = { st, donut, destinos };
 
   // Sin gastos fijos (hipoteca, recibos…): interesan los gastos en los que puedes decidir
   const _fijo = new Map(), esFijo = c => { if (!c) return false; if (!_fijo.has(c)) _fijo.set(c, esGastoFijo(c, months[months.length - 1])); return _fijo.get(c); };
@@ -110,7 +111,7 @@ function renderDashboard() {
 
     <div class="grid-2 dash-charts">
       <div class="card"><div class="card-head"><h3>Ingresos vs. gastos</h3></div><div class="chart-box"><canvas id="ch-ig"></canvas></div></div>
-      <div class="card dv-card"><div class="card-head"><h3>¿Dónde va vuestro dinero?</h3>${st.ingresos > 0 ? `<span class="sub">De ${fmtEUR(st.ingresos, 0)} ingresados</span>` : ''}</div>
+      <div class="card dv-card"><div class="card-head"><h3>¿Dónde va vuestro dinero?</h3><div class="zoom-h">${st.ingresos > 0 ? `<span class="sub">De ${fmtEUR(st.ingresos, 0)} ingresados</span>` : ''}${donut.length || destinos.length ? '<button class="zoom-btn" data-action="dv-zoom" title="Ampliar" aria-label="Ampliar">⤢</button>' : ''}</div></div>
         ${donut.length || destinos.length ? `<div class="dv-grid">
           <div class="dv-col"><div class="dv-t">Gastos${st.ingresos > 0 ? ` · ${fmtPct(sum(donut, 'v') / st.ingresos, 0)}` : ''}</div>
             ${donut.length ? `<div class="chart-box dv-chart"><canvas id="ch-cat"></canvas></div>
@@ -257,13 +258,13 @@ Object.assign(Actions, { 'mes-pick': el => selectorMes({ valor: el.dataset.v, ti
 
 /* ---------- Flujo de caja (diagrama de Sankey, estilo Monarch) ---------- */
 /** De dónde entra el dinero (izquierda) y a dónde va (derecha): categorías de gasto, cuentas de ahorro/inversión y lo que queda. */
-function sankeyCaja(st, donut, destinos) {
+function sankeyCaja(st, donut, destinos, opt = {}) {
   const izq = new Map();
   for (const m of st.movs) if (m.tipo === 'ingreso' && num(m.importe) > 0) { const r = rootOf(catById(m.categoria_id)); const k = r ? r.nombre : 'Otros ingresos'; izq.set(k, (izq.get(k) || 0) + num(m.importe)); }
   let L = [...izq.entries()].map(([n, v]) => ({ n, v, c: '#16a34a' })).sort((a, b) => b.v - a.v);
   if (L.length > 5) { const r = L.slice(4); L = L.slice(0, 4).concat([{ n: 'Otros ingresos', v: sum(r, 'v'), c: '#16a34a' }]); }
   L.forEach((x, i) => { x.c = ['#15803d', '#16a34a', '#22c55e', '#4ade80', '#86efac'][i] || '#16a34a'; });
-  let G = donut.map((d, i) => ({ n: nombreDonut(d), v: d.v, c: colorDonut(d, i) }));
+  let G = donut.map((d, i) => ({ n: nombreDonut(d), v: d.v, c: colorDonut(d, i), k: d.k }));
   if (G.length > 7) { const r = G.slice(6); G = G.slice(0, 6).concat([{ n: 'Resto de gastos', v: sum(r, 'v'), c: '#cbd5e1' }]); }
   const R = G.concat(destinos.filter(x => !x.resto).map(x => ({ n: x.n, v: x.v, c: x.c, ah: true })));
   const tL = sum(L, 'v'), tR = sum(R, 'v');
@@ -271,24 +272,24 @@ function sankeyCaja(st, donut, destinos) {
   if (tR - tL > 0.5) L.push({ n: 'Del saldo que había', v: tR - tL, c: '#94a3b8' });
   const tot = Math.max(tL, tR);
   if (!(tot > 0) || !L.length || !R.length) return '';
-  const movil = window.innerWidth < 640, W = Math.max(320, Math.min(980, (document.querySelector('#view') || document.body).clientWidth - (movil ? 36 : 64)));
-  const fs = movil ? 11 : 12.5, lw = movil ? 92 : 170, rw = movil ? 128 : 230, bar = 10, x1 = lw, x2 = W - rw - bar, gap = 6;
-  const n = Math.max(L.length, R.length), H = Math.max(200, n * (movil ? 36 : 42)), k = (H - gap * (n - 1)) / tot;
+  const movil = window.innerWidth < 640, z = !!opt.W, W = opt.W || Math.max(320, Math.min(980, (document.querySelector('#view') || document.body).clientWidth - (movil ? 36 : 64)));
+  const fs = movil ? (z ? 12 : 11) : (z ? 14 : 12.5), lw = movil ? 92 : (z ? 200 : 170), rw = movil ? 132 : (z ? 260 : 230), bar = 10, x1 = lw, x2 = W - rw - bar, gap = 6;
+  const n = Math.max(L.length, R.length), H = opt.H ? Math.max(opt.H, n * (fs * 2 + 8)) : Math.max(200, n * (movil ? 36 : 42)), k = (H - gap * (n - 1)) / tot;
   const pos = arr => { const alto = sum(arr, x => x.v * k) + gap * (arr.length - 1); let y = (H - alto) / 2; return arr.map(x => { const o = { ...x, y, h: Math.max(1.5, x.v * k) }; y += x.v * k + gap; return o; }); };
   const PL = pos(L), PR = pos(R), pct = v => fmtPct(v / tot, 0);
   // Cada ingreso se reparte entre los destinos en la misma proporción
   const offR = PR.map(r => r.y);
   let flujos = '';
-  for (const l of PL) {
+  PL.forEach((l, i) => {
     let yl = l.y;
     PR.forEach((r, j) => {
       const h = l.v * r.v / tot * k; if (h < 0.3) return;
       const yr = offR[j]; offR[j] += h;
       const mx = (x1 + bar + x2) / 2;
-      flujos += `<path d="M${x1 + bar},${yl}C${mx},${yl} ${mx},${yr} ${x2},${yr}L${x2},${yr + h}C${mx},${yr + h} ${mx},${yl + h} ${x1 + bar},${yl + h}Z" fill="${esc(r.c)}" fill-opacity=".28"><title>${esc(l.n)} → ${esc(r.n)}: ${fmtEUR(l.v * r.v / tot)}</title></path>`;
+      flujos += `<path data-l="${i}" data-r="${j}" d="M${x1 + bar},${yl}C${mx},${yl} ${mx},${yr} ${x2},${yr}L${x2},${yr + h}C${mx},${yr + h} ${mx},${yl + h} ${x1 + bar},${yl + h}Z" fill="${esc(r.c)}" fill-opacity=".28"><title>${esc(l.n)} → ${esc(r.n)}: ${fmtEUR(l.v * r.v / tot)}</title></path>`;
       yl += h;
     });
-  }
+  });
   const etiqueta = (x, y, anchor, n, v) => `<text x="${x}" y="${y - 2}" text-anchor="${anchor}" font-size="${fs}" class="sk-n">${esc(n.length > (movil ? 16 : 28) ? n.slice(0, movil ? 15 : 27) + '…' : n)}</text><text x="${x}" y="${y + fs}" text-anchor="${anchor}" font-size="${fs - 1}" class="sk-v">${fmtEUR(v, 0)} · ${pct(v)}</text>`;
   // Etiquetas sin solaparse: se separan lo justo y se recolocan dentro del alto del gráfico
   const yEtiq = P => { const sep = fs * 2 + 6, ys = P.map(x => x.y + x.h / 2);
@@ -296,12 +297,70 @@ function sankeyCaja(st, donut, destinos) {
     const sobra = ys.length ? ys[ys.length - 1] - (H - fs) : 0; if (sobra > 0) { ys[ys.length - 1] -= sobra; for (let i = ys.length - 2; i >= 0; i--) ys[i] = Math.min(ys[i], ys[i + 1] - sep); }
     return ys; };
   const yl = yEtiq(PL), yr = yEtiq(PR);
-  const nodosL = PL.map((l, i) => `<rect x="${x1}" y="${l.y}" width="${bar}" height="${l.h}" rx="2" fill="${esc(l.c)}"/>${etiqueta(x1 - 6, yl[i], 'end', l.n, l.v)}`).join('');
-  const nodosR = PR.map((r, i) => `<rect x="${x2}" y="${r.y}" width="${bar}" height="${r.h}" rx="2" fill="${esc(r.c)}"/>${etiqueta(x2 + bar + 6, yr[i], 'start', r.n, r.v)}`).join('');
+  const nodosL = PL.map((l, i) => `<g class="sk-node" data-side="l" data-i="${i}"><rect x="${x1}" y="${l.y}" width="${bar}" height="${l.h}" rx="2" fill="${esc(l.c)}"/>${etiqueta(x1 - 6, yl[i], 'end', l.n, l.v)}</g>`).join('');
+  const nodosR = PR.map((r, i) => `<g class="sk-node" data-side="r" data-i="${i}"><rect x="${x2}" y="${r.y}" width="${bar}" height="${r.h}" rx="2" fill="${esc(r.c)}"/>${etiqueta(x2 + bar + 6, yr[i], 'start', r.n, r.v)}</g>`).join('');
   const ahorro = sum(R.filter(x => x.ah), 'v');
-  return `<div class="card sk-card"><div class="card-head"><h3>Flujo de caja</h3><span class="sub">${fmtEUR(tL, 0)} entran · ${fmtEUR(tot - ahorro, 0)} en gastos · ${fmtEUR(ahorro, 0)} ahorrado o en cuenta</span></div>
-    <svg class="sk-svg" viewBox="0 0 ${W} ${H + 4}" width="100%" role="img" aria-label="Diagrama del flujo de caja">${flujos}${nodosL}${nodosR}</svg></div>`;
+  const svg = `<svg class="sk-svg" viewBox="0 0 ${W} ${H + 4}" width="100%" role="img" aria-label="Diagrama del flujo de caja">${flujos}${nodosL}${nodosR}</svg>`;
+  if (z) return { svg, L: PL, R: PR, tot };
+  return `<div class="card sk-card"><div class="card-head"><h3>Flujo de caja</h3><button class="zoom-btn" data-action="sk-zoom" title="Ampliar" aria-label="Ampliar">⤢</button></div>
+    <div class="small muted sk-res">${fmtEUR(tL, 0)} entran · ${fmtEUR(tot - ahorro, 0)} en gastos · ${fmtEUR(ahorro, 0)} ahorrado o en cuenta</div>${svg}</div>`;
 }
+
+/* ---------- Vistas ampliadas e interactivas (pantalla completa) ---------- */
+/** Ids de la categoría raíz y sus subcategorías, para abrir sus movimientos con «bud-ver». */
+const idsRaiz = k => k === '_none' ? '_none' : [k, ...childrenOf(k).map(c => c.id)].join(',');
+function zoomModal(titulo, cuerpo) {
+  const m = modal(`<div class="zoom-tit"><h3>${titulo}</h3><span class="small muted">${periodLabel(periodMonths())}</span></div>${cuerpo}`);
+  m.el.classList.add('modal-full'); m.el.parentElement.classList.add('modal-back-full'); return m;
+}
+const zoomInfo = (n, v, tot, extra = '', ids = '') => `<div class="zi-t"><b>${esc(n)}</b><span>${fmtEUR(v)}${tot > 0 ? ` · ${fmtPct(v / tot, 1)}` : ''}</span></div>${extra}${ids ? `<button class="btn sm" data-action="bud-ver" data-ids="${esc(ids)}">Ver movimientos</button>` : ''}`;
+
+Actions['sk-zoom'] = () => {
+  const D = S._dv; if (!D) return;
+  const movil = window.innerWidth < 640, W = Math.min(1400, window.innerWidth - (movil ? 32 : 120)), H = Math.max(260, window.innerHeight - (movil ? 260 : 240));
+  const sk = sankeyCaja(D.st, D.donut, D.destinos, { W, H }); if (!sk) return;
+  const m = zoomModal('Flujo de caja', `<div class="sk-zoom">${sk.svg}</div><div class="zoom-info" id="sk-info"><span class="muted">Toca un ingreso, un destino o una franja para ver el detalle.</span></div>`);
+  const svg = m.el.querySelector('svg'), info = m.el.querySelector('#sk-info');
+  const marcar = f => { svg.classList.toggle('sk-foco', !!f); svg.querySelectorAll('path').forEach(p => p.classList.toggle('on', !!f && f(p))); };
+  svg.addEventListener('click', e => {
+    const g = e.target.closest('.sk-node'), p = e.target.closest('path');
+    if (g) {
+      const i = +g.dataset.i, lado = g.dataset.side, x = (lado === 'l' ? sk.L : sk.R)[i];
+      marcar(q => q.dataset[lado] === String(i));
+      const otros = (lado === 'l' ? sk.R : sk.L).map(o => ({ n: o.n, v: lado === 'l' ? x.v * o.v / sk.tot : o.v * x.v / sk.tot, c: o.c })).filter(o => o.v >= 0.5).sort((a, b) => b.v - a.v);
+      const lista = `<ul class="zi-l">${otros.map(o => `<li><i style="background:${esc(o.c)}"></i><span>${lado === 'l' ? '→ ' : '← '}${esc(o.n)}</span><b>${fmtEUR(o.v)}</b></li>`).join('')}</ul>`;
+      info.innerHTML = zoomInfo(x.n, x.v, sk.tot, lado === 'l' ? lista : (otros.length > 1 ? lista : ''), lado === 'r' && x.k ? idsRaiz(x.k) : '');
+    } else if (p) {
+      const l = sk.L[+p.dataset.l], r = sk.R[+p.dataset.r];
+      marcar(q => q === p); info.innerHTML = zoomInfo(`${l.n} → ${r.n}`, l.v * r.v / sk.tot, sk.tot, '', r.k ? idsRaiz(r.k) : '');
+    } else { marcar(null); info.innerHTML = '<span class="muted">Toca un ingreso, un destino o una franja para ver el detalle.</span>'; }
+  });
+};
+
+Actions['dv-zoom'] = () => {
+  const D = S._dv; if (!D) return;
+  const { st, donut, destinos } = D, ing = st.ingresos;
+  const G = donut.map((d, i) => ({ n: nombreDonut(d), v: d.v, c: colorDonut(d, i), ids: d.k === '_otros' ? '' : idsRaiz(d.k) }));
+  const A = destinos.map(d => ({ n: d.n, v: d.v, c: d.c }));
+  const col = (id, t, xs) => xs.length ? `<div class="dz-col"><div class="dv-t">${t}${ing > 0 ? ` · ${fmtPct(sum(xs.filter(x => !/^Queda/.test(x.n)), 'v') / ing, 0)} de los ingresos` : ''}</div>
+      <div class="dz-chart"><canvas id="${id}"></canvas><div class="dz-centro" id="${id}-c"><b>${fmtEUR(sum(xs, 'v'), 0)}</b><span>total</span></div></div>
+      <ul class="dz-leg">${xs.map((x, i) => `<li><button data-z="${id}" data-i="${i}"><i style="background:${esc(x.c)}"></i><span>${esc(x.n)}</span><b>${fmtEUR(x.v, 0)}</b><em>${ing > 0 ? fmtPct(x.v / ing, 0) : ''}</em></button></li>`).join('')}</ul></div>` : '';
+  const m = zoomModal('¿Dónde va vuestro dinero?', `<div class="dz-grid">${col('z-cat', 'Gastos', G)}${col('z-dest', 'Ahorro e inversión', A)}</div><div class="zoom-info" id="dz-info"><span class="muted">Toca un sector o una línea de la leyenda para ver el detalle.</span></div>`);
+  const info = m.el.querySelector('#dz-info'), datos = { 'z-cat': G, 'z-dest': A };
+  const elegir = (id, i) => {
+    for (const k of Object.keys(datos)) { const ch = Charts[k]; if (!ch || !ch.setActiveElements) continue; const a = k === id ? [{ datasetIndex: 0, index: i }] : []; ch.setActiveElements(a); ch.tooltip.setActiveElements(a, { x: 0, y: 0 }); ch.update(); }
+    m.el.querySelectorAll('.dz-leg button').forEach(b => b.classList.toggle('on', b.dataset.z === id && +b.dataset.i === i));
+    const x = datos[id][i], c = m.el.querySelector(`#${id}-c`);
+    if (c) c.innerHTML = `<b>${fmtEUR(x.v, 0)}</b><span>${esc(x.n.length > 18 ? x.n.slice(0, 17) + '…' : x.n)}</span>`;
+    info.innerHTML = zoomInfo(x.n, x.v, ing, ing > 0 ? `<div class="small muted">${fmtPct(x.v / ing, 1)} de lo ingresado · ${fmtPct(x.v / sum(datos[id], 'v'), 1)} de ${id === 'z-cat' ? 'los gastos' : 'lo apartado'}</div>` : '', x.ids || '');
+  };
+  const dona = (id, xs) => mkChart(id, { type: 'doughnut',
+    data: { labels: xs.map(x => x.n), datasets: [{ data: xs.map(x => round2(x.v)), backgroundColor: xs.map(x => x.c), borderWidth: 2, borderColor: Tema.hueco(), hoverOffset: 14 }] },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '58%', layout: { padding: 12 }, onClick: (e, els) => { if (els.length) elegir(id, els[0].index); },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${fmtEUR(ctx.parsed)}${ing > 0 ? ` · ${fmtPct(ctx.parsed / ing, 1)}` : ''}` } } } } });
+  if (G.length) dona('z-cat', G); if (A.length) dona('z-dest', A);
+  m.el.querySelectorAll('.dz-leg button').forEach(b => b.addEventListener('click', () => elegir(b.dataset.z, +b.dataset.i)));
+};
 
 /* ---------- «¿Dónde va vuestro dinero?» ---------- */
 const nombreDonut = d => d.k === '_none' ? 'Sin categoría' : d.c ? d.c.nombre : '—';

@@ -1,5 +1,10 @@
 # Historial de versiones
 
+## 5.35.0 — 28/11/2026 · Gráficos a pantalla completa
+- Botón ⤢ en «¿Dónde va vuestro dinero?» y en «Flujo de caja» para verlos a pantalla completa.
+- Flujo de caja ampliado: toca un ingreso, un destino o una franja para resaltarla y ver su importe, a qué destinos se reparte y sus movimientos.
+- Círculos ampliados: toca un sector o la leyenda para ver importe, % de lo ingresado y del total, y sus movimientos.
+
 ## 5.34.0 — 27/11/2026 · Flujo de caja
 - Inicio: nuevo diagrama «Flujo de caja» (Sankey, estilo Monarch) bajo los gráficos circulares: de dónde entra el dinero y a qué categorías de gasto, cuentas de ahorro/inversión y saldo va, con importe y % de cada flujo. Si se gasta más de lo ingresado aparece «Del saldo que había».
 

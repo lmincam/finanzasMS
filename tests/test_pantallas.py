@@ -117,3 +117,16 @@ def test_inicio_flujo_de_caja_sankey(app):
       const xs = [...new Set(ys.map(y => y[0]))].sort((a, b) => a - b); const h = x => ys.filter(y => y[0] === x).reduce((s, y) => s + y[1], 0);
       return [h(xs[0]), h(xs[xs.length - 1])]; })()""")
     assert abs(r[0] - r[1]) < 3
+
+
+def test_ampliar_graficos_de_inicio(app):
+    a = app
+    a.ir('dashboard')
+    a.page.click('[data-action="sk-zoom"]'); a.page.wait_for_timeout(250)
+    assert a.page.locator('.modal-full .sk-svg').count() == 1
+    a.page.locator('.modal-full .sk-node[data-side="r"]').first.click(); a.page.wait_for_timeout(150)
+    assert 'Ver movimientos' in a.texto('#sk-info')
+    a.page.click('.modal-full .modal-x'); a.page.wait_for_timeout(150)
+    a.page.click('[data-action="dv-zoom"]'); a.page.wait_for_timeout(300)
+    a.page.locator('.dz-leg button').first.click(); a.page.wait_for_timeout(150)
+    assert '€' in a.texto('#dz-info') and a.page.locator('.dz-leg button.on').count() == 1
