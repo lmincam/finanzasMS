@@ -130,3 +130,15 @@ def test_ampliar_graficos_de_inicio(app):
     a.page.click('[data-action="dv-zoom"]'); a.page.wait_for_timeout(300)
     a.page.locator('.dz-leg button').first.click(); a.page.wait_for_timeout(150)
     assert '€' in a.texto('#dz-info') and a.page.locator('.dz-leg button.on').count() == 1
+
+
+def test_flujo_de_caja_ampliado_en_horizontal(app):
+    a = app
+    a.page.set_viewport_size({'width': 956, 'height': 440})
+    a.ir('dashboard')
+    a.page.click('[data-action="sk-zoom"]'); a.page.wait_for_timeout(250)
+    assert a.page.locator('.modal-full.sk-horiz').count() == 1
+    svg, inf = a.page.locator('.modal-full .sk-zoom').bounding_box(), a.page.locator('#sk-info').bounding_box()
+    assert inf['x'] > svg['x'] + svg['width'] - 2  # el detalle, a la derecha
+    a.page.set_viewport_size({'width': 440, 'height': 956}); a.page.wait_for_timeout(300)
+    assert a.page.locator('.modal-full.sk-horiz').count() == 0

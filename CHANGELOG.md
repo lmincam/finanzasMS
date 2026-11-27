@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.35.1 — 28/11/2026 · Flujo de caja en horizontal
+- Flujo de caja ampliado optimizado para el móvil en horizontal: el diagrama ocupa todo el alto y el detalle sale en un panel a la derecha. Se redibuja solo al girar el móvil, conservando lo seleccionado.
+
 ## 5.35.0 — 28/11/2026 · Gráficos a pantalla completa
 - Botón ⤢ en «¿Dónde va vuestro dinero?» y en «Flujo de caja» para verlos a pantalla completa.
 - Flujo de caja ampliado: toca un ingreso, un destino o una franja para resaltarla y ver su importe, a qué destinos se reparte y sus movimientos.

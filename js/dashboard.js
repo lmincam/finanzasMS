@@ -309,32 +309,54 @@ function sankeyCaja(st, donut, destinos, opt = {}) {
 /* ---------- Vistas ampliadas e interactivas (pantalla completa) ---------- */
 /** Ids de la categoría raíz y sus subcategorías, para abrir sus movimientos con «bud-ver». */
 const idsRaiz = k => k === '_none' ? '_none' : [k, ...childrenOf(k).map(c => c.id)].join(',');
-function zoomModal(titulo, cuerpo) {
-  const m = modal(`<div class="zoom-tit"><h3>${titulo}</h3><span class="small muted">${periodLabel(periodMonths())}</span></div>${cuerpo}`);
+function zoomModal(titulo, cuerpo, onClose) {
+  const m = modal(`<div class="zoom-tit"><h3>${titulo}</h3><span class="small muted">${periodLabel(periodMonths())}</span></div>${cuerpo}`, { onClose });
   m.el.classList.add('modal-full'); m.el.parentElement.classList.add('modal-back-full'); return m;
 }
 const zoomInfo = (n, v, tot, extra = '', ids = '') => `<div class="zi-t"><b>${esc(n)}</b><span>${fmtEUR(v)}${tot > 0 ? ` · ${fmtPct(v / tot, 1)}` : ''}</span></div>${extra}${ids ? `<button class="btn sm" data-action="bud-ver" data-ids="${esc(ids)}">Ver movimientos</button>` : ''}`;
 
 Actions['sk-zoom'] = () => {
   const D = S._dv; if (!D) return;
-  const movil = window.innerWidth < 640, W = Math.min(1400, window.innerWidth - (movil ? 32 : 120)), H = Math.max(260, window.innerHeight - (movil ? 260 : 240));
-  const sk = sankeyCaja(D.st, D.donut, D.destinos, { W, H }); if (!sk) return;
-  const m = zoomModal('Flujo de caja', `<div class="sk-zoom">${sk.svg}</div><div class="zoom-info" id="sk-info"><span class="muted">Toca un ingreso, un destino o una franja para ver el detalle.</span></div>`);
-  const svg = m.el.querySelector('svg'), info = m.el.querySelector('#sk-info');
-  const marcar = f => { svg.classList.toggle('sk-foco', !!f); svg.querySelectorAll('path').forEach(p => p.classList.toggle('on', !!f && f(p))); };
-  svg.addEventListener('click', e => {
-    const g = e.target.closest('.sk-node'), p = e.target.closest('path');
-    if (g) {
-      const i = +g.dataset.i, lado = g.dataset.side, x = (lado === 'l' ? sk.L : sk.R)[i];
+  const AYUDA = '<span class="muted">Toca un ingreso, un destino o una franja para ver el detalle.</span>';
+  let onResize = null;
+  const m = zoomModal('Flujo de caja', `<div class="sk-wrap"><div class="sk-zoom"></div><div class="zoom-info" id="sk-info">${AYUDA}</div></div>`, () => window.removeEventListener('resize', onResize));
+  const box = m.el.querySelector('.sk-zoom'), info = m.el.querySelector('#sk-info');
+  let sel = null, sk = null;
+  const pintar = () => {
+    const horiz = window.innerWidth > window.innerHeight && window.innerWidth >= 560, movil = Math.min(window.innerWidth, window.innerHeight) < 640;
+    m.el.classList.toggle('sk-horiz', horiz);
+    // En horizontal el detalle va a la derecha: el diagrama usa el ancho restante y todo el alto
+    const panel = horiz ? Math.min(340, Math.max(240, window.innerWidth * 0.28)) : 0;
+    const W = Math.min(1600, window.innerWidth - panel - (movil ? 40 : 90)), H = horiz ? Math.max(200, window.innerHeight - (movil ? 90 : 120)) : Math.max(260, window.innerHeight - (movil ? 260 : 240));
+    sk = sankeyCaja(D.st, D.donut, D.destinos, { W, H }); if (!sk) return;
+    box.innerHTML = sk.svg;
+    if (sel) aplicar(sel);
+  };
+  const marcar = f => { const svg = box.querySelector('svg'); svg.classList.toggle('sk-foco', !!f); svg.querySelectorAll('path').forEach(p => p.classList.toggle('on', !!f && f(p))); };
+  const aplicar = s2 => {
+    sel = s2;
+    if (!s2) { marcar(null); info.innerHTML = AYUDA; return; }
+    if (s2.tipo === 'nodo') {
+      const { lado, i } = s2, x = (lado === 'l' ? sk.L : sk.R)[i]; if (!x) return aplicar(null);
       marcar(q => q.dataset[lado] === String(i));
-      const otros = (lado === 'l' ? sk.R : sk.L).map(o => ({ n: o.n, v: lado === 'l' ? x.v * o.v / sk.tot : o.v * x.v / sk.tot, c: o.c })).filter(o => o.v >= 0.5).sort((a, b) => b.v - a.v);
+      const otros = (lado === 'l' ? sk.R : sk.L).map(o => ({ n: o.n, v: x.v * o.v / sk.tot, c: o.c })).filter(o => o.v >= 0.5).sort((a, b) => b.v - a.v);
       const lista = `<ul class="zi-l">${otros.map(o => `<li><i style="background:${esc(o.c)}"></i><span>${lado === 'l' ? '→ ' : '← '}${esc(o.n)}</span><b>${fmtEUR(o.v)}</b></li>`).join('')}</ul>`;
-      info.innerHTML = zoomInfo(x.n, x.v, sk.tot, lado === 'l' ? lista : (otros.length > 1 ? lista : ''), lado === 'r' && x.k ? idsRaiz(x.k) : '');
-    } else if (p) {
-      const l = sk.L[+p.dataset.l], r = sk.R[+p.dataset.r];
-      marcar(q => q === p); info.innerHTML = zoomInfo(`${l.n} → ${r.n}`, l.v * r.v / sk.tot, sk.tot, '', r.k ? idsRaiz(r.k) : '');
-    } else { marcar(null); info.innerHTML = '<span class="muted">Toca un ingreso, un destino o una franja para ver el detalle.</span>'; }
+      info.innerHTML = zoomInfo(x.n, x.v, sk.tot, lado === 'l' || otros.length > 1 ? lista : '', lado === 'r' && x.k ? idsRaiz(x.k) : '');
+    } else {
+      const l = sk.L[s2.l], r = sk.R[s2.r]; if (!l || !r) return aplicar(null);
+      marcar(q => q.dataset.l === String(s2.l) && q.dataset.r === String(s2.r));
+      info.innerHTML = zoomInfo(`${l.n} → ${r.n}`, l.v * r.v / sk.tot, sk.tot, '', r.k ? idsRaiz(r.k) : '');
+    }
+  };
+  box.addEventListener('click', e => {
+    const g = e.target.closest('.sk-node'), p = e.target.closest('path');
+    if (g) aplicar({ tipo: 'nodo', lado: g.dataset.side, i: +g.dataset.i });
+    else if (p) aplicar({ tipo: 'flujo', l: +p.dataset.l, r: +p.dataset.r });
+    else aplicar(null);
   });
+  let t = null; onResize = () => { clearTimeout(t); t = setTimeout(pintar, 120); };
+  window.addEventListener('resize', onResize);
+  pintar();
 };
 
 Actions['dv-zoom'] = () => {

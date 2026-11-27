@@ -1409,3 +1409,12 @@ html,body{overflow-x:clip}
   .dz-grid{grid-template-columns:1fr;gap:18px}
   .dz-chart{height:280px}
 }
+
+/* Flujo de caja ampliado: en horizontal, el detalle a la derecha */
+.sk-wrap{flex:1;min-height:0;display:flex;flex-direction:column}
+.modal-full.sk-horiz .sk-wrap{flex-direction:row;gap:18px}
+.modal-full.sk-horiz .sk-zoom{flex:1;min-width:0}
+.modal-full.sk-horiz .zoom-info{width:clamp(240px,28vw,340px);flex:none;border-top:0;border-left:1px solid var(--line);margin-top:0;padding:30px 0 0 16px;overflow:auto;justify-content:flex-start}
+.modal-full.sk-horiz .zi-l{grid-template-columns:1fr}
+.modal-full.sk-horiz{padding-left:calc(16px + env(safe-area-inset-left));padding-right:calc(16px + env(safe-area-inset-right))}
+@media (max-height:500px){.modal-full .zoom-tit{margin-bottom:4px}.modal.modal-full{padding-top:10px;padding-bottom:10px}}
