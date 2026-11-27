@@ -1,5 +1,16 @@
 # Historial de versiones
 
+## 5.33.1 — 27/11/2026 · Exportación lista para analizar
+- Las medias ya no cuentan meses sin ingresos registrados (el primer mes a medias las hundía); se marcan como «fuera de medias».
+- Gasto por categoría con % del gasto total y desviación de la media frente al presupuesto.
+- Deudas: dato del banco y, de los últimos 12 meses, cuánto se pagó en intereses y cuánto en capital.
+- Vehículos: seguro real de sus pólizas e importe de mantenimiento de los últimos 12 meses (antes salía 0 €).
+- TIR de inversiones avisa cuando hay menos de un año de historia.
+- Nueva sección «Calidad de los datos» (duplicados, sin categoría, préstamos que no cuadran…).
+- Cada exportación guarda sus indicadores; la siguiente incluye «Cambios desde la última exportación».
+- Nuevo botón «Movimientos CSV» con todos los movimientos (fecha, mes de nómina, categoría, subcategoría, cuenta, importe…).
+- Secciones numeradas sin huecos.
+
 ## 5.33.0 — 27/11/2026 · Exportar para Claude
 - Ajustes: nueva tarjeta «🤖 Exportar para Claude». Genera un informe con toda la foto financiera (patrimonio, cuentas, inversiones y productos, inmuebles, vehículos, deudas, 12 meses de ingresos, gastos y ahorro, gasto por categoría frente al presupuesto, seguros, metas, partidas previstas, recibos recurrentes y evolución del patrimonio) listo para analizarlo con Claude.
 - «Compartir» abre el menú del iPhone para mandar el archivo directamente a la app de Claude; «Copiar texto» lo deja en el portapapeles. Opción para incluir los movimientos de los últimos 3 meses.

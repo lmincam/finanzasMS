@@ -398,3 +398,22 @@ def test_calendario_rejilla_y_detalle_del_dia(movil):
     assert a.page.locator('.cd-dia').count() == 1 and 'Mercadona' in a.texto('.cd-card')
     a.page.click('.cd-card [data-action="cal-dia"]'); a.page.wait_for_timeout(200)
     assert a.page.locator('.cd-dia').count() > 1
+
+
+def test_exportar_informe_csv_y_cambios(app):
+    a = app
+    md = a.ev("informeClaude({movimientos:true})")
+    import re
+    nums = [int(n) for n in re.findall(r'^## (\d+)\. ', md, re.M)]
+    assert nums == list(range(1, len(nums) + 1))  # numeración sin huecos
+    assert 'primera exportación' in md and 'fuera de medias' in md and 'Calidad de los datos' in md
+    assert 'NaN' not in md and 'undefined' not in md
+    # Al exportar se guardan los indicadores; la siguiente exportación compara
+    a.ev("S._expInd = indicadoresExport([addMonths(mesActual(), -1)]); S._expInd.neto -= 1000; S._expInd.fecha = '2026-10-01'; guardarIndicadoresExport()")
+    a.page.wait_for_timeout(200)
+    md2 = a.ev("informeClaude()")
+    assert 'Cambios desde la última exportación' in md2 and '+1.000 €' in md2
+    csv = a.ev("movimientosCSV()")
+    lineas = csv.strip().split('\n')
+    assert lineas[0].lstrip('﻿').startswith('fecha,mes_nomina,tipo,categoria')
+    assert len(lineas) == a.ev("S.movimientos.length") + 1
