@@ -1,5 +1,9 @@
 # Historial de versiones
 
+## 5.35.2 — 28/11/2026 · Flujo de caja más grande
+- Ampliado: el diagrama ocupa todo el hueco disponible y queda centrado en alto; el panel de detalle de la derecha es más estrecho.
+- Las etiquetas ocupan solo lo que mide su texto, así las franjas entre ingresos y gastos son mucho más largas (también en la tarjeta de Inicio).
+
 ## 5.35.1 — 28/11/2026 · Flujo de caja en horizontal
 - Flujo de caja ampliado optimizado para el móvil en horizontal: el diagrama ocupa todo el alto y el detalle sale en un panel a la derecha. Se redibuja solo al girar el móvil, conservando lo seleccionado.
 

@@ -273,7 +273,12 @@ function sankeyCaja(st, donut, destinos, opt = {}) {
   const tot = Math.max(tL, tR);
   if (!(tot > 0) || !L.length || !R.length) return '';
   const movil = window.innerWidth < 640, z = !!opt.W, W = opt.W || Math.max(320, Math.min(980, (document.querySelector('#view') || document.body).clientWidth - (movil ? 36 : 64)));
-  const fs = movil ? (z ? 12 : 11) : (z ? 14 : 12.5), lw = movil ? 92 : (z ? 200 : 170), rw = movil ? 132 : (z ? 260 : 230), bar = 10, x1 = lw, x2 = W - rw - bar, gap = 6;
+  const fs = movil ? (z ? 13 : 11) : (z ? 14.5 : 12.5); let lw = movil ? (z ? 126 : 92) : (z ? 190 : 170), rw = movil ? (z ? 150 : 132) : (z ? 230 : 230), x1, x2; const bar = 10, gap = 6;
+  // Ancho de etiquetas según el texto real: todo el espacio sobrante es para las franjas
+  const corta = n => n.length > (movil && !z ? 16 : 28) ? n.slice(0, movil && !z ? 15 : 27) + '…' : n;
+  const ctx = (sankeyCaja._c = sankeyCaja._c || document.createElement('canvas').getContext('2d'));
+  const ancho = arr => { let w = 0; for (const x of arr) { ctx.font = `600 ${fs}px system-ui,-apple-system,sans-serif`; w = Math.max(w, ctx.measureText(corta(x.n)).width); ctx.font = `${fs - 1}px system-ui,-apple-system,sans-serif`; w = Math.max(w, ctx.measureText(`${fmtEUR(x.v, 0)} · 100 %`).width); } return Math.ceil(w) + 12; };
+  lw = Math.min(lw, ancho(L)); rw = Math.min(rw, ancho(R)); x1 = lw; x2 = W - rw - bar;
   const n = Math.max(L.length, R.length), H = opt.H ? Math.max(opt.H, n * (fs * 2 + 8)) : Math.max(200, n * (movil ? 36 : 42)), k = (H - gap * (n - 1)) / tot;
   const pos = arr => { const alto = sum(arr, x => x.v * k) + gap * (arr.length - 1); let y = (H - alto) / 2; return arr.map(x => { const o = { ...x, y, h: Math.max(1.5, x.v * k) }; y += x.v * k + gap; return o; }); };
   const PL = pos(L), PR = pos(R), pct = v => fmtPct(v / tot, 0);
@@ -290,7 +295,7 @@ function sankeyCaja(st, donut, destinos, opt = {}) {
       yl += h;
     });
   });
-  const etiqueta = (x, y, anchor, n, v) => `<text x="${x}" y="${y - 2}" text-anchor="${anchor}" font-size="${fs}" class="sk-n">${esc(n.length > (movil ? 16 : 28) ? n.slice(0, movil ? 15 : 27) + '…' : n)}</text><text x="${x}" y="${y + fs}" text-anchor="${anchor}" font-size="${fs - 1}" class="sk-v">${fmtEUR(v, 0)} · ${pct(v)}</text>`;
+  const etiqueta = (x, y, anchor, n, v) => `<text x="${x}" y="${y - 2}" text-anchor="${anchor}" font-size="${fs}" class="sk-n">${esc(corta(n))}</text><text x="${x}" y="${y + fs}" text-anchor="${anchor}" font-size="${fs - 1}" class="sk-v">${fmtEUR(v, 0)} · ${pct(v)}</text>`;
   // Etiquetas sin solaparse: se separan lo justo y se recolocan dentro del alto del gráfico
   const yEtiq = P => { const sep = fs * 2 + 6, ys = P.map(x => x.y + x.h / 2);
     for (let i = 1; i < ys.length; i++) ys[i] = Math.max(ys[i], ys[i - 1] + sep);
@@ -300,7 +305,7 @@ function sankeyCaja(st, donut, destinos, opt = {}) {
   const nodosL = PL.map((l, i) => `<g class="sk-node" data-side="l" data-i="${i}"><rect x="${x1}" y="${l.y}" width="${bar}" height="${l.h}" rx="2" fill="${esc(l.c)}"/>${etiqueta(x1 - 6, yl[i], 'end', l.n, l.v)}</g>`).join('');
   const nodosR = PR.map((r, i) => `<g class="sk-node" data-side="r" data-i="${i}"><rect x="${x2}" y="${r.y}" width="${bar}" height="${r.h}" rx="2" fill="${esc(r.c)}"/>${etiqueta(x2 + bar + 6, yr[i], 'start', r.n, r.v)}</g>`).join('');
   const ahorro = sum(R.filter(x => x.ah), 'v');
-  const svg = `<svg class="sk-svg" viewBox="0 0 ${W} ${H + 4}" width="100%" role="img" aria-label="Diagrama del flujo de caja">${flujos}${nodosL}${nodosR}</svg>`;
+  const svg = `<svg class="sk-svg" viewBox="0 0 ${W} ${H + 4}" ${z ? `width="${W}" height="${H + 4}"` : 'width="100%"'} role="img" aria-label="Diagrama del flujo de caja">${flujos}${nodosL}${nodosR}</svg>`;
   if (z) return { svg, L: PL, R: PR, tot };
   return `<div class="card sk-card"><div class="card-head"><h3>Flujo de caja</h3><button class="zoom-btn" data-action="sk-zoom" title="Ampliar" aria-label="Ampliar">⤢</button></div>
     <div class="small muted sk-res">${fmtEUR(tL, 0)} entran · ${fmtEUR(tot - ahorro, 0)} en gastos · ${fmtEUR(ahorro, 0)} ahorrado o en cuenta</div>${svg}</div>`;
@@ -325,9 +330,9 @@ Actions['sk-zoom'] = () => {
   const pintar = () => {
     const horiz = window.innerWidth > window.innerHeight && window.innerWidth >= 560, movil = Math.min(window.innerWidth, window.innerHeight) < 640;
     m.el.classList.toggle('sk-horiz', horiz);
-    // En horizontal el detalle va a la derecha: el diagrama usa el ancho restante y todo el alto
-    const panel = horiz ? Math.min(340, Math.max(240, window.innerWidth * 0.28)) : 0;
-    const W = Math.min(1600, window.innerWidth - panel - (movil ? 40 : 90)), H = horiz ? Math.max(200, window.innerHeight - (movil ? 90 : 120)) : Math.max(260, window.innerHeight - (movil ? 260 : 240));
+    // El diagrama ocupa todo el hueco libre (medido tras colocar el panel de detalle), centrado en alto
+    box.innerHTML = '';
+    const W = Math.max(300, Math.min(1800, box.clientWidth - 8)), H = Math.max(200, box.clientHeight - 12);
     sk = sankeyCaja(D.st, D.donut, D.destinos, { W, H }); if (!sk) return;
     box.innerHTML = sk.svg;
     if (sel) aplicar(sel);
