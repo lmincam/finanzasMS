@@ -43,6 +43,7 @@ js/
   ajustes.js          Pestaña Ajustes
   auth.js             Inicio de sesión (Supabase Auth)
   copias.js           Copias de seguridad automáticas y restauración
+  exportar.js         Informe «Exportar para Claude» (Ajustes)
   pwa.js              App instalable, modo sin conexión y avisos
   app.js              Navegación, eventos y arranque (se carga el último)
 sql/esquema_completo.sql  Base de datos completa en UN ÚNICO script, ejecutable las veces que quieras

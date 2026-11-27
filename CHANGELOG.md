@@ -1,5 +1,10 @@
 # Historial de versiones
 
+## 5.33.0 — 27/11/2026 · Exportar para Claude
+- Ajustes: nueva tarjeta «🤖 Exportar para Claude». Genera un informe con toda la foto financiera (patrimonio, cuentas, inversiones y productos, inmuebles, vehículos, deudas, 12 meses de ingresos, gastos y ahorro, gasto por categoría frente al presupuesto, seguros, metas, partidas previstas, recibos recurrentes y evolución del patrimonio) listo para analizarlo con Claude.
+- «Compartir» abre el menú del iPhone para mandar el archivo directamente a la app de Claude; «Copiar texto» lo deja en el portapapeles. Opción para incluir los movimientos de los últimos 3 meses.
+- No incluye datos identificativos: ni IBAN, ni matrículas, ni nº de póliza, ni direcciones, ni referencias catastrales.
+
 ## 5.32.1 — 27/11/2026 · Orden de Planificar
 - Seguros pasa a ser la segunda pestaña de Planificar, justo después de Presupuestos.
 

@@ -34,6 +34,7 @@ function renderAjustes() {
         </div></div>
     </div>
 
+    ${renderExportarCard()}
     ${renderCopiasCard()}
     ${renderAccesosCard()}
     ${renderHistorialCard()}
