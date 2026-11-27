@@ -1,5 +1,8 @@
 # Historial de versiones
 
+## 5.34.0 — 27/11/2026 · Flujo de caja
+- Inicio: nuevo diagrama «Flujo de caja» (Sankey, estilo Monarch) bajo los gráficos circulares: de dónde entra el dinero y a qué categorías de gasto, cuentas de ahorro/inversión y saldo va, con importe y % de cada flujo. Si se gasta más de lo ingresado aparece «Del saldo que había».
+
 ## 5.33.1 — 27/11/2026 · Exportación lista para analizar
 - Las medias ya no cuentan meses sin ingresos registrados (el primer mes a medias las hundía); se marcan como «fuera de medias».
 - Gasto por categoría con % del gasto total y desviación de la media frente al presupuesto.

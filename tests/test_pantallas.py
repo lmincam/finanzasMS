@@ -104,3 +104,16 @@ def test_mayores_gastos_sin_fijos(app):
     assert hip, 'el stub debería tener algún gasto fijo (cuota de la hipoteca)'
     ids = a.ev("[...document.querySelectorAll('.top-list .it')].map(x => x.dataset.id)")
     assert ids and not set(ids) & set(hip)
+
+
+def test_inicio_flujo_de_caja_sankey(app):
+    a = app
+    a.ir('dashboard')
+    assert a.page.locator('.sk-card svg path').count() >= 3
+    t = a.texto('.sk-card')
+    assert 'Flujo de caja' in t and 'Nómina' in t and 'NaN' not in t
+    # Lo que sale por la derecha suma lo que entra por la izquierda
+    r = a.ev("""(() => { const ys = [...document.querySelectorAll('.sk-card rect')].map(r => [+r.getAttribute('x'), +r.getAttribute('height')]);
+      const xs = [...new Set(ys.map(y => y[0]))].sort((a, b) => a - b); const h = x => ys.filter(y => y[0] === x).reduce((s, y) => s + y[1], 0);
+      return [h(xs[0]), h(xs[xs.length - 1])]; })()""")
+    assert abs(r[0] - r[1]) < 3

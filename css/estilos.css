@@ -1364,3 +1364,11 @@ html,body{overflow-x:clip}
   .cm-ley>span:last-child{flex-basis:100%}
   .cr-grid{grid-template-columns:1fr;gap:10px}
 }
+
+/* Flujo de caja (Sankey) */
+.sk-card .sub{font-size:12.5px}
+.sk-svg{display:block;margin-top:8px;overflow:visible}
+.sk-svg .sk-n{fill:var(--txt);font-weight:600}
+.sk-svg .sk-v{fill:var(--muted)}
+.sk-svg path{transition:fill-opacity .15s}
+.sk-svg path:hover{fill-opacity:.5}

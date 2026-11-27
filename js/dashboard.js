@@ -123,6 +123,8 @@ function renderDashboard() {
         : '<div class="empty">Sin movimientos en el periodo</div>'}</div>
     </div>
 
+    ${sankeyCaja(st, donut, destinos)}
+
     <div class="dash-bottom">
     ${renderBudgetCard(rows, nM, totBud, totSpent)}
 
@@ -252,6 +254,54 @@ Object.assign(Changes, {
 
 // El mes se elige pulsando el texto: en ordenador se abre el calendario nativo (en el móvil lo abre el propio input invisible)
 Object.assign(Actions, { 'mes-pick': el => selectorMes({ valor: el.dataset.v, titulo: el.dataset.id === 'p-from' ? 'Desde' : el.dataset.id === 'p-to' ? 'Hasta' : 'Elige el mes', onPick: ym => Changes[el.dataset.id]({ value: ym }) }) });
+
+/* ---------- Flujo de caja (diagrama de Sankey, estilo Monarch) ---------- */
+/** De dónde entra el dinero (izquierda) y a dónde va (derecha): categorías de gasto, cuentas de ahorro/inversión y lo que queda. */
+function sankeyCaja(st, donut, destinos) {
+  const izq = new Map();
+  for (const m of st.movs) if (m.tipo === 'ingreso' && num(m.importe) > 0) { const r = rootOf(catById(m.categoria_id)); const k = r ? r.nombre : 'Otros ingresos'; izq.set(k, (izq.get(k) || 0) + num(m.importe)); }
+  let L = [...izq.entries()].map(([n, v]) => ({ n, v, c: '#16a34a' })).sort((a, b) => b.v - a.v);
+  if (L.length > 5) { const r = L.slice(4); L = L.slice(0, 4).concat([{ n: 'Otros ingresos', v: sum(r, 'v'), c: '#16a34a' }]); }
+  L.forEach((x, i) => { x.c = ['#15803d', '#16a34a', '#22c55e', '#4ade80', '#86efac'][i] || '#16a34a'; });
+  let G = donut.map((d, i) => ({ n: nombreDonut(d), v: d.v, c: colorDonut(d, i) }));
+  if (G.length > 7) { const r = G.slice(6); G = G.slice(0, 6).concat([{ n: 'Resto de gastos', v: sum(r, 'v'), c: '#cbd5e1' }]); }
+  const R = G.concat(destinos.filter(x => !x.resto).map(x => ({ n: x.n, v: x.v, c: x.c, ah: true })));
+  const tL = sum(L, 'v'), tR = sum(R, 'v');
+  if (tL - tR > 0.5) R.push({ n: 'Queda en cuenta', v: tL - tR, c: '#94a3b8', ah: true });
+  if (tR - tL > 0.5) L.push({ n: 'Del saldo que había', v: tR - tL, c: '#94a3b8' });
+  const tot = Math.max(tL, tR);
+  if (!(tot > 0) || !L.length || !R.length) return '';
+  const movil = window.innerWidth < 640, W = Math.max(320, Math.min(980, (document.querySelector('#view') || document.body).clientWidth - (movil ? 36 : 64)));
+  const fs = movil ? 11 : 12.5, lw = movil ? 92 : 170, rw = movil ? 128 : 230, bar = 10, x1 = lw, x2 = W - rw - bar, gap = 6;
+  const n = Math.max(L.length, R.length), H = Math.max(200, n * (movil ? 36 : 42)), k = (H - gap * (n - 1)) / tot;
+  const pos = arr => { const alto = sum(arr, x => x.v * k) + gap * (arr.length - 1); let y = (H - alto) / 2; return arr.map(x => { const o = { ...x, y, h: Math.max(1.5, x.v * k) }; y += x.v * k + gap; return o; }); };
+  const PL = pos(L), PR = pos(R), pct = v => fmtPct(v / tot, 0);
+  // Cada ingreso se reparte entre los destinos en la misma proporción
+  const offR = PR.map(r => r.y);
+  let flujos = '';
+  for (const l of PL) {
+    let yl = l.y;
+    PR.forEach((r, j) => {
+      const h = l.v * r.v / tot * k; if (h < 0.3) return;
+      const yr = offR[j]; offR[j] += h;
+      const mx = (x1 + bar + x2) / 2;
+      flujos += `<path d="M${x1 + bar},${yl}C${mx},${yl} ${mx},${yr} ${x2},${yr}L${x2},${yr + h}C${mx},${yr + h} ${mx},${yl + h} ${x1 + bar},${yl + h}Z" fill="${esc(r.c)}" fill-opacity=".28"><title>${esc(l.n)} → ${esc(r.n)}: ${fmtEUR(l.v * r.v / tot)}</title></path>`;
+      yl += h;
+    });
+  }
+  const etiqueta = (x, y, anchor, n, v) => `<text x="${x}" y="${y - 2}" text-anchor="${anchor}" font-size="${fs}" class="sk-n">${esc(n.length > (movil ? 16 : 28) ? n.slice(0, movil ? 15 : 27) + '…' : n)}</text><text x="${x}" y="${y + fs}" text-anchor="${anchor}" font-size="${fs - 1}" class="sk-v">${fmtEUR(v, 0)} · ${pct(v)}</text>`;
+  // Etiquetas sin solaparse: se separan lo justo y se recolocan dentro del alto del gráfico
+  const yEtiq = P => { const sep = fs * 2 + 6, ys = P.map(x => x.y + x.h / 2);
+    for (let i = 1; i < ys.length; i++) ys[i] = Math.max(ys[i], ys[i - 1] + sep);
+    const sobra = ys.length ? ys[ys.length - 1] - (H - fs) : 0; if (sobra > 0) { ys[ys.length - 1] -= sobra; for (let i = ys.length - 2; i >= 0; i--) ys[i] = Math.min(ys[i], ys[i + 1] - sep); }
+    return ys; };
+  const yl = yEtiq(PL), yr = yEtiq(PR);
+  const nodosL = PL.map((l, i) => `<rect x="${x1}" y="${l.y}" width="${bar}" height="${l.h}" rx="2" fill="${esc(l.c)}"/>${etiqueta(x1 - 6, yl[i], 'end', l.n, l.v)}`).join('');
+  const nodosR = PR.map((r, i) => `<rect x="${x2}" y="${r.y}" width="${bar}" height="${r.h}" rx="2" fill="${esc(r.c)}"/>${etiqueta(x2 + bar + 6, yr[i], 'start', r.n, r.v)}`).join('');
+  const ahorro = sum(R.filter(x => x.ah), 'v');
+  return `<div class="card sk-card"><div class="card-head"><h3>Flujo de caja</h3><span class="sub">${fmtEUR(tL, 0)} entran · ${fmtEUR(tot - ahorro, 0)} en gastos · ${fmtEUR(ahorro, 0)} ahorrado o en cuenta</span></div>
+    <svg class="sk-svg" viewBox="0 0 ${W} ${H + 4}" width="100%" role="img" aria-label="Diagrama del flujo de caja">${flujos}${nodosL}${nodosR}</svg></div>`;
+}
 
 /* ---------- «¿Dónde va vuestro dinero?» ---------- */
 const nombreDonut = d => d.k === '_none' ? 'Sin categoría' : d.c ? d.c.nombre : '—';
